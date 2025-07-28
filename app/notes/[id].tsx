@@ -17,13 +17,13 @@ import {
   Clock,
 } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import api from '@/services/api';
-import { Note } from '@/types/api';
+import { getNoteBySlug } from '@/services';
+import { logger } from '@/utils/logger';
 
 export default function NoteDetailScreen() {
   const { id } = useLocalSearchParams();
   const { user } = useAuth();
-  const [note, setNote] = useState<Note | null>(null);
+  const [note, setNote] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isBookmarked, setIsBookmarked] = useState(false);
 
@@ -33,46 +33,53 @@ export default function NoteDetailScreen() {
 
   const fetchNote = async () => {
     setIsLoading(true);
+    logger.debug('NoteDetailScreen', 'Fetching note by slug', { slug: id });
     try {
-      const response = await api.notes.fetchNoteById(id as string);
-      if (response.success) {
-        setNote(response.data!);
-        setIsBookmarked(response.data!.isBookmarked);
-      }
+      const noteData = await getNoteBySlug(id as string);
+      logger.info('NoteDetailScreen', 'Note loaded successfully', { 
+        noteId: noteData.id, 
+        title: noteData.title 
+      });
+      setNote(noteData);
+      // TODO: Check bookmark status when API is ready
+      // setIsBookmarked(noteData.isBookmarked);
     } catch (error) {
-      console.error('Error fetching note:', error);
+      logger.error('NoteDetailScreen', 'Error fetching note', error);
     } finally {
       setIsLoading(false);
     }
   };
 
   const toggleBookmark = async () => {
+    logger.userAction('Bookmark toggle attempted', { noteId: note?.id });
+    // TODO: Implement bookmark functionality when API is ready
     try {
-      const response = await api.notes.toggleBookmark(note!.id);
-      if (response.success) {
-        setIsBookmarked(response.data!);
-      }
+      // const response = await toggleNoteBookmark(note.id);
+      // setIsBookmarked(response.isBookmarked);
+      logger.info('NoteDetailScreen', 'Bookmark functionality not yet implemented');
     } catch (error) {
-      console.error('Error toggling bookmark:', error);
+      logger.error('NoteDetailScreen', 'Error toggling bookmark', error);
     }
   };
 
   const shareNote = async () => {
+    logger.userAction('Note share initiated', { noteId: note?.id, title: note?.title });
     try {
       await Share.share({
-        message: `${note.title}\n\n${note.preview}\n\nDibaca melalui JPJOnline`,
+        message: `${note.title}\n\n${note.content.substring(0, 200)}...\n\nRead via JPJOnline`,
         title: note.title,
       });
+      logger.info('NoteDetailScreen', 'Note shared successfully');
     } catch (error) {
-      console.error('Error sharing note:', error);
+      logger.error('NoteDetailScreen', 'Error sharing note', error);
     }
   };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('ms-MY', {
+    return date.toLocaleDateString('en-US', {
       day: 'numeric',
-      month: 'long',
+      month: 'short',
       year: 'numeric',
     });
   };
@@ -186,33 +193,29 @@ export default function NoteDetailScreen() {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.noteInfo}>
           <View style={styles.categoryBadge}>
-            <Text style={styles.categoryText}>{note.category}</Text>
+            <Text style={styles.categoryText}>{note.topic?.category?.title || 'General'}</Text>
           </View>
           <View style={styles.metaInfo}>
             <View style={styles.readTime}>
               <Clock size={14} color="#666666" />
               <Text style={styles.readTimeText}>
-                {note.readTime} minit bacaan
+                {Math.ceil(note.content.length / 200)} min read
               </Text>
             </View>
             <Text style={styles.dateText}>
-              Dikemaskini: {formatDate(note.dateModified)}
+              Updated: {formatDate(note.updatedAt)}
             </Text>
           </View>
         </View>
 
         <View style={styles.articleContent}>{renderContent(note.content)}</View>
 
-        <View style={styles.tags}>
-          <Text style={styles.tagsTitle}>Tag:</Text>
-          <View style={styles.tagsList}>
-            {note.tags.map((tag: string, index: number) => (
-              <View key={index} style={styles.tag}>
-                <Text style={styles.tagText}>#{tag}</Text>
-              </View>
-            ))}
+        {note.topic && (
+          <View style={styles.topicInfo}>
+            <Text style={styles.topicTitle}>Topic:</Text>
+            <Text style={styles.topicText}>{note.topic.title}</Text>
           </View>
-        </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -369,30 +372,20 @@ const styles = StyleSheet.create({
   spacing: {
     height: 12,
   },
-  tags: {
+  topicInfo: {
     padding: 20,
     borderTopWidth: 1,
     borderTopColor: '#F0F0F0',
   },
-  tagsTitle: {
+  topicTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: '#333333',
     marginBottom: 12,
   },
-  tagsList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  tag: {
-    backgroundColor: '#F8F9FA',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  tagText: {
-    fontSize: 12,
+  topicText: {
+    fontSize: 14,
     color: '#666666',
+    fontStyle: 'italic',
   },
 });

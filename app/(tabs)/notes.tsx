@@ -20,68 +20,92 @@ import {
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/utils/logger';
-import api from '@/services/api';
-import { Note } from '@/types/api';
+import { getNotesGroupedByCategory } from '@/services';
 
 const { width } = Dimensions.get('window');
 const cardWidth = (width - 60) / 2; // 2 columns with padding
 
+// Types for the new API structure
+interface ApiNote {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  order: number;
+  authorId: string;
+  topicId: string;
+  createdAt: string;
+  updatedAt: string;
+  author: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  topic: {
+    id: string;
+    title: string;
+    slug: string;
+    category: {
+      id: string;
+      title: string;
+      slug: string;
+    };
+  };
+}
+
+interface CategoryGroup {
+  category: {
+    id: string;
+    title: string;
+    slug: string;
+  };
+  notes: ApiNote[];
+  count: number;
+}
+
+interface NotesApiResponse {
+  notesByCategory: Record<string, CategoryGroup>;
+  allCategories: Array<{
+    id: string;
+    title: string;
+    slug: string;
+  }>;
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  groupedByCategory: boolean;
+}
 export default function NotesScreen() {
   const { user } = useAuth();
-  const [allNotes, setAllNotes] = useState<Note[]>([]);
-  const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
+  const [notesData, setNotesData] = useState<NotesApiResponse | null>(null);
+  const [filteredNotes, setFilteredNotes] = useState<ApiNote[]>([]);
+  const [categories, setCategories] = useState<Array<{ id: string; title: string; slug: string }>>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [showBookmarksOnly, setShowBookmarksOnly] = useState(false);
-  const [categories, setCategories] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetchCategories();
-    fetchAllNotes();
-  }, [showBookmarksOnly]);
+    fetchNotesData();
+  }, []);
 
   useEffect(() => {
     applyFilters();
-  }, [searchQuery, selectedCategory, allNotes]);
+  }, [searchQuery, selectedCategory, notesData, showBookmarksOnly]);
 
-  const fetchCategories = async () => {
-    try {
-      const response = await api.notes.fetchCategories();
-      if (response.success) {
-        setCategories(response.data!);
-      }
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    }
-  };
-
-  const fetchAllNotes = async () => {
+  const fetchNotesData = async () => {
     setIsLoading(true);
-    logger.debug('NotesScreen', 'Fetching notes', { showBookmarksOnly });
+    logger.debug('NotesScreen', 'Fetching notes grouped by category');
     try {
-      if (showBookmarksOnly) {
-        const response = await api.notes.getBookmarkedNotes();
-        if (response.success) {
-          logger.debug('NotesScreen', 'Bookmarked notes loaded', { count: response.data!.length });
-          setAllNotes(response.data!);
-        }
-      } else {
-        const response = await api.notes.fetchNotes();
-        if (response.success) {
-          // Check bookmark status for each note
-          const notesWithBookmarks = await Promise.all(
-            response.data!.map(async (note) => ({
-              ...note,
-              isBookmarked:
-                (await api.storage.getBookmarks()).data?.includes(note.id) ||
-                false,
-            }))
-          );
-          logger.debug('NotesScreen', 'All notes loaded', { count: notesWithBookmarks.length });
-          setAllNotes(notesWithBookmarks);
-        }
-      }
+      const response = await getNotesGroupedByCategory();
+      logger.debug('NotesScreen', 'Notes data loaded', { 
+        categoriesCount: response.allCategories.length,
+        totalNotes: response.total 
+      });
+      
+      setNotesData(response);
+      setCategories([{ id: 'all', title: 'All', slug: 'all' }, ...response.allCategories]);
     } catch (error) {
       logger.error('NotesScreen', 'Error fetching notes', error);
     } finally {
@@ -90,16 +114,32 @@ export default function NotesScreen() {
   };
 
   const applyFilters = () => {
+    if (!notesData) {
+      setFilteredNotes([]);
+      return;
+    }
+
+    // Flatten all notes from all categories
+    let allNotes: ApiNote[] = [];
+    Object.values(notesData.notesByCategory).forEach(categoryGroup => {
+      allNotes = [...allNotes, ...categoryGroup.notes];
+    });
+
     let filtered = [...allNotes];
 
-    // Apply bookmark filter first
-    if (showBookmarksOnly) {
-      filtered = filtered.filter((note) => note.isBookmarked);
-    }
+    // TODO: Apply bookmark filter when bookmark API is integrated
+    // if (showBookmarksOnly) {
+    //   filtered = filtered.filter((note) => note.isBookmarked);
+    // }
 
     // Apply category filter
     if (selectedCategory !== 'All') {
-      filtered = filtered.filter((note) => note.category === selectedCategory);
+      const selectedCategoryData = categories.find(cat => cat.title === selectedCategory);
+      if (selectedCategoryData) {
+        filtered = filtered.filter((note) => 
+          note.topic.category.slug === selectedCategoryData.slug
+        );
+      }
     }
 
     // Apply search filter
@@ -109,55 +149,47 @@ export default function NotesScreen() {
         (note) =>
           note.title.toLowerCase().includes(query) ||
           note.content.toLowerCase().includes(query) ||
-          note.tags.some((tag) => tag.toLowerCase().includes(query))
+          note.topic.title.toLowerCase().includes(query) ||
+          note.topic.category.title.toLowerCase().includes(query)
       );
     }
 
     setFilteredNotes(filtered);
   };
+
   const toggleBookmark = async (noteId: string) => {
     logger.userAction('Bookmark toggled', { noteId });
-    try {
-      const response = await api.notes.toggleBookmark(noteId);
-      if (!response.success) return;
-
-      // Update local state
-      setAllNotes((prev) =>
-        prev.map((note) =>
-          note.id === noteId ? { ...note, isBookmarked: response.data! } : note
-        )
-      );
-    } catch (error) {
-      logger.error('NotesScreen', 'Error toggling bookmark', error);
-    }
+    // TODO: Implement bookmark functionality when API is ready
+    // try {
+    //   const response = await toggleNoteBookmark(noteId);
+    //   // Update local state
+    // } catch (error) {
+    //   logger.error('NotesScreen', 'Error toggling bookmark', error);
+    // }
   };
 
-  const openNote = (note: Note) => {
-    if (note.isPremium && user?.subscription !== 'premium') {
-      logger.warn('NotesScreen', 'Premium note access denied', { 
-        noteId: note.id, 
-        userTier: user?.subscription 
-      });
-      // Show premium upgrade prompt
-      return;
-    }
+  const openNote = (note: ApiNote) => {
+    logger.userAction('Note opened', { noteId: note.id, title: note.title, slug: note.slug });
+    
+    // TODO: Add to activity history when API is ready
+    // api.user.saveActivity({
+    //   type: 'note_viewed',
+    //   noteId: note.id,
+    //   noteTitle: note.title,
+    // });
 
-    logger.userAction('Note opened', { noteId: note.id, title: note.title });
-    // Add to activity history
-    api.user.saveActivity({
-      type: 'note_viewed',
-      noteId: note.id,
-      noteTitle: note.title,
-    });
-
-    // Navigate to note detail screen
-    logger.navigation('NoteDetail', { noteId: note.id });
-    router.push(`/notes/${note.id}`);
+    // Navigate to note detail screen using slug
+    logger.navigation('NoteDetail', { noteSlug: note.slug });
+    router.push(`/notes/${note.slug}`);
   };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+    return date.toLocaleDateString('en-US', { 
+      day: 'numeric', 
+      month: 'short',
+      year: 'numeric'
+    });
   };
 
   if (isLoading) {
@@ -206,20 +238,20 @@ export default function NotesScreen() {
         >
           {categories.map((category) => (
             <TouchableOpacity
-              key={category}
+              key={category.id}
               style={[
                 styles.categoryButton,
-                selectedCategory === category && styles.selectedCategoryButton,
+                selectedCategory === category.title && styles.selectedCategoryButton,
               ]}
-              onPress={() => setSelectedCategory(category)}
+              onPress={() => setSelectedCategory(category.title)}
             >
               <Text
                 style={[
                   styles.categoryText,
-                  selectedCategory === category && styles.selectedCategoryText,
+                  selectedCategory === category.title && styles.selectedCategoryText,
                 ]}
               >
-                {category}
+                {category.title}
               </Text>
             </TouchableOpacity>
           ))}
@@ -243,26 +275,20 @@ export default function NotesScreen() {
           <TouchableOpacity
             style={[
               styles.noteCard,
-              note.isPremium &&
-                user?.subscription !== 'premium' &&
-                styles.lockedCard,
+              // TODO: Add premium check when implemented
+              // note.isPremium && user?.subscription !== 'premium' && styles.lockedCard,
             ]}
             onPress={() => openNote(note)}
           >
             <View style={styles.noteHeader}>
               <View style={styles.categoryBadge}>
-                <Text style={styles.categoryBadgeText}>{note.category}</Text>
+                <Text style={styles.categoryBadgeText}>{note.topic.category.title}</Text>
               </View>
               <View style={styles.noteActions}>
-                {note.isPremium && (
-                  <Crown size={16} color="#FF9800" style={styles.premiumIcon} />
-                )}
+                {/* TODO: Add premium icon when implemented */}
                 <TouchableOpacity onPress={() => toggleBookmark(note.id)}>
-                  {note.isBookmarked ? (
-                    <BookmarkCheck size={18} color="#facc15" />
-                  ) : (
-                    <Bookmark size={18} color="#CCCCCC" />
-                  )}
+                  {/* TODO: Show bookmark status when implemented */}
+                  <Bookmark size={18} color="#CCCCCC" />
                 </TouchableOpacity>
               </View>
             </View>
@@ -271,16 +297,18 @@ export default function NotesScreen() {
               {note.title}
             </Text>
             <Text style={styles.notePreview} numberOfLines={3}>
-              {note.preview}
+              {note.content.substring(0, 150)}...
             </Text>
 
             <View style={styles.noteFooter}>
               <Text style={styles.dateText}>
-                {formatDate(note.dateModified)}
+                {formatDate(note.updatedAt)}
               </Text>
               <View style={styles.readTime}>
                 <Clock size={12} color="#999999" />
-                <Text style={styles.readTimeText}>{note.readTime}m</Text>
+                <Text style={styles.readTimeText}>
+                  {Math.ceil(note.content.length / 200)}m
+                </Text>
               </View>
             </View>
           </TouchableOpacity>
@@ -291,7 +319,7 @@ export default function NotesScreen() {
             <Text style={styles.emptyMessage}>
               {searchQuery
                 ? 'Try adjusting your search terms'
-                : 'No notes available in this category'}
+                : showBookmarksOnly ? 'No bookmarked notes found' : 'No notes available in this category'}
             </Text>
           </View>
         )}
@@ -299,6 +327,19 @@ export default function NotesScreen() {
     </View>
   );
 }
+
+// Helper function to extract preview from content
+const extractPreview = (content: string, maxLength: number = 150): string => {
+  // Remove markdown headers and formatting
+  const cleanContent = content
+    .replace(/^#+\s+/gm, '') // Remove headers
+    .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold
+    .replace(/\*(.*?)\*/g, '$1') // Remove italic
+    .replace(/\n+/g, ' ') // Replace newlines with spaces
+    .trim();
+  
+  return cleanContent.length > maxLength ? cleanContent.substring(0, maxLength) + '...' : cleanContent;
+};
 
 const styles = StyleSheet.create({
   container: {

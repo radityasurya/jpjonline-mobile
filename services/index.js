@@ -21,6 +21,13 @@ export {
   changePassword
 } from './userService.js';
 
+// Notes services
+export {
+  getNotesGroupedByCategory,
+  getNoteBySlug,
+  searchNotes
+} from './notesService.js';
+
 // API configuration
 export { API_CONFIG, getAuthHeaders, buildApiUrl } from '../config/api.js';
 

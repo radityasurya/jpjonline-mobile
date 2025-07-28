@@ -19,6 +19,7 @@ import {
 } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
+import { logger } from '@/utils/logger';
 import api from '@/services/api';
 import { Note } from '@/types/api';
 
@@ -57,10 +58,12 @@ export default function NotesScreen() {
 
   const fetchAllNotes = async () => {
     setIsLoading(true);
+    logger.debug('NotesScreen', 'Fetching notes', { showBookmarksOnly });
     try {
       if (showBookmarksOnly) {
         const response = await api.notes.getBookmarkedNotes();
         if (response.success) {
+          logger.debug('NotesScreen', 'Bookmarked notes loaded', { count: response.data!.length });
           setAllNotes(response.data!);
         }
       } else {
@@ -75,11 +78,12 @@ export default function NotesScreen() {
                 false,
             }))
           );
+          logger.debug('NotesScreen', 'All notes loaded', { count: notesWithBookmarks.length });
           setAllNotes(notesWithBookmarks);
         }
       }
     } catch (error) {
-      console.error('Error fetching notes:', error);
+      logger.error('NotesScreen', 'Error fetching notes', error);
     } finally {
       setIsLoading(false);
     }
@@ -112,6 +116,7 @@ export default function NotesScreen() {
     setFilteredNotes(filtered);
   };
   const toggleBookmark = async (noteId: string) => {
+    logger.userAction('Bookmark toggled', { noteId });
     try {
       const response = await api.notes.toggleBookmark(noteId);
       if (!response.success) return;
@@ -123,16 +128,21 @@ export default function NotesScreen() {
         )
       );
     } catch (error) {
-      console.error('Error toggling bookmark:', error);
+      logger.error('NotesScreen', 'Error toggling bookmark', error);
     }
   };
 
   const openNote = (note: Note) => {
     if (note.isPremium && user?.subscription !== 'premium') {
+      logger.warn('NotesScreen', 'Premium note access denied', { 
+        noteId: note.id, 
+        userTier: user?.subscription 
+      });
       // Show premium upgrade prompt
       return;
     }
 
+    logger.userAction('Note opened', { noteId: note.id, title: note.title });
     // Add to activity history
     api.user.saveActivity({
       type: 'note_viewed',
@@ -141,6 +151,7 @@ export default function NotesScreen() {
     });
 
     // Navigate to note detail screen
+    logger.navigation('NoteDetail', { noteId: note.id });
     router.push(`/notes/${note.id}`);
   };
 

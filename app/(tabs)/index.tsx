@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { router } from 'expo-router';
+import { logger } from '@/utils/logger';
 import { Book, FileText, Trophy, Clock, Crown } from 'lucide-react-native';
 import { useState, useEffect } from 'react';
 import api from '@/services/api';
@@ -19,9 +20,11 @@ export default function HomeScreen() {
 
   useEffect(() => {
     if (!user) {
+      logger.warn('HomeScreen', 'No user found, redirecting to login');
       router.replace('/auth/login');
       return;
     }
+    logger.info('HomeScreen', 'Loading user stats', { userId: user.id });
     loadStats();
   }, [user]);
 
@@ -31,12 +34,19 @@ export default function HomeScreen() {
 
   const loadStats = async () => {
     try {
+      logger.debug('HomeScreen', 'Fetching user statistics');
       const response = await api.user.fetchUserStats(user!.id);
       if (response.success) {
+        logger.debug('HomeScreen', 'Stats loaded successfully', { 
+          totalExams: response.data!.totalExams,
+          averageScore: response.data!.averageScore 
+        });
         setStats(response.data!);
+      } else {
+        logger.warn('HomeScreen', 'Failed to load stats', response.error);
       }
     } catch (error) {
-      console.error('Error loading stats:', error);
+      logger.error('HomeScreen', 'Error loading stats', error);
     }
   };
 
@@ -65,10 +75,13 @@ export default function HomeScreen() {
   ];
 
   const handleActivityClick = (activity: any) => {
+    logger.userAction('Activity clicked', { type: activity.type, id: activity.id });
     if (activity.type === 'exam_completed') {
       // Navigate to results page, it will load data from localStorage
+      logger.navigation('ExamResult', { examId: activity.examId });
       router.push(`/exam/result/${activity.examId}`);
     } else if (activity.type === 'note_viewed' || activity.type === 'note_bookmarked') {
+      logger.navigation('NoteDetail', { noteId: activity.noteId });
       router.push(`/notes/${activity.noteId}`);
     }
   };

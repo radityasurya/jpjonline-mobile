@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { logger } from '@/utils/logger';
 
 interface User {
   id: string;
@@ -47,12 +48,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuthState = async () => {
     try {
+      logger.debug('AuthContext', 'Checking authentication state');
       const userData = await AsyncStorage.getItem('user');
       if (userData) {
-        setUser(JSON.parse(userData));
+        const user = JSON.parse(userData);
+        logger.info('AuthContext', 'User found in storage', { userId: user.id });
+        setUser(user);
+      } else {
+        logger.debug('AuthContext', 'No user found in storage');
       }
     } catch (error) {
-      console.error('Error checking auth state:', error);
+      logger.error('AuthContext', 'Failed to check auth state', error);
     } finally {
       setIsLoading(false);
     }
@@ -60,6 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
+    logger.info('AuthContext', 'Login attempt started', { email });
     try {
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -69,6 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       );
 
       if (foundUser) {
+        logger.info('AuthContext', 'Login successful', { userId: foundUser.id, tier: foundUser.subscription });
         const userData = {
           id: foundUser.id,
           name: foundUser.name,
@@ -79,10 +87,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await AsyncStorage.setItem('token', 'mock-jwt-token');
         setUser(userData);
         return true;
+      } else {
+        logger.warn('AuthContext', 'Login failed - invalid credentials', { email });
       }
       return false;
     } catch (error) {
-      console.error('Login error:', error);
+      logger.error('AuthContext', 'Login error', error);
       return false;
     } finally {
       setIsLoading(false);
@@ -91,10 +101,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const register = async (name: string, email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
+    logger.info('AuthContext', 'Registration attempt started', { email, name });
     try {
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
+      logger.info('AuthContext', 'Registration successful', { email });
       const userData = {
         id: Date.now().toString(),
         name,
@@ -106,7 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(userData);
       return true;
     } catch (error) {
-      console.error('Registration error:', error);
+      logger.error('AuthContext', 'Registration error', error);
       return false;
     } finally {
       setIsLoading(false);
@@ -115,11 +127,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
+      logger.info('AuthContext', 'User logout initiated');
       await AsyncStorage.removeItem('user');
       await AsyncStorage.removeItem('token');
       setUser(null);
+      logger.info('AuthContext', 'User logout completed');
     } catch (error) {
-      console.error('Logout error:', error);
+      logger.error('AuthContext', 'Logout error', error);
     }
   };
 

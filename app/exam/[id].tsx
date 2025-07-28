@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
+import { logger } from '@/utils/logger';
 import api from '@/services/api';
 import { Exam, Question, ExamResult } from '@/types/api';
 
@@ -35,6 +36,7 @@ export default function ExamScreen() {
   const [isTimerActive, setIsTimerActive] = useState(true);
 
   const handleExitExam = () => {
+    logger.userAction('Exam exit requested');
     Alert.alert(
       'Exit Exam',
       'Are you sure you want to exit? Your progress will be lost.',
@@ -43,7 +45,10 @@ export default function ExamScreen() {
         {
           text: 'Exit',
           style: 'destructive',
-          onPress: () => router.back(),
+          onPress: () => {
+            logger.userAction('Exam exited', { examId: id });
+            router.back();
+          },
         },
       ]
     );
@@ -55,9 +60,15 @@ export default function ExamScreen() {
 
   const fetchExamData = async () => {
     setIsLoading(true);
+    logger.info('ExamScreen', 'Loading exam data', { examId: id });
     try {
       const response = await api.exams.fetchExamQuestions(id as string);
       if (response.success) {
+        logger.info('ExamScreen', 'Exam data loaded successfully', {
+          examId: id,
+          questionsCount: response.data!.questions.length,
+          examTitle: response.data!.exam.title
+        });
         setExam(response.data!.exam);
         setQuestions(response.data!.questions);
         setAnswers(new Array(response.data!.questions.length).fill(-1));
@@ -69,7 +80,7 @@ export default function ExamScreen() {
         );
       }
     } catch (error) {
-      console.error('Error fetching exam data:', error);
+      logger.error('ExamScreen', 'Failed to load exam data', error);
       Alert.alert('Error', 'Failed to load exam. Please try again.');
       router.back();
     } finally {
@@ -78,6 +89,10 @@ export default function ExamScreen() {
   };
 
   const handleAnswerSelect = (answerIndex: number) => {
+    logger.debug('ExamScreen', 'Answer selected', { 
+      questionIndex: currentQuestionIndex, 
+      answerIndex 
+    });
     const newAnswers = [...answers];
     newAnswers[currentQuestionIndex] = answerIndex;
     setAnswers(newAnswers);
@@ -90,10 +105,17 @@ export default function ExamScreen() {
 
   const handleCheckAnswer = () => {
     if (answers[currentQuestionIndex] === -1) {
+      logger.warn('ExamScreen', 'Check answer attempted with no selection');
       Alert.alert('No Answer Selected', 'Please select an answer first.');
       return;
     }
 
+    logger.userAction('Answer checked', { 
+      questionIndex: currentQuestionIndex,
+      selectedAnswer: answers[currentQuestionIndex],
+      correctAnswer: questions[currentQuestionIndex].correctAnswer
+    });
+    
     const currentQuestion = questions[currentQuestionIndex];
     const isCorrect =
       answers[currentQuestionIndex] === currentQuestion.correctAnswer;
@@ -136,12 +158,19 @@ export default function ExamScreen() {
   const handleSubmitExam = async () => {
     if (isSubmitting) return;
 
+    logger.info('ExamScreen', 'Exam submission initiated', {
+      examId: exam!.id,
+      answeredQuestions: answers.filter(answer => answer !== -1).length,
+      totalQuestions: questions.length
+    });
+
     // Check if all questions are answered
     const unansweredCount = answers.filter((answer) => answer === -1).length;
 
     // Don't allow submission if no questions are answered at all
     const answeredCount = answers.filter((answer) => answer !== -1).length;
     if (answeredCount === 0) {
+      logger.warn('ExamScreen', 'Submission blocked - no answers provided');
       Alert.alert(
         'No Answers Selected',
         'Please answer at least one question before submitting the exam.',
@@ -151,6 +180,7 @@ export default function ExamScreen() {
     }
 
     if (unansweredCount > 0) {
+      logger.warn('ExamScreen', 'Submission with unanswered questions', { unansweredCount });
       Alert.alert(
         'Unanswered Questions',
         `You still have ${unansweredCount} unanswered questions. Are you sure you want to submit the exam?`,
@@ -167,6 +197,7 @@ export default function ExamScreen() {
 
   const submitExam = async () => {
     setIsSubmitting(true);
+    logger.info('ExamScreen', 'Submitting exam answers', { examId: exam!.id });
 
     try {
       // Calculate time spent (for now, use exam duration as fallback)
@@ -178,6 +209,11 @@ export default function ExamScreen() {
       );
 
       if (response.success) {
+        logger.info('ExamScreen', 'Exam submitted successfully', {
+          examId: exam!.id,
+          score: response.data!.score,
+          passed: response.data!.passed
+        });
         router.replace(
           `/exam/result/${exam!.id}?resultData=${encodeURIComponent(
             JSON.stringify(response.data!)
@@ -185,7 +221,7 @@ export default function ExamScreen() {
         );
       }
     } catch (error) {
-      console.error('Error submitting exam:', error);
+      logger.error('ExamScreen', 'Failed to submit exam', error);
       Alert.alert('Error', 'Failed to submit exam. Please try again.');
     } finally {
       setIsSubmitting(false);

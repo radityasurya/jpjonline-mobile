@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { router } from 'expo-router';
+import { logger } from '@/utils/logger';
 import { Eye, EyeOff } from 'lucide-react-native';
 
 export default function LoginScreen() {
@@ -44,15 +45,19 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     if (!validateForm()) return;
 
+    logger.userAction('Login attempt', { email });
     const success = await login(email, password);
     if (success) {
+      logger.navigation('Home', { from: 'login' });
       router.replace('/(tabs)');
     } else {
+      logger.warn('LoginScreen', 'Login failed - showing error alert');
       Alert.alert('Ralat', 'E-mel atau kata laluan tidak sah');
     }
   };
 
   const fillDemoCredentials = (type: 'premium' | 'free') => {
+    logger.userAction('Demo credentials filled', { type });
     if (type === 'premium') {
       setEmail('premium@jpjonline.com');
       setPassword('premium123');

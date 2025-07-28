@@ -10,6 +10,7 @@ import {
   FlatList,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
+import { logger } from '@/utils/logger';
 import {
   FileText,
   Trophy,
@@ -63,14 +64,21 @@ export default function TestsScreen() {
 
   const fetchAllTests = async () => {
     setIsLoading(true);
+    logger.debug('TestsScreen', 'Fetching available tests');
     try {
       const response = await api.exams.fetchExams(user?.subscription);
       if (response.success) {
+        logger.info('TestsScreen', 'Tests loaded successfully', { 
+          count: response.data!.length,
+          userTier: user?.subscription 
+        });
         setAllTests(response.data!);
         setHasMore(response.data!.length > 10);
+      } else {
+        logger.warn('TestsScreen', 'Failed to load tests', response.error);
       }
     } catch (error) {
-      console.error('Error fetching tests:', error);
+      logger.error('TestsScreen', 'Error fetching tests', error);
     } finally {
       setIsLoading(false);
     }
@@ -100,17 +108,28 @@ export default function TestsScreen() {
   };
 
   const fetchTestResults = async () => {
+    logger.debug('TestsScreen', 'Fetching test results');
     try {
       const response = await api.exams.getExamResults();
       if (response.success) {
+        logger.debug('TestsScreen', 'Test results loaded', { count: response.data!.length });
         setTestResults(response.data!);
+      } else {
+        logger.warn('TestsScreen', 'Failed to load test results', response.error);
       }
     } catch (error) {
-      console.error('Error fetching test results:', error);
+      logger.error('TestsScreen', 'Error fetching test results', error);
     }
   };
 
   const startTest = (test: Exam) => {
+    logger.userAction('Test started', { 
+      testId: test.id, 
+      testTitle: test.title,
+      difficulty: test.difficulty,
+      isPremium: test.isPremium 
+    });
+    logger.navigation('Exam', { examId: test.id });
     router.push(`/exam/${test.id}`);
   };
 

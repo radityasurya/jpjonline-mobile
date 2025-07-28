@@ -1,4 +1,5 @@
 import { API_CONFIG, buildApiUrl, getAuthHeaders } from '../config/api.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * User Profile Service
@@ -14,6 +15,9 @@ import { API_CONFIG, buildApiUrl, getAuthHeaders } from '../config/api.js';
  */
 export const getUserProfile = async (token) => {
   try {
+    logger.debug('UserService', 'Fetching user profile');
+    logger.apiRequest('GET', API_CONFIG.ENDPOINTS.USER.PROFILE);
+    
     // TODO: Uncomment when CORS is configured on backend
     // const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.USER.PROFILE), {
     //   method: 'GET',
@@ -27,12 +31,13 @@ export const getUserProfile = async (token) => {
     // return await response.json();
 
     // Mock response - remove when API is ready
+    logger.debug('UserService', 'Using mock profile response');
     await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
     
     // Extract mock user data from token (in real implementation, backend validates token)
     const isPremium = token.includes('premium');
     
-    return {
+    const mockResponse = {
       id: isPremium ? "clx1234567890" : "clx0987654321",
       name: isPremium ? "Ahmad Faizal" : "Siti Aminah",
       email: isPremium ? "premium@jpj.com" : "free@jpj.com",
@@ -40,8 +45,12 @@ export const getUserProfile = async (token) => {
       role: "USER",
       image: null
     };
+    
+    logger.debug('UserService', 'Profile fetched successfully', { userId: mockResponse.id });
+    logger.apiResponse('GET', API_CONFIG.ENDPOINTS.USER.PROFILE, 200);
+    return mockResponse;
   } catch (error) {
-    console.error('Get user profile error:', error);
+    logger.error('UserService', 'Failed to fetch user profile', error);
     throw error;
   }
 };
@@ -56,6 +65,9 @@ export const getUserProfile = async (token) => {
  */
 export const updateUserProfile = async (token, profileData) => {
   try {
+    logger.info('UserService', 'Updating user profile', profileData);
+    logger.apiRequest('PUT', API_CONFIG.ENDPOINTS.USER.PROFILE, profileData);
+    
     // TODO: Uncomment when CORS is configured on backend
     // const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.USER.PROFILE), {
     //   method: 'PUT',
@@ -71,6 +83,7 @@ export const updateUserProfile = async (token, profileData) => {
     // return await response.json();
 
     // Mock response - remove when API is ready
+    logger.debug('UserService', 'Using mock profile update response');
     await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
     
     // Extract mock user data from token and merge with updates
@@ -89,12 +102,16 @@ export const updateUserProfile = async (token, profileData) => {
       ...profileData
     };
     
-    return {
+    const mockResponse = {
       success: true,
       user: updatedUser
     };
+    
+    logger.info('UserService', 'Profile updated successfully', { userId: updatedUser.id });
+    logger.apiResponse('PUT', API_CONFIG.ENDPOINTS.USER.PROFILE, 200);
+    return mockResponse;
   } catch (error) {
-    console.error('Update user profile error:', error);
+    logger.error('UserService', 'Failed to update user profile', error);
     throw error;
   }
 };
@@ -109,6 +126,9 @@ export const updateUserProfile = async (token, profileData) => {
  */
 export const changePassword = async (token, passwordData) => {
   try {
+    logger.info('UserService', 'Changing user password');
+    logger.apiRequest('POST', API_CONFIG.ENDPOINTS.USER.CHANGE_PASSWORD);
+    
     // TODO: Uncomment when CORS is configured on backend
     // const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.USER.CHANGE_PASSWORD), {
     //   method: 'POST',
@@ -124,19 +144,25 @@ export const changePassword = async (token, passwordData) => {
     // return await response.json();
 
     // Mock response - remove when API is ready
+    logger.debug('UserService', 'Using mock password change response');
     await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
     
     // Simulate incorrect current password for demo
     if (passwordData.currentPassword === 'wrongpassword') {
+      logger.warn('UserService', 'Password change failed - incorrect current password');
       throw new Error('Current password is incorrect');
     }
     
-    return {
+    const mockResponse = {
       success: true,
       message: "Password changed successfully"
     };
+    
+    logger.info('UserService', 'Password changed successfully');
+    logger.apiResponse('POST', API_CONFIG.ENDPOINTS.USER.CHANGE_PASSWORD, 200);
+    return mockResponse;
   } catch (error) {
-    console.error('Change password error:', error);
+    logger.error('UserService', 'Failed to change password', error);
     throw error;
   }
 };

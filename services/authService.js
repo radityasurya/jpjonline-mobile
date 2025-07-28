@@ -1,4 +1,5 @@
 import { API_CONFIG, buildApiUrl, getAuthHeaders } from '../config/api.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * Authentication Service
@@ -17,6 +18,9 @@ import { API_CONFIG, buildApiUrl, getAuthHeaders } from '../config/api.js';
  */
 export const signup = async (userData) => {
   try {
+    logger.info('AuthService', 'Starting user signup', { email: userData.email });
+    logger.apiRequest('POST', API_CONFIG.ENDPOINTS.AUTH.SIGNUP, { email: userData.email, name: userData.name });
+    
     // TODO: Uncomment when CORS is configured on backend
     // const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.AUTH.SIGNUP), {
     //   method: 'POST',
@@ -32,14 +36,16 @@ export const signup = async (userData) => {
     // return await response.json();
 
     // Mock response - remove when API is ready
+    logger.debug('AuthService', 'Using mock signup response');
     await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
     
     // Simulate email already exists error for demo
     if (userData.email === 'existing@jpjonline.com') {
+      logger.warn('AuthService', 'Signup failed - email already exists', { email: userData.email });
       throw new Error('Email already exists');
     }
 
-    return {
+    const mockResponse = {
       success: true,
       user: {
         id: `clx${Date.now()}`,
@@ -50,8 +56,12 @@ export const signup = async (userData) => {
         image: null
       }
     };
+    
+    logger.info('AuthService', 'Signup successful', { userId: mockResponse.user.id });
+    logger.apiResponse('POST', API_CONFIG.ENDPOINTS.AUTH.SIGNUP, 200, { success: true });
+    return mockResponse;
   } catch (error) {
-    console.error('Signup error:', error);
+    logger.error('AuthService', 'Signup failed', error);
     throw error;
   }
 };
@@ -65,6 +75,9 @@ export const signup = async (userData) => {
  */
 export const login = async (credentials) => {
   try {
+    logger.info('AuthService', 'Starting user login', { email: credentials.email });
+    logger.apiRequest('POST', API_CONFIG.ENDPOINTS.AUTH.LOGIN, { email: credentials.email });
+    
     // TODO: Uncomment when CORS is configured on backend
     // const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.AUTH.LOGIN), {
     //   method: 'POST',
@@ -80,16 +93,18 @@ export const login = async (credentials) => {
     // return await response.json();
 
     // Mock response - remove when API is ready
+    logger.debug('AuthService', 'Using mock login response');
     await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
     
     // Simulate invalid credentials for demo
-    if (credentials.email !== 'premium@jpj.com' && credentials.email !== 'free@jpj.com') {
+    if (credentials.email !== 'premium@jpjonline.com' && credentials.email !== 'free@jpjonline.com') {
+      logger.warn('AuthService', 'Login failed - invalid credentials', { email: credentials.email });
       throw new Error('Invalid email or password');
     }
 
-    const isPremium = credentials.email === 'premium@jpj.com';
+    const isPremium = credentials.email === 'premium@jpjonline.com';
     
-    return {
+    const mockResponse = {
       success: true,
       token: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.mock.token.${Date.now()}`,
       user: {
@@ -101,8 +116,15 @@ export const login = async (credentials) => {
         image: null
       }
     };
+    
+    logger.info('AuthService', 'Login successful', { 
+      userId: mockResponse.user.id, 
+      tier: mockResponse.user.tier 
+    });
+    logger.apiResponse('POST', API_CONFIG.ENDPOINTS.AUTH.LOGIN, 200, { success: true });
+    return mockResponse;
   } catch (error) {
-    console.error('Login error:', error);
+    logger.error('AuthService', 'Login failed', error);
     throw error;
   }
 };
@@ -114,6 +136,9 @@ export const login = async (credentials) => {
  */
 export const getSession = async (token) => {
   try {
+    logger.debug('AuthService', 'Validating user session');
+    logger.apiRequest('GET', API_CONFIG.ENDPOINTS.AUTH.SESSION);
+    
     // TODO: Uncomment when CORS is configured on backend
     // const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.AUTH.SESSION), {
     //   method: 'GET',
@@ -127,24 +152,29 @@ export const getSession = async (token) => {
     // return await response.json();
 
     // Mock response - remove when API is ready
+    logger.debug('AuthService', 'Using mock session response');
     await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
     
     // Extract mock user data from token (in real implementation, backend validates token)
     const isPremium = token.includes('premium');
     
-    return {
+    const mockResponse = {
       user: {
         id: isPremium ? "clx1234567890" : "clx0987654321",
         name: isPremium ? "Ahmad Faizal" : "Siti Aminah",
-        email: isPremium ? "premium@jpj.com" : "free@jpj.com",
+        email: isPremium ? "premium@jpjonline.com" : "free@jpjonline.com",
         tier: isPremium ? "PREMIUM" : "FREE",
         role: "USER",
         image: null
       },
       expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours from now
     };
+    
+    logger.debug('AuthService', 'Session validation successful', { userId: mockResponse.user.id });
+    logger.apiResponse('GET', API_CONFIG.ENDPOINTS.AUTH.SESSION, 200);
+    return mockResponse;
   } catch (error) {
-    console.error('Session validation error:', error);
+    logger.error('AuthService', 'Session validation failed', error);
     throw error;
   }
 };
@@ -157,6 +187,9 @@ export const getSession = async (token) => {
  */
 export const forgotPassword = async (data) => {
   try {
+    logger.info('AuthService', 'Password reset requested', { email: data.email });
+    logger.apiRequest('POST', API_CONFIG.ENDPOINTS.AUTH.FORGOT_PASSWORD, { email: data.email });
+    
     // TODO: Uncomment when CORS is configured on backend
     // const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.AUTH.FORGOT_PASSWORD), {
     //   method: 'POST',
@@ -172,14 +205,19 @@ export const forgotPassword = async (data) => {
     // return await response.json();
 
     // Mock response - remove when API is ready
+    logger.debug('AuthService', 'Using mock forgot password response');
     await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate network delay
     
-    return {
+    const mockResponse = {
       success: true,
       message: "Password reset email sent"
     };
+    
+    logger.info('AuthService', 'Password reset email sent', { email: data.email });
+    logger.apiResponse('POST', API_CONFIG.ENDPOINTS.AUTH.FORGOT_PASSWORD, 200);
+    return mockResponse;
   } catch (error) {
-    console.error('Forgot password error:', error);
+    logger.error('AuthService', 'Forgot password failed', error);
     throw error;
   }
 };
@@ -193,6 +231,9 @@ export const forgotPassword = async (data) => {
  */
 export const resetPassword = async (data) => {
   try {
+    logger.info('AuthService', 'Password reset attempted');
+    logger.apiRequest('POST', API_CONFIG.ENDPOINTS.AUTH.RESET_PASSWORD, { token: data.token });
+    
     // TODO: Uncomment when CORS is configured on backend
     // const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.AUTH.RESET_PASSWORD), {
     //   method: 'POST',
@@ -208,19 +249,25 @@ export const resetPassword = async (data) => {
     // return await response.json();
 
     // Mock response - remove when API is ready
+    logger.debug('AuthService', 'Using mock reset password response');
     await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
     
     // Simulate invalid token for demo
     if (data.token === 'invalid-token') {
+      logger.warn('AuthService', 'Password reset failed - invalid token');
       throw new Error('Invalid or expired reset token');
     }
     
-    return {
+    const mockResponse = {
       success: true,
       message: "Password has been reset"
     };
+    
+    logger.info('AuthService', 'Password reset successful');
+    logger.apiResponse('POST', API_CONFIG.ENDPOINTS.AUTH.RESET_PASSWORD, 200);
+    return mockResponse;
   } catch (error) {
-    console.error('Reset password error:', error);
+    logger.error('AuthService', 'Reset password failed', error);
     throw error;
   }
 };

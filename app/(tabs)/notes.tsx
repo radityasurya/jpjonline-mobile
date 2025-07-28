@@ -21,7 +21,7 @@ import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/utils/logger';
 import { getNotesGroupedByCategory } from '@/services';
-import { isBookmarked, toggleBookmark } from '@/services/bookmarkService';
+import bookmarkService from '@/services/bookmarkService';
 
 const { width } = Dimensions.get('window');
 const cardWidth = (width - 60) / 2; // 2 columns with padding
@@ -106,7 +106,7 @@ export default function NotesScreen() {
     const states: { [key: string]: boolean } = {};
     Object.values(notesData.notesByCategory).forEach(categoryGroup => {
       categoryGroup.notes.forEach(note => {
-        states[note.id] = isBookmarked(note.id);
+        states[note.id] = bookmarkService.isBookmarked(note.id);
       });
     });
     setBookmarkStates(states);
@@ -176,7 +176,7 @@ export default function NotesScreen() {
   const handleToggleBookmark = async (noteId: string) => {
     logger.userAction('Bookmark toggled', { noteId });
     try {
-      const newBookmarkStatus = toggleBookmark(noteId);
+      const newBookmarkStatus = bookmarkService.toggleBookmark(noteId);
       setBookmarkStates(prev => ({
         ...prev,
         [noteId]: newBookmarkStatus

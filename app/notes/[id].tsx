@@ -20,6 +20,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getNoteBySlug } from '@/services';
 import { logger } from '@/utils/logger';
 import { updateStats } from '@/services';
+import bookmarkService from '@/services/bookmarkService';
 
 export default function NoteDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -52,7 +53,7 @@ export default function NoteDetailScreen() {
       });
       
       // Check bookmark status
-      setNoteIsBookmarked(isBookmarked(noteData.id));
+      setNoteIsBookmarked(bookmarkService.isBookmarked(noteData.id));
     } catch (error) {
       logger.error('NoteDetailScreen', 'Error fetching note', error);
     } finally {
@@ -69,7 +70,7 @@ export default function NoteDetailScreen() {
         noteTitle: note.title
       });
       
-      const newBookmarkStatus = toggleBookmark(note.id);
+      const newBookmarkStatus = bookmarkService.toggleBookmark(note.id);
       setNoteIsBookmarked(newBookmarkStatus);
       logger.info('NoteDetailScreen', 'Bookmark toggled successfully', { 
         noteId: note.id, 

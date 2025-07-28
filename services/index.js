@@ -28,6 +28,14 @@ export {
   searchNotes
 } from './notesService.js';
 
+// Exams services
+export {
+  getUserExams,
+  getExamBySlug,
+  submitExamResults,
+  getUserExamHistory
+} from './examsService.js';
+
 // API configuration
 export { API_CONFIG, getAuthHeaders, buildApiUrl } from '../config/api.js';
 

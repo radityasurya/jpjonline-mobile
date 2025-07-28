@@ -21,6 +21,10 @@ export const API_CONFIG = {
     USER: {
       PROFILE: '/api/me',
       CHANGE_PASSWORD: '/api/me/change-password',
+    },
+    EXAMS: {
+      USER_EXAMS: '/api/me/exams',
+      EXAM_HISTORY: '/api/me/exam-history',
     }
   },
   HEADERS: {

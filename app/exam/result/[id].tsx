@@ -32,12 +32,16 @@ export default function ExamResultScreen() {
     try {
       if (resultData) {
         // Data passed from navigation
-        const parsedResult = JSON.parse(decodeURIComponent(resultData as string));
+        const parsedResult = JSON.parse(
+          decodeURIComponent(resultData as string)
+        );
         setResult(parsedResult);
-        
+
         // Load questions for detailed review
         if (parsedResult.examId) {
-          const examResponse = await api.exams.fetchExamQuestions(parsedResult.examId);
+          const examResponse = await api.exams.fetchExamQuestions(
+            parsedResult.examId
+          );
           if (examResponse.success) {
             setQuestions(examResponse.data!.questions);
           }
@@ -46,16 +50,22 @@ export default function ExamResultScreen() {
         // Try to load from localStorage using exam ID
         const storedResults = await api.exams.getExamResults();
         if (storedResults.success) {
-          const examResults = storedResults.data!.filter(r => r.examId === id);
+          const examResults = storedResults.data!.filter(
+            (r) => r.examId === id
+          );
           if (examResults.length > 0) {
             // Get the most recent result for this exam
-            const latestResult = examResults.sort((a, b) => 
-              new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()
+            const latestResult = examResults.sort(
+              (a, b) =>
+                new Date(b.completedAt).getTime() -
+                new Date(a.completedAt).getTime()
             )[0];
             setResult(latestResult);
-            
+
             // Load questions for detailed review
-            const examResponse = await api.exams.fetchExamQuestions(id as string);
+            const examResponse = await api.exams.fetchExamQuestions(
+              id as string
+            );
             if (examResponse.success) {
               setQuestions(examResponse.data!.questions);
             }
@@ -76,7 +86,7 @@ export default function ExamResultScreen() {
 
   const shareResult = async () => {
     if (!result) return;
-    
+
     setIsSharing(true);
     try {
       await Share.share({
@@ -101,7 +111,7 @@ export default function ExamResultScreen() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#FFEEB4" />
+        <ActivityIndicator size="large" color="#facc15" />
       </View>
     );
   }
@@ -109,11 +119,7 @@ export default function ExamResultScreen() {
   if (!result) {
     return (
       <View style={styles.errorContainer}>
-        <ResultsActions
-          onShare={() => {}}
-          onRetry={goHome}
-          onHome={goHome}
-        />
+        <ResultsActions onShare={() => {}} onRetry={goHome} onHome={goHome} />
       </View>
     );
   }
@@ -140,20 +146,21 @@ export default function ExamResultScreen() {
 
         {/* Detailed Results */}
         <View style={styles.detailsContainer}>
-          {result.results && result.results.map((questionResult: any, index: number) => {
-            const question = questions[index];
-            return (
-            <QuestionReview
-              key={index}
-              questionResult={{
-                ...questionResult,
-                questionImage: question?.image,
-                options: question?.options || questionResult.options
-              }}
-              questionIndex={index}
-            />
-            );
-          })}
+          {result.results &&
+            result.results.map((questionResult: any, index: number) => {
+              const question = questions[index];
+              return (
+                <QuestionReview
+                  key={index}
+                  questionResult={{
+                    ...questionResult,
+                    questionImage: question?.image,
+                    options: question?.options || questionResult.options,
+                  }}
+                  questionIndex={index}
+                />
+              );
+            })}
         </View>
       </ScrollView>
 

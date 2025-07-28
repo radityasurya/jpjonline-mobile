@@ -34,23 +34,27 @@ export function ExamHeader({
       <TouchableOpacity style={styles.headerButton} onPress={onExit}>
         <X size={24} color="#333333" />
       </TouchableOpacity>
-      
+
       <View style={styles.headerCenter}>
         <View style={styles.progressContainer}>
           <Text style={styles.progressText}>
             Question {currentQuestionIndex + 1}/{totalQuestions}
           </Text>
           <View style={styles.progressBar}>
-            <View 
+            <View
               style={[
-                styles.progressFill, 
-                { width: `${((currentQuestionIndex + 1) / totalQuestions) * 100}%` }
-              ]} 
+                styles.progressFill,
+                {
+                  width: `${
+                    ((currentQuestionIndex + 1) / totalQuestions) * 100
+                  }%`,
+                },
+              ]}
             />
           </View>
         </View>
       </View>
-      
+
       <View style={styles.headerRight}>
         <ExamTimer
           mode={timerMode}
@@ -75,7 +79,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 60,
     paddingBottom: 16,
-    backgroundColor: '#FFEEB4',
+    backgroundColor: '#facc15',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,

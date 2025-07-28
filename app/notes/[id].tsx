@@ -9,7 +9,13 @@ import {
   Share,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
-import { ArrowLeft, Bookmark, BookmarkCheck, Share2, Clock } from 'lucide-react-native';
+import {
+  ArrowLeft,
+  Bookmark,
+  BookmarkCheck,
+  Share2,
+  Clock,
+} from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import api from '@/services/api';
 import { Note } from '@/types/api';
@@ -75,7 +81,7 @@ export default function NoteDetailScreen() {
     // Simple markdown-like rendering
     const lines = content.split('\n');
     const elements: JSX.Element[] = [];
-    
+
     lines.forEach((line, index) => {
       if (line.startsWith('# ')) {
         elements.push(
@@ -123,14 +129,14 @@ export default function NoteDetailScreen() {
         );
       }
     });
-    
+
     return elements;
   };
 
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#FFEEB4" />
+        <ActivityIndicator size="large" color="#facc15" />
         <Text style={styles.loadingText}>Memuatkan nota...</Text>
       </View>
     );
@@ -140,7 +146,10 @@ export default function NoteDetailScreen() {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>Nota tidak dijumpai</Text>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
           <Text style={styles.backButtonText}>Kembali</Text>
         </TouchableOpacity>
       </View>
@@ -150,17 +159,23 @@ export default function NoteDetailScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.headerButton} onPress={() => router.back()}>
+        <TouchableOpacity
+          style={styles.headerButton}
+          onPress={() => router.back()}
+        >
           <ArrowLeft size={24} color="#333333" />
         </TouchableOpacity>
-        
+
         <View style={styles.headerActions}>
           <TouchableOpacity style={styles.headerButton} onPress={shareNote}>
             <Share2 size={22} color="#333333" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.headerButton} onPress={toggleBookmark}>
+          <TouchableOpacity
+            style={styles.headerButton}
+            onPress={toggleBookmark}
+          >
             {isBookmarked ? (
-              <BookmarkCheck size={22} color="#FFEEB4" />
+              <BookmarkCheck size={22} color="#facc15" />
             ) : (
               <Bookmark size={22} color="#333333" />
             )}
@@ -176,7 +191,9 @@ export default function NoteDetailScreen() {
           <View style={styles.metaInfo}>
             <View style={styles.readTime}>
               <Clock size={14} color="#666666" />
-              <Text style={styles.readTimeText}>{note.readTime} minit bacaan</Text>
+              <Text style={styles.readTimeText}>
+                {note.readTime} minit bacaan
+              </Text>
             </View>
             <Text style={styles.dateText}>
               Dikemaskini: {formatDate(note.dateModified)}
@@ -184,9 +201,7 @@ export default function NoteDetailScreen() {
           </View>
         </View>
 
-        <View style={styles.articleContent}>
-          {renderContent(note.content)}
-        </View>
+        <View style={styles.articleContent}>{renderContent(note.content)}</View>
 
         <View style={styles.tags}>
           <Text style={styles.tagsTitle}>Tag:</Text>
@@ -250,7 +265,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 60,
     paddingBottom: 20,
-    backgroundColor: '#FFEEB4',
+    backgroundColor: '#facc15',
   },
   headerButton: {
     padding: 8,

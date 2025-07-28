@@ -11,7 +11,23 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import { User, Settings, Trophy, BookOpen, Clock, Crown, CreditCard as Edit3, Save, X, LogOut, Mail, Phone, Info, MessageCircle, ExternalLink } from 'lucide-react-native';
+import {
+  User,
+  Settings,
+  Trophy,
+  BookOpen,
+  Clock,
+  Crown,
+  CreditCard as Edit3,
+  Save,
+  X,
+  LogOut,
+  Mail,
+  Phone,
+  Info,
+  MessageCircle,
+  ExternalLink,
+} from 'lucide-react-native';
 import api from '@/services/api';
 import { AboutData, ContactRequest } from '@/types/api';
 
@@ -23,7 +39,7 @@ export default function ProfileScreen() {
     passedExams: 0,
     totalStudyTime: 0,
     bookmarkedNotes: 0,
-    streak: 0
+    streak: 0,
   });
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isAboutModalVisible, setIsAboutModalVisible] = useState(false);
@@ -31,13 +47,13 @@ export default function ProfileScreen() {
   const [editedProfile, setEditedProfile] = useState({
     name: user?.name || '',
     email: user?.email || '',
-    phone: ''
+    phone: '',
   });
   const [aboutData, setAboutData] = useState<AboutData | null>(null);
   const [contactForm, setContactForm] = useState<ContactRequest>({
     subject: '',
     message: '',
-    email: user?.email || ''
+    email: user?.email || '',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmittingContact, setIsSubmittingContact] = useState(false);
@@ -61,7 +77,7 @@ export default function ProfileScreen() {
     setEditedProfile({
       name: user?.name || '',
       email: user?.email || '',
-      phone: ''
+      phone: '',
     });
     setIsEditModalVisible(true);
   };
@@ -95,7 +111,7 @@ export default function ProfileScreen() {
     setContactForm({
       subject: '',
       message: '',
-      email: user?.email || ''
+      email: user?.email || '',
     });
     setIsContactModalVisible(true);
   };
@@ -123,14 +139,10 @@ export default function ProfileScreen() {
   };
 
   const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Logout', style: 'destructive', onPress: logout },
-      ]
-    );
+    Alert.alert('Logout', 'Are you sure you want to logout?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Logout', style: 'destructive', onPress: logout },
+    ]);
   };
 
   const formatStudyTime = (minutes: number) => {
@@ -154,15 +166,23 @@ export default function ProfileScreen() {
               {user?.subscription === 'premium' && (
                 <Crown size={14} color="#4CAF50" style={styles.premiumIcon} />
               )}
-              <Text style={[
-                styles.subscriptionText,
-                { color: user?.subscription === 'premium' ? '#4CAF50' : '#FF9800' }
-              ]}>
+              <Text
+                style={[
+                  styles.subscriptionText,
+                  {
+                    color:
+                      user?.subscription === 'premium' ? '#4CAF50' : '#FF9800',
+                  },
+                ]}
+              >
                 {user?.subscription === 'premium' ? 'PREMIUM' : 'FREE'}
               </Text>
             </View>
           </View>
-          <TouchableOpacity style={styles.editButton} onPress={handleEditProfile}>
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={handleEditProfile}
+          >
             <Edit3 size={20} color="#666666" />
           </TouchableOpacity>
         </View>
@@ -171,25 +191,27 @@ export default function ProfileScreen() {
       {/* Statistics */}
       <View style={styles.statsSection}>
         <Text style={styles.sectionTitle}>Your Progress</Text>
-        
+
         <View style={styles.statsGrid}>
           <View style={styles.statCard}>
             <Trophy size={24} color="#4CAF50" />
             <Text style={styles.statNumber}>{stats.totalExams}</Text>
             <Text style={styles.statLabel}>Tests Completed</Text>
           </View>
-          
+
           <View style={styles.statCard}>
             <Text style={styles.statNumber}>{stats.averageScore}%</Text>
             <Text style={styles.statLabel}>Average Score</Text>
           </View>
-          
+
           <View style={styles.statCard}>
             <Clock size={24} color="#2196F3" />
-            <Text style={styles.statNumber}>{formatStudyTime(stats.totalStudyTime)}</Text>
+            <Text style={styles.statNumber}>
+              {formatStudyTime(stats.totalStudyTime)}
+            </Text>
             <Text style={styles.statLabel}>Study Time</Text>
           </View>
-          
+
           <View style={styles.statCard}>
             <BookOpen size={24} color="#FF9800" />
             <Text style={styles.statNumber}>{stats.bookmarkedNotes}</Text>
@@ -207,31 +229,31 @@ export default function ProfileScreen() {
       {/* Settings */}
       <View style={styles.settingsSection}>
         <Text style={styles.sectionTitle}>Settings</Text>
-        
+
         <TouchableOpacity style={styles.settingItem}>
           <Settings size={20} color="#666666" />
           <Text style={styles.settingText}>App Preferences</Text>
           <ExternalLink size={16} color="#CCCCCC" />
         </TouchableOpacity>
-        
+
         <TouchableOpacity style={styles.settingItem}>
           <BookOpen size={20} color="#666666" />
           <Text style={styles.settingText}>Study History</Text>
           <ExternalLink size={16} color="#CCCCCC" />
         </TouchableOpacity>
-        
+
         <TouchableOpacity style={styles.settingItem} onPress={handleAboutUs}>
           <Info size={20} color="#666666" />
           <Text style={styles.settingText}>About Us</Text>
           <ExternalLink size={16} color="#CCCCCC" />
         </TouchableOpacity>
-        
+
         <TouchableOpacity style={styles.settingItem} onPress={handleContactUs}>
           <MessageCircle size={20} color="#666666" />
           <Text style={styles.settingText}>Contact Us</Text>
           <ExternalLink size={16} color="#CCCCCC" />
         </TouchableOpacity>
-        
+
         <TouchableOpacity style={styles.settingItem} onPress={handleLogout}>
           <LogOut size={20} color="#FF3B30" />
           <Text style={[styles.settingText, { color: '#FF3B30' }]}>Logout</Text>
@@ -242,7 +264,8 @@ export default function ProfileScreen() {
       <Modal
         visible={isEditModalVisible}
         animationType="slide"
-        presentationStyle="pageSheet">
+        presentationStyle="pageSheet"
+      >
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={() => setIsEditModalVisible(false)}>
@@ -264,7 +287,9 @@ export default function ProfileScreen() {
               <TextInput
                 style={styles.input}
                 value={editedProfile.name}
-                onChangeText={(text) => setEditedProfile(prev => ({ ...prev, name: text }))}
+                onChangeText={(text) =>
+                  setEditedProfile((prev) => ({ ...prev, name: text }))
+                }
                 placeholder="Enter your full name"
               />
             </View>
@@ -276,7 +301,9 @@ export default function ProfileScreen() {
                 <TextInput
                   style={styles.inputWithIconText}
                   value={editedProfile.email}
-                  onChangeText={(text) => setEditedProfile(prev => ({ ...prev, email: text }))}
+                  onChangeText={(text) =>
+                    setEditedProfile((prev) => ({ ...prev, email: text }))
+                  }
                   placeholder="Enter your email"
                   keyboardType="email-address"
                 />
@@ -290,7 +317,9 @@ export default function ProfileScreen() {
                 <TextInput
                   style={styles.inputWithIconText}
                   value={editedProfile.phone}
-                  onChangeText={(text) => setEditedProfile(prev => ({ ...prev, phone: text }))}
+                  onChangeText={(text) =>
+                    setEditedProfile((prev) => ({ ...prev, phone: text }))
+                  }
                   placeholder="Enter your phone number"
                   keyboardType="phone-pad"
                 />
@@ -304,7 +333,8 @@ export default function ProfileScreen() {
       <Modal
         visible={isAboutModalVisible}
         animationType="slide"
-        presentationStyle="pageSheet">
+        presentationStyle="pageSheet"
+      >
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={() => setIsAboutModalVisible(false)}>
@@ -325,8 +355,12 @@ export default function ProfileScreen() {
                 <Text style={styles.aboutTitle}>{aboutData.title}</Text>
                 <Text style={styles.aboutContent}>{aboutData.content}</Text>
                 <View style={styles.aboutFooter}>
-                  <Text style={styles.aboutVersion}>Version: {aboutData.version}</Text>
-                  <Text style={styles.aboutUpdated}>Last Updated: {aboutData.lastUpdated}</Text>
+                  <Text style={styles.aboutVersion}>
+                    Version: {aboutData.version}
+                  </Text>
+                  <Text style={styles.aboutUpdated}>
+                    Last Updated: {aboutData.lastUpdated}
+                  </Text>
                 </View>
               </>
             ) : null}
@@ -338,14 +372,18 @@ export default function ProfileScreen() {
       <Modal
         visible={isContactModalVisible}
         animationType="slide"
-        presentationStyle="pageSheet">
+        presentationStyle="pageSheet"
+      >
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={() => setIsContactModalVisible(false)}>
               <X size={24} color="#666666" />
             </TouchableOpacity>
             <Text style={styles.modalTitle}>Contact Us</Text>
-            <TouchableOpacity onPress={handleSubmitContact} disabled={isSubmittingContact}>
+            <TouchableOpacity
+              onPress={handleSubmitContact}
+              disabled={isSubmittingContact}
+            >
               {isSubmittingContact ? (
                 <ActivityIndicator size="small" color="#4CAF50" />
               ) : (
@@ -360,7 +398,9 @@ export default function ProfileScreen() {
               <TextInput
                 style={styles.input}
                 value={contactForm.email}
-                onChangeText={(text) => setContactForm(prev => ({ ...prev, email: text }))}
+                onChangeText={(text) =>
+                  setContactForm((prev) => ({ ...prev, email: text }))
+                }
                 placeholder="Your email address"
                 keyboardType="email-address"
                 editable={false}
@@ -372,7 +412,9 @@ export default function ProfileScreen() {
               <TextInput
                 style={styles.input}
                 value={contactForm.subject}
-                onChangeText={(text) => setContactForm(prev => ({ ...prev, subject: text }))}
+                onChangeText={(text) =>
+                  setContactForm((prev) => ({ ...prev, subject: text }))
+                }
                 placeholder="What is this about?"
               />
             </View>
@@ -382,7 +424,9 @@ export default function ProfileScreen() {
               <TextInput
                 style={[styles.input, styles.textArea]}
                 value={contactForm.message}
-                onChangeText={(text) => setContactForm(prev => ({ ...prev, message: text }))}
+                onChangeText={(text) =>
+                  setContactForm((prev) => ({ ...prev, message: text }))
+                }
                 placeholder="Tell us more about your inquiry..."
                 multiline
                 numberOfLines={6}
@@ -391,7 +435,8 @@ export default function ProfileScreen() {
             </View>
 
             <Text style={styles.contactNote}>
-              We typically respond within 24 hours. For urgent matters, please call our support line.
+              We typically respond within 24 hours. For urgent matters, please
+              call our support line.
             </Text>
           </ScrollView>
         </View>
@@ -406,7 +451,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   header: {
-    backgroundColor: '#FFEEB4',
+    backgroundColor: '#facc15',
     paddingTop: 70,
     paddingBottom: 30,
     paddingHorizontal: 20,

@@ -30,42 +30,42 @@ export default function RegisterScreen() {
 
   const validateForm = () => {
     const newErrors: any = {};
-    
+
     if (!name) {
       newErrors.name = 'Name is required';
     } else if (name.length < 2) {
       newErrors.name = 'Name must be at least 2 characters';
     }
-    
+
     if (!email) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(email)) {
       newErrors.email = 'Invalid email format';
     }
-    
+
     if (!password) {
       newErrors.password = 'Password is required';
     } else if (password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
     }
-    
+
     if (!confirmPassword) {
       newErrors.confirmPassword = 'Password confirmation is required';
     } else if (password !== confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleRegister = async () => {
     if (!validateForm()) return;
-    
+
     const success = await register(name, email, password);
     if (success) {
       Alert.alert('Success', 'Your account has been registered!', [
-        { text: 'OK', onPress: () => router.replace('/(tabs)') }
+        { text: 'OK', onPress: () => router.replace('/(tabs)') },
       ]);
     } else {
       Alert.alert('Error', 'Registration failed. Please try again.');
@@ -77,7 +77,8 @@ export default function RegisterScreen() {
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => router.back()}>
+          onPress={() => router.back()}
+        >
           <ArrowLeft size={24} color="#333333" />
         </TouchableOpacity>
         <Text style={styles.title}>Create Account</Text>
@@ -116,7 +117,10 @@ export default function RegisterScreen() {
           <Text style={styles.label}>Password</Text>
           <View style={styles.passwordContainer}>
             <TextInput
-              style={[styles.passwordInput, errors.password && styles.inputError]}
+              style={[
+                styles.passwordInput,
+                errors.password && styles.inputError,
+              ]}
               value={password}
               onChangeText={setPassword}
               placeholder="Enter your password"
@@ -126,7 +130,8 @@ export default function RegisterScreen() {
             />
             <TouchableOpacity
               style={styles.eyeButton}
-              onPress={() => setShowPassword(!showPassword)}>
+              onPress={() => setShowPassword(!showPassword)}
+            >
               {showPassword ? (
                 <EyeOff size={20} color="#666666" />
               ) : (
@@ -134,14 +139,19 @@ export default function RegisterScreen() {
               )}
             </TouchableOpacity>
           </View>
-          {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+          {errors.password && (
+            <Text style={styles.errorText}>{errors.password}</Text>
+          )}
         </View>
 
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Confirm Password</Text>
           <View style={styles.passwordContainer}>
             <TextInput
-              style={[styles.passwordInput, errors.confirmPassword && styles.inputError]}
+              style={[
+                styles.passwordInput,
+                errors.confirmPassword && styles.inputError,
+              ]}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               placeholder="Confirm your password"
@@ -151,7 +161,8 @@ export default function RegisterScreen() {
             />
             <TouchableOpacity
               style={styles.eyeButton}
-              onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+            >
               {showConfirmPassword ? (
                 <EyeOff size={20} color="#666666" />
               ) : (
@@ -167,7 +178,8 @@ export default function RegisterScreen() {
         <TouchableOpacity
           style={styles.registerButton}
           onPress={handleRegister}
-          disabled={isLoading}>
+          disabled={isLoading}
+        >
           {isLoading ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (
@@ -192,7 +204,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   header: {
-    backgroundColor: '#FFEEB4',
+    backgroundColor: '#facc15',
     paddingHorizontal: 20,
     paddingTop: 60,
     paddingBottom: 40,

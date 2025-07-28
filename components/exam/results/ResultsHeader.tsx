@@ -1,6 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Trophy, Clock, CircleCheck as CheckCircle, Circle as XCircle } from 'lucide-react-native';
+import {
+  Trophy,
+  Clock,
+  CircleCheck as CheckCircle,
+  Circle as XCircle,
+} from 'lucide-react-native';
 
 interface ResultsHeaderProps {
   examTitle: string;
@@ -44,7 +49,7 @@ export function ResultsHeader({
         </Text>
         <Trophy size={32} color={getScoreColor(score)} />
       </View>
-      
+
       <Text style={styles.examTitle}>{examTitle}</Text>
       <Text style={[styles.statusText, { color: getScoreColor(score) }]}>
         {passed ? 'PASSED' : 'FAILED'}
@@ -59,13 +64,15 @@ export function ResultsHeader({
           <Text style={styles.statNumber}>{correctAnswers}</Text>
           <Text style={styles.statLabel}>Correct</Text>
         </View>
-        
+
         <View style={styles.statItem}>
           <XCircle size={24} color="#FF3B30" />
-          <Text style={styles.statNumber}>{totalQuestions - correctAnswers}</Text>
+          <Text style={styles.statNumber}>
+            {totalQuestions - correctAnswers}
+          </Text>
           <Text style={styles.statLabel}>Incorrect</Text>
         </View>
-        
+
         <View style={styles.statItem}>
           <Clock size={24} color="#2196F3" />
           <Text style={styles.statNumber}>{timeSpent}</Text>
@@ -79,7 +86,7 @@ export function ResultsHeader({
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    backgroundColor: '#FFEEB4',
+    backgroundColor: '#facc15',
     paddingTop: 80,
     paddingBottom: 40,
     paddingHorizontal: 20,

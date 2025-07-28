@@ -32,7 +32,8 @@ export function SplashScreen() {
             opacity: fadeAnim,
             transform: [{ scale: scaleAnim }],
           },
-        ]}>
+        ]}
+      >
         <Text style={styles.logoText}>JPJ</Text>
         <Text style={styles.logoSubtext}>Online</Text>
         <Text style={styles.tagline}>Digital Learning System</Text>
@@ -44,7 +45,7 @@ export function SplashScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFEEB4',
+    backgroundColor: '#facc15',
     justifyContent: 'center',
     alignItems: 'center',
   },

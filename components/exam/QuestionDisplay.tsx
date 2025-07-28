@@ -6,26 +6,27 @@ interface QuestionDisplayProps {
   questionIndex: number;
 }
 
-export function QuestionDisplay({ question, questionIndex }: QuestionDisplayProps) {
+export function QuestionDisplay({
+  question,
+  questionIndex,
+}: QuestionDisplayProps) {
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
 
   return (
     <View style={styles.questionContainer}>
-      <Text style={styles.questionNumber}>
-        Question {questionIndex + 1}
-      </Text>
-      
+      <Text style={styles.questionNumber}>Question {questionIndex + 1}</Text>
+
       {question.image && (
         <View style={styles.imageContainer}>
           {imageLoading && (
             <View style={styles.imageLoadingContainer}>
-              <ActivityIndicator size="large" color="#FFEEB4" />
+              <ActivityIndicator size="large" color="#facc15" />
               <Text style={styles.loadingText}>Loading image...</Text>
             </View>
           )}
           {!imageError && (
-            <Image 
+            <Image
               source={{ uri: question.image }}
               style={[styles.questionImage, imageLoading && styles.hiddenImage]}
               onLoad={() => setImageLoading(false)}
@@ -43,11 +44,9 @@ export function QuestionDisplay({ question, questionIndex }: QuestionDisplayProp
           )}
         </View>
       )}
-      
+
       {question.question && question.question.trim() && (
-        <Text style={styles.questionText}>
-          {question.question}
-        </Text>
+        <Text style={styles.questionText}>{question.question}</Text>
       )}
     </View>
   );

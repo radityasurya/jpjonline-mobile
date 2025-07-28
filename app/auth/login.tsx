@@ -17,31 +17,33 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>(
+    {}
+  );
   const { login, isLoading } = useAuth();
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
-    
+
     if (!email) {
       newErrors.email = 'E-mel diperlukan';
     } else if (!/\S+@\S+\.\S+/.test(email)) {
       newErrors.email = 'Format e-mel tidak sah';
     }
-    
+
     if (!password) {
       newErrors.password = 'Kata laluan diperlukan';
     } else if (password.length < 6) {
       newErrors.password = 'Kata laluan mestilah sekurang-kurangnya 6 aksara';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleLogin = async () => {
     if (!validateForm()) return;
-    
+
     const success = await login(email, password);
     if (success) {
       router.replace('/(tabs)');
@@ -86,7 +88,10 @@ export default function LoginScreen() {
           <Text style={styles.label}>Password</Text>
           <View style={styles.passwordContainer}>
             <TextInput
-              style={[styles.passwordInput, errors.password && styles.inputError]}
+              style={[
+                styles.passwordInput,
+                errors.password && styles.inputError,
+              ]}
               value={password}
               onChangeText={setPassword}
               placeholder="Enter your password"
@@ -96,7 +101,8 @@ export default function LoginScreen() {
             />
             <TouchableOpacity
               style={styles.eyeButton}
-              onPress={() => setShowPassword(!showPassword)}>
+              onPress={() => setShowPassword(!showPassword)}
+            >
               {showPassword ? (
                 <EyeOff size={20} color="#666666" />
               ) : (
@@ -104,19 +110,23 @@ export default function LoginScreen() {
               )}
             </TouchableOpacity>
           </View>
-          {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+          {errors.password && (
+            <Text style={styles.errorText}>{errors.password}</Text>
+          )}
         </View>
 
         <TouchableOpacity
           style={styles.forgotButton}
-          onPress={() => router.push('/auth/forgot-password')}>
+          onPress={() => router.push('/auth/forgot-password')}
+        >
           <Text style={styles.forgotText}>Forgot password?</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.loginButton}
           onPress={handleLogin}
-          disabled={isLoading}>
+          disabled={isLoading}
+        >
           {isLoading ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (
@@ -129,12 +139,14 @@ export default function LoginScreen() {
           <View style={styles.demoButtons}>
             <TouchableOpacity
               style={styles.demoButton}
-              onPress={() => fillDemoCredentials('premium')}>
+              onPress={() => fillDemoCredentials('premium')}
+            >
               <Text style={styles.demoButtonText}>Premium</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.demoButton, styles.freeDemoButton]}
-              onPress={() => fillDemoCredentials('free')}>
+              onPress={() => fillDemoCredentials('free')}
+            >
               <Text style={styles.demoButtonText}>Free</Text>
             </TouchableOpacity>
           </View>
@@ -157,7 +169,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   header: {
-    backgroundColor: '#FFEEB4',
+    backgroundColor: '#facc15',
     paddingHorizontal: 20,
     paddingTop: 80,
     paddingBottom: 40,

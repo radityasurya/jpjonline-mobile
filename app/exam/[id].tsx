@@ -40,10 +40,10 @@ export default function ExamScreen() {
       'Are you sure you want to exit? Your progress will be lost.',
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Exit', 
-          style: 'destructive', 
-          onPress: () => router.back()
+        {
+          text: 'Exit',
+          style: 'destructive',
+          onPress: () => router.back(),
         },
       ]
     );
@@ -61,8 +61,12 @@ export default function ExamScreen() {
         setExam(response.data!.exam);
         setQuestions(response.data!.questions);
         setAnswers(new Array(response.data!.questions.length).fill(-1));
-        setAnswerValidation(new Array(response.data!.questions.length).fill(false));
-        setHasCheckedAnswer(new Array(response.data!.questions.length).fill(false));
+        setAnswerValidation(
+          new Array(response.data!.questions.length).fill(false)
+        );
+        setHasCheckedAnswer(
+          new Array(response.data!.questions.length).fill(false)
+        );
       }
     } catch (error) {
       console.error('Error fetching exam data:', error);
@@ -91,8 +95,9 @@ export default function ExamScreen() {
     }
 
     const currentQuestion = questions[currentQuestionIndex];
-    const isCorrect = answers[currentQuestionIndex] === currentQuestion.correctAnswer;
-    
+    const isCorrect =
+      answers[currentQuestionIndex] === currentQuestion.correctAnswer;
+
     const newValidation = [...answerValidation];
     newValidation[currentQuestionIndex] = isCorrect;
     setAnswerValidation(newValidation);
@@ -132,10 +137,10 @@ export default function ExamScreen() {
     if (isSubmitting) return;
 
     // Check if all questions are answered
-    const unansweredCount = answers.filter(answer => answer === -1).length;
-    
+    const unansweredCount = answers.filter((answer) => answer === -1).length;
+
     // Don't allow submission if no questions are answered at all
-    const answeredCount = answers.filter(answer => answer !== -1).length;
+    const answeredCount = answers.filter((answer) => answer !== -1).length;
     if (answeredCount === 0) {
       Alert.alert(
         'No Answers Selected',
@@ -144,7 +149,7 @@ export default function ExamScreen() {
       );
       return;
     }
-    
+
     if (unansweredCount > 0) {
       Alert.alert(
         'Unanswered Questions',
@@ -162,14 +167,22 @@ export default function ExamScreen() {
 
   const submitExam = async () => {
     setIsSubmitting(true);
-    
+
     try {
       // Calculate time spent (for now, use exam duration as fallback)
       const timeSpent = exam!.duration;
-      const response = await api.exams.submitExamResult(exam!.id, answers, Math.floor(timeSpent / 60));
-      
+      const response = await api.exams.submitExamResult(
+        exam!.id,
+        answers,
+        Math.floor(timeSpent / 60)
+      );
+
       if (response.success) {
-        router.replace(`/exam/result/${exam!.id}?resultData=${encodeURIComponent(JSON.stringify(response.data!))}`);
+        router.replace(
+          `/exam/result/${exam!.id}?resultData=${encodeURIComponent(
+            JSON.stringify(response.data!)
+          )}`
+        );
       }
     } catch (error) {
       console.error('Error submitting exam:', error);
@@ -182,7 +195,7 @@ export default function ExamScreen() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#FFEEB4" />
+        <ActivityIndicator size="large" color="#facc15" />
         <Text style={styles.loadingText}>Preparing exam...</Text>
       </View>
     );
@@ -217,7 +230,9 @@ export default function ExamScreen() {
         currentQuestionIndex={currentQuestionIndex}
         answers={answers}
         onQuestionSelect={handleQuestionSelect}
-        onToggleQuestionSidebar={() => setShowQuestionSidebar(!showQuestionSidebar)}
+        onToggleQuestionSidebar={() =>
+          setShowQuestionSidebar(!showQuestionSidebar)
+        }
       />
 
       <QuestionSidebar
@@ -245,14 +260,15 @@ export default function ExamScreen() {
         />
 
         {/* Explanation for Open Exams */}
-        {exam?.settings?.type === 'open' && hasCheckedAnswer[currentQuestionIndex] && (
-          <View style={styles.explanationContainer}>
-            <Text style={styles.explanationTitle}>Explanation:</Text>
-            <Text style={styles.explanationText}>
-              {currentQuestion.explanation}
-            </Text>
-          </View>
-        )}
+        {exam?.settings?.type === 'open' &&
+          hasCheckedAnswer[currentQuestionIndex] && (
+            <View style={styles.explanationContainer}>
+              <Text style={styles.explanationTitle}>Explanation:</Text>
+              <Text style={styles.explanationText}>
+                {currentQuestion.explanation}
+              </Text>
+            </View>
+          )}
       </ScrollView>
 
       <ExamNavigation

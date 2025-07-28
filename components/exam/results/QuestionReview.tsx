@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Image, ActivityIndicator } from 'react-native';
-import { CircleCheck as CheckCircle, Circle as XCircle } from 'lucide-react-native';
+import {
+  CircleCheck as CheckCircle,
+  Circle as XCircle,
+} from 'lucide-react-native';
 
 interface QuestionReviewProps {
   questionResult: {
@@ -18,10 +21,15 @@ interface QuestionReviewProps {
   questionIndex: number;
 }
 
-export function QuestionReview({ questionResult, questionIndex }: QuestionReviewProps) {
+export function QuestionReview({
+  questionResult,
+  questionIndex,
+}: QuestionReviewProps) {
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
-  const [optionImageStates, setOptionImageStates] = useState<{ [key: number]: { loading: boolean; error: boolean } }>({});
+  const [optionImageStates, setOptionImageStates] = useState<{
+    [key: number]: { loading: boolean; error: boolean };
+  }>({});
 
   const handleImageLoad = () => {
     setImageLoading(false);
@@ -33,32 +41,43 @@ export function QuestionReview({ questionResult, questionIndex }: QuestionReview
   };
 
   const handleOptionImageLoad = (index: number) => {
-    setOptionImageStates(prev => ({
+    setOptionImageStates((prev) => ({
       ...prev,
-      [index]: { ...prev[index], loading: false }
+      [index]: { ...prev[index], loading: false },
     }));
   };
 
   const handleOptionImageError = (index: number) => {
-    setOptionImageStates(prev => ({
+    setOptionImageStates((prev) => ({
       ...prev,
-      [index]: { loading: false, error: true }
+      [index]: { loading: false, error: true },
     }));
   };
 
   const renderAnswerOption = (option: any, index: number) => {
     const isUserAnswer = questionResult.userAnswer === index;
     const isCorrectAnswer = questionResult.correctAnswer === index;
-    const optionState = optionImageStates[index] || { loading: true, error: false };
+    const optionState = optionImageStates[index] || {
+      loading: true,
+      error: false,
+    };
     const hasImage = typeof option === 'object' && option.image;
-    const hasText = typeof option === 'string' || (typeof option === 'object' && option.text && option.text.trim());
+    const hasText =
+      typeof option === 'string' ||
+      (typeof option === 'object' && option.text && option.text.trim());
 
     return (
-      <View key={index} style={[
-        styles.answerOption,
-        isUserAnswer && (questionResult.isCorrect ? styles.correctUserAnswer : styles.incorrectUserAnswer),
-        isCorrectAnswer && !isUserAnswer && styles.correctAnswer,
-      ]}>
+      <View
+        key={index}
+        style={[
+          styles.answerOption,
+          isUserAnswer &&
+            (questionResult.isCorrect
+              ? styles.correctUserAnswer
+              : styles.incorrectUserAnswer),
+          isCorrectAnswer && !isUserAnswer && styles.correctAnswer,
+        ]}
+      >
         <View style={styles.answerHeader}>
           <Text style={styles.answerLetter}>
             {String.fromCharCode(65 + index)}
@@ -89,9 +108,12 @@ export function QuestionReview({ questionResult, questionIndex }: QuestionReview
               </View>
             )}
             {!optionState.error && (
-              <Image 
+              <Image
                 source={{ uri: option.image }}
-                style={[styles.optionImage, optionState.loading && styles.hiddenImage]}
+                style={[
+                  styles.optionImage,
+                  optionState.loading && styles.hiddenImage,
+                ]}
                 onLoad={() => handleOptionImageLoad(index)}
                 onError={() => handleOptionImageError(index)}
                 resizeMode="cover"
@@ -114,8 +136,8 @@ export function QuestionReview({ questionResult, questionIndex }: QuestionReview
     );
   };
 
-  const options = Array.isArray(questionResult.options) 
-    ? questionResult.options 
+  const options = Array.isArray(questionResult.options)
+    ? questionResult.options
     : questionResult.options?.choices || [];
 
   return (
@@ -133,12 +155,12 @@ export function QuestionReview({ questionResult, questionIndex }: QuestionReview
         <View style={styles.questionImageContainer}>
           {imageLoading && (
             <View style={styles.imageLoadingContainer}>
-              <ActivityIndicator size="large" color="#FFEEB4" />
+              <ActivityIndicator size="large" color="#facc15" />
               <Text style={styles.loadingText}>Loading image...</Text>
             </View>
           )}
           {!imageError && (
-            <Image 
+            <Image
               source={{ uri: questionResult.questionImage }}
               style={[styles.questionImage, imageLoading && styles.hiddenImage]}
               onLoad={handleImageLoad}
@@ -148,24 +170,30 @@ export function QuestionReview({ questionResult, questionIndex }: QuestionReview
           )}
           {imageError && (
             <View style={styles.imageErrorContainer}>
-              <Text style={styles.imageErrorText}>Failed to load question image</Text>
+              <Text style={styles.imageErrorText}>
+                Failed to load question image
+              </Text>
             </View>
           )}
         </View>
       )}
-      
+
       {questionResult.question && questionResult.question.trim() && (
         <Text style={styles.questionText}>{questionResult.question}</Text>
       )}
-      
+
       <View style={styles.answersContainer}>
-        {options.map((option: any, index: number) => renderAnswerOption(option, index))}
+        {options.map((option: any, index: number) =>
+          renderAnswerOption(option, index)
+        )}
       </View>
-      
+
       {questionResult.explanation && (
         <View style={styles.explanation}>
           <Text style={styles.explanationTitle}>Explanation:</Text>
-          <Text style={styles.explanationText}>{questionResult.explanation}</Text>
+          <Text style={styles.explanationText}>
+            {questionResult.explanation}
+          </Text>
         </View>
       )}
     </View>

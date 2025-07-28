@@ -10,7 +10,13 @@ import {
   FlatList,
   Dimensions,
 } from 'react-native';
-import { Search, Bookmark, BookmarkCheck, Clock, Crown } from 'lucide-react-native';
+import {
+  Search,
+  Bookmark,
+  BookmarkCheck,
+  Clock,
+  Crown,
+} from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import api from '@/services/api';
@@ -28,7 +34,6 @@ export default function NotesScreen() {
   const [showBookmarksOnly, setShowBookmarksOnly] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
 
   useEffect(() => {
     fetchCategories();
@@ -65,7 +70,9 @@ export default function NotesScreen() {
           const notesWithBookmarks = await Promise.all(
             response.data!.map(async (note) => ({
               ...note,
-              isBookmarked: (await api.storage.getBookmarks()).data?.includes(note.id) || false
+              isBookmarked:
+                (await api.storage.getBookmarks()).data?.includes(note.id) ||
+                false,
             }))
           );
           setAllNotes(notesWithBookmarks);
@@ -83,21 +90,22 @@ export default function NotesScreen() {
 
     // Apply bookmark filter first
     if (showBookmarksOnly) {
-      filtered = filtered.filter(note => note.isBookmarked);
+      filtered = filtered.filter((note) => note.isBookmarked);
     }
 
     // Apply category filter
     if (selectedCategory !== 'All') {
-      filtered = filtered.filter(note => note.category === selectedCategory);
+      filtered = filtered.filter((note) => note.category === selectedCategory);
     }
 
     // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(note =>
-        note.title.toLowerCase().includes(query) ||
-        note.content.toLowerCase().includes(query) ||
-        note.tags.some(tag => tag.toLowerCase().includes(query))
+      filtered = filtered.filter(
+        (note) =>
+          note.title.toLowerCase().includes(query) ||
+          note.content.toLowerCase().includes(query) ||
+          note.tags.some((tag) => tag.toLowerCase().includes(query))
       );
     }
 
@@ -109,11 +117,9 @@ export default function NotesScreen() {
       if (!response.success) return;
 
       // Update local state
-      setAllNotes(prev =>
-        prev.map(note =>
-          note.id === noteId
-            ? { ...note, isBookmarked: response.data! }
-            : note
+      setAllNotes((prev) =>
+        prev.map((note) =>
+          note.id === noteId ? { ...note, isBookmarked: response.data! } : note
         )
       );
     } catch (error) {
@@ -126,14 +132,14 @@ export default function NotesScreen() {
       // Show premium upgrade prompt
       return;
     }
-    
+
     // Add to activity history
     api.user.saveActivity({
       type: 'note_viewed',
       noteId: note.id,
-      noteTitle: note.title
+      noteTitle: note.title,
     });
-    
+
     // Navigate to note detail screen
     router.push(`/notes/${note.id}`);
   };
@@ -146,7 +152,7 @@ export default function NotesScreen() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#FFEEB4" />
+        <ActivityIndicator size="large" color="#facc15" />
         <Text style={styles.loadingText}>Loading notes...</Text>
       </View>
     );
@@ -172,8 +178,12 @@ export default function NotesScreen() {
             styles.bookmarkIconFilter,
             showBookmarksOnly && styles.activeBookmarkIconFilter,
           ]}
-          onPress={() => setShowBookmarksOnly(!showBookmarksOnly)}>
-          <BookmarkCheck size={20} color={showBookmarksOnly ? '#FFFFFF' : '#666666'} />
+          onPress={() => setShowBookmarksOnly(!showBookmarksOnly)}
+        >
+          <BookmarkCheck
+            size={20}
+            color={showBookmarksOnly ? '#FFFFFF' : '#666666'}
+          />
         </TouchableOpacity>
       </View>
 
@@ -181,7 +191,8 @@ export default function NotesScreen() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoriesScrollContent}>
+          contentContainerStyle={styles.categoriesScrollContent}
+        >
           {categories.map((category) => (
             <TouchableOpacity
               key={category}
@@ -189,12 +200,14 @@ export default function NotesScreen() {
                 styles.categoryButton,
                 selectedCategory === category && styles.selectedCategoryButton,
               ]}
-              onPress={() => setSelectedCategory(category)}>
+              onPress={() => setSelectedCategory(category)}
+            >
               <Text
                 style={[
                   styles.categoryText,
                   selectedCategory === category && styles.selectedCategoryText,
-                ]}>
+                ]}
+              >
                 {category}
               </Text>
             </TouchableOpacity>
@@ -216,10 +229,12 @@ export default function NotesScreen() {
         columnWrapperStyle={styles.row}
         keyExtractor={(item) => item.id}
         renderItem={({ item: note }) => (
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[
               styles.noteCard,
-              note.isPremium && user?.subscription !== 'premium' && styles.lockedCard
+              note.isPremium &&
+                user?.subscription !== 'premium' &&
+                styles.lockedCard,
             ]}
             onPress={() => openNote(note)}
           >
@@ -233,21 +248,25 @@ export default function NotesScreen() {
                 )}
                 <TouchableOpacity onPress={() => toggleBookmark(note.id)}>
                   {note.isBookmarked ? (
-                    <BookmarkCheck size={18} color="#FFEEB4" />
+                    <BookmarkCheck size={18} color="#facc15" />
                   ) : (
                     <Bookmark size={18} color="#CCCCCC" />
                   )}
                 </TouchableOpacity>
               </View>
             </View>
-            
-            <Text style={styles.noteTitle} numberOfLines={2}>{note.title}</Text>
+
+            <Text style={styles.noteTitle} numberOfLines={2}>
+              {note.title}
+            </Text>
             <Text style={styles.notePreview} numberOfLines={3}>
               {note.preview}
             </Text>
-            
+
             <View style={styles.noteFooter}>
-              <Text style={styles.dateText}>{formatDate(note.dateModified)}</Text>
+              <Text style={styles.dateText}>
+                {formatDate(note.dateModified)}
+              </Text>
               <View style={styles.readTime}>
                 <Clock size={12} color="#999999" />
                 <Text style={styles.readTimeText}>{note.readTime}m</Text>
@@ -259,7 +278,9 @@ export default function NotesScreen() {
           <View style={styles.emptyState}>
             <Text style={styles.emptyTitle}>No notes found</Text>
             <Text style={styles.emptyMessage}>
-              {searchQuery ? 'Try adjusting your search terms' : 'No notes available in this category'}
+              {searchQuery
+                ? 'Try adjusting your search terms'
+                : 'No notes available in this category'}
             </Text>
           </View>
         )}

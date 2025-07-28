@@ -10,7 +10,16 @@ import {
   FlatList,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import { FileText, Trophy, Clock, Crown, Play, Lock, Settings, Search } from 'lucide-react-native';
+import {
+  FileText,
+  Trophy,
+  Clock,
+  Crown,
+  Play,
+  Lock,
+  Settings,
+  Search,
+} from 'lucide-react-native';
 import { router } from 'expo-router';
 import api from '@/services/api';
 import { Exam, ExamResult } from '@/types/api';
@@ -27,7 +36,9 @@ export default function TestsScreen() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [selectedTab, setSelectedTab] = useState<'available' | 'results'>('available');
+  const [selectedTab, setSelectedTab] = useState<'available' | 'results'>(
+    'available'
+  );
 
   useEffect(() => {
     fetchCategories();
@@ -70,16 +81,17 @@ export default function TestsScreen() {
 
     // Apply category filter
     if (selectedCategory !== 'All') {
-      filtered = filtered.filter(test => test.category === selectedCategory);
+      filtered = filtered.filter((test) => test.category === selectedCategory);
     }
 
     // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(test =>
-        test.title.toLowerCase().includes(query) ||
-        test.description.toLowerCase().includes(query) ||
-        test.category.toLowerCase().includes(query)
+      filtered = filtered.filter(
+        (test) =>
+          test.title.toLowerCase().includes(query) ||
+          test.description.toLowerCase().includes(query) ||
+          test.category.toLowerCase().includes(query)
       );
     }
 
@@ -104,10 +116,14 @@ export default function TestsScreen() {
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'Easy': return '#4CAF50';
-      case 'Medium': return '#FF9800';
-      case 'Hard': return '#F44336';
-      default: return '#666666';
+      case 'Easy':
+        return '#4CAF50';
+      case 'Medium':
+        return '#FF9800';
+      case 'Hard':
+        return '#F44336';
+      default:
+        return '#666666';
     }
   };
 
@@ -121,13 +137,17 @@ export default function TestsScreen() {
   };
 
   const renderTestItem = ({ item: test }: { item: Exam }) => (
-    <TestCard test={test} onPress={() => startTest(test)} getDifficultyColor={getDifficultyColor} />
+    <TestCard
+      test={test}
+      onPress={() => startTest(test)}
+      getDifficultyColor={getDifficultyColor}
+    />
   );
 
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#FFEEB4" />
+        <ActivityIndicator size="large" color="#facc15" />
         <Text style={styles.loadingText}>Loading tests...</Text>
       </View>
     );
@@ -141,12 +161,14 @@ export default function TestsScreen() {
             styles.tabButton,
             selectedTab === 'available' && styles.activeTabButton,
           ]}
-          onPress={() => setSelectedTab('available')}>
+          onPress={() => setSelectedTab('available')}
+        >
           <Text
             style={[
               styles.tabText,
               selectedTab === 'available' && styles.activeTabText,
-            ]}>
+            ]}
+          >
             Available Tests
           </Text>
         </TouchableOpacity>
@@ -155,12 +177,14 @@ export default function TestsScreen() {
             styles.tabButton,
             selectedTab === 'results' && styles.activeTabButton,
           ]}
-          onPress={() => setSelectedTab('results')}>
+          onPress={() => setSelectedTab('results')}
+        >
           <Text
             style={[
               styles.tabText,
               selectedTab === 'results' && styles.activeTabText,
-            ]}>
+            ]}
+          >
             Results
           </Text>
         </TouchableOpacity>
@@ -184,20 +208,25 @@ export default function TestsScreen() {
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.categoriesScrollContent}>
+              contentContainerStyle={styles.categoriesScrollContent}
+            >
               {categories.map((category) => (
                 <TouchableOpacity
                   key={category}
                   style={[
                     styles.categoryButton,
-                    selectedCategory === category && styles.selectedCategoryButton,
+                    selectedCategory === category &&
+                      styles.selectedCategoryButton,
                   ]}
-                  onPress={() => setSelectedCategory(category)}>
+                  onPress={() => setSelectedCategory(category)}
+                >
                   <Text
                     style={[
                       styles.categoryText,
-                      selectedCategory === category && styles.selectedCategoryText,
-                    ]}>
+                      selectedCategory === category &&
+                        styles.selectedCategoryText,
+                    ]}
+                  >
                     {category}
                   </Text>
                 </TouchableOpacity>
@@ -226,7 +255,9 @@ export default function TestsScreen() {
                 <Trophy size={64} color="#CCCCCC" />
                 <Text style={styles.emptyTitle}>No Tests Found</Text>
                 <Text style={styles.emptyMessage}>
-                  {searchQuery ? 'Try adjusting your search terms' : 'No tests available in this category'}
+                  {searchQuery
+                    ? 'Try adjusting your search terms'
+                    : 'No tests available in this category'}
                 </Text>
               </View>
             )}
@@ -238,16 +269,31 @@ export default function TestsScreen() {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.listContainer}
             renderItem={({ item: result }) => (
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.resultCard}
-                onPress={() => router.push(`/exam/result/${result.examId}?resultData=${encodeURIComponent(JSON.stringify(result))}`)}
+                onPress={() =>
+                  router.push(
+                    `/exam/result/${
+                      result.examId
+                    }?resultData=${encodeURIComponent(JSON.stringify(result))}`
+                  )
+                }
               >
                 <View style={styles.resultHeader}>
                   <Text style={styles.resultTitle}>{result.examTitle}</Text>
-                  <View style={[
-                    styles.scoreBadge,
-                    { backgroundColor: result.score >= 80 ? '#4CAF50' : result.score >= 60 ? '#FF9800' : '#F44336' }
-                  ]}>
+                  <View
+                    style={[
+                      styles.scoreBadge,
+                      {
+                        backgroundColor:
+                          result.score >= 80
+                            ? '#4CAF50'
+                            : result.score >= 60
+                            ? '#FF9800'
+                            : '#F44336',
+                      },
+                    ]}
+                  >
                     <Text style={styles.scoreText}>{result.score}%</Text>
                   </View>
                 </View>
@@ -269,7 +315,8 @@ export default function TestsScreen() {
                 <Trophy size={64} color="#CCCCCC" />
                 <Text style={styles.emptyTitle}>No Results</Text>
                 <Text style={styles.emptyMessage}>
-                  You haven't completed any tests yet. Start your first test now!
+                  You haven't completed any tests yet. Start your first test
+                  now!
                 </Text>
               </View>
             )}
@@ -293,14 +340,12 @@ function TestCard({ test, onPress, getDifficultyColor }: any) {
           {test.isPremium && (
             <Crown size={16} color="#FF9800" style={styles.badgeIcon} />
           )}
-          <Settings 
-            size={16} 
-            color={test.settings.type === 'open' ? '#4CAF50' : '#FF9800'} 
+          <Settings
+            size={16}
+            color={test.settings.type === 'open' ? '#4CAF50' : '#FF9800'}
             style={styles.badgeIcon}
           />
-          {!test.isAccessible && (
-            <Lock size={16} color="#CCCCCC" />
-          )}
+          {!test.isAccessible && <Lock size={16} color="#CCCCCC" />}
         </View>
       </View>
 
@@ -315,7 +360,12 @@ function TestCard({ test, onPress, getDifficultyColor }: any) {
         </View>
         <View style={styles.detailItem}>
           <Trophy size={16} color={getDifficultyColor(test.difficulty)} />
-          <Text style={[styles.detailText, { color: getDifficultyColor(test.difficulty) }]}>
+          <Text
+            style={[
+              styles.detailText,
+              { color: getDifficultyColor(test.difficulty) },
+            ]}
+          >
             {test.difficulty}
           </Text>
         </View>
@@ -323,7 +373,9 @@ function TestCard({ test, onPress, getDifficultyColor }: any) {
 
       <View style={styles.testTypeIndicator}>
         <Text style={styles.testTypeText}>
-          {test.settings.type === 'open' ? 'Open Test (Immediate Feedback)' : 'Closed Test (Review at End)'}
+          {test.settings.type === 'open'
+            ? 'Open Test (Immediate Feedback)'
+            : 'Closed Test (Review at End)'}
         </Text>
       </View>
 
@@ -337,7 +389,8 @@ function TestCard({ test, onPress, getDifficultyColor }: any) {
             !test.isAccessible && styles.disabledButton,
           ]}
           onPress={onPress}
-          disabled={!test.isAccessible}>
+          disabled={!test.isAccessible}
+        >
           <Play size={16} color="#FFFFFF" />
           <Text style={styles.startButtonText}>Start</Text>
         </TouchableOpacity>

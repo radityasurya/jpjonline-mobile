@@ -28,7 +28,7 @@ export default function ForgotPasswordScreen() {
     }
 
     setIsLoading(true);
-    
+
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
@@ -42,21 +42,23 @@ export default function ForgotPasswordScreen() {
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButton}
-            onPress={() => router.back()}>
+            onPress={() => router.back()}
+          >
             <ArrowLeft size={24} color="#333333" />
           </TouchableOpacity>
         </View>
-        
+
         <View style={styles.successContainer}>
           <Mail size={64} color="#4CAF50" />
           <Text style={styles.successTitle}>Email Sent</Text>
           <Text style={styles.successMessage}>
-            A password reset link has been sent to {email}. 
-            Please check your inbox.
+            A password reset link has been sent to {email}. Please check your
+            inbox.
           </Text>
           <TouchableOpacity
             style={styles.backToLoginButton}
-            onPress={() => router.push('/auth/login')}>
+            onPress={() => router.push('/auth/login')}
+          >
             <Text style={styles.backToLoginText}>Back to Sign In</Text>
           </TouchableOpacity>
         </View>
@@ -69,7 +71,8 @@ export default function ForgotPasswordScreen() {
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => router.back()}>
+          onPress={() => router.back()}
+        >
           <ArrowLeft size={24} color="#333333" />
         </TouchableOpacity>
         <Text style={styles.title}>Forgot Password</Text>
@@ -95,7 +98,8 @@ export default function ForgotPasswordScreen() {
         <TouchableOpacity
           style={styles.resetButton}
           onPress={handleResetPassword}
-          disabled={isLoading}>
+          disabled={isLoading}
+        >
           {isLoading ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (
@@ -113,7 +117,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   header: {
-    backgroundColor: '#FFEEB4',
+    backgroundColor: '#facc15',
     paddingHorizontal: 20,
     paddingTop: 60,
     paddingBottom: 40,

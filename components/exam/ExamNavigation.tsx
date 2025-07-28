@@ -7,7 +7,7 @@ interface ExamNavigationProps {
   totalQuestions: number;
   selectedAnswer: number;
   hasCheckedAnswer: boolean;
-  isOpenExam: boolean;
+  examMode: 'OPEN' | 'CLOSED';
   isSubmitting: boolean;
   onPrevious: () => void;
   onNext: () => void;
@@ -20,7 +20,7 @@ export function ExamNavigation({
   totalQuestions,
   selectedAnswer,
   hasCheckedAnswer,
-  isOpenExam,
+  examMode,
   isSubmitting,
   onPrevious,
   onNext,
@@ -28,8 +28,9 @@ export function ExamNavigation({
   onSubmit,
 }: ExamNavigationProps) {
   const isLastQuestion = currentQuestionIndex === totalQuestions - 1;
-  const canProceed = !isOpenExam || hasCheckedAnswer;
-  const showCheckButton = isOpenExam && !hasCheckedAnswer && selectedAnswer !== -1;
+  const canProceed = examMode === 'CLOSED' || hasCheckedAnswer;
+  const showCheckButton = examMode === 'OPEN' && !hasCheckedAnswer && selectedAnswer !== -1;
+  const canMoveNext = examMode === 'CLOSED' ? selectedAnswer !== -1 : hasCheckedAnswer;
 
   return (
     <View style={styles.navigation}>
@@ -69,7 +70,7 @@ export function ExamNavigation({
               <Text style={styles.submitButtonText}>Submit</Text>
             )}
           </TouchableOpacity>
-        ) : !isLastQuestion && canProceed ? (
+        ) : !isLastQuestion && canMoveNext ? (
           <TouchableOpacity
             style={styles.navButton}
             onPress={onNext}>

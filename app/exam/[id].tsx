@@ -10,6 +10,7 @@ import {
 import { useLocalSearchParams, router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/utils/logger';
+import soundManager from '@/utils/soundManager';
 import { getExamBySlug, submitExamResults, updateStats } from '@/services';
 import { activityService, ACTIVITY_TYPES } from '@/services';
 
@@ -56,6 +57,8 @@ export default function ExamScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showQuestionSidebar, setShowQuestionSidebar] = useState(false);
   const [isTimerActive, setIsTimerActive] = useState(true);
+  const [examMode, setExamMode] = useState<'OPEN' | 'CLOSED'>('OPEN');
+  const [isAnswerLocked, setIsAnswerLocked] = useState<boolean[]>([]);
 
   const handleExitExam = () => {
     logger.userAction('Exam exit requested');
@@ -69,7 +72,7 @@ export default function ExamScreen() {
           style: 'destructive',
           onPress: () => {
             logger.userAction('Exam exited', { examSlug });
-            router.back();
+            router.replace('/(tabs)/tests');
           },
         },
       ]
@@ -92,11 +95,19 @@ export default function ExamScreen() {
       });
       setExam(examData);
       setQuestions(examData.questions);
+      
+      // Set exam mode based on exam settings or default to OPEN
+      const mode = examData.settings?.type === 'closed' ? 'CLOSED' : 'OPEN';
+      setExamMode(mode);
+      
       setAnswers(new Array(examData.questions.length).fill(-1));
       setAnswerValidation(
         new Array(examData.questions.length).fill(false)
       );
       setHasCheckedAnswer(
+        new Array(examData.questions.length).fill(false)
+      );
+      setIsAnswerLocked(
         new Array(examData.questions.length).fill(false)
       );
       
@@ -119,6 +130,12 @@ export default function ExamScreen() {
   };
 
   const handleAnswerSelect = (answerIndex: number) => {
+    // In CLOSED mode, lock answer after selection
+    if (examMode === 'CLOSED' && isAnswerLocked[currentQuestionIndex]) {
+      logger.debug('ExamScreen', 'Answer locked in CLOSED mode');
+      return;
+    }
+    
     logger.debug('ExamScreen', 'Answer selected', { 
       questionIndex: currentQuestionIndex, 
       answerIndex 
@@ -127,10 +144,17 @@ export default function ExamScreen() {
     newAnswers[currentQuestionIndex] = answerIndex;
     setAnswers(newAnswers);
 
-    // Reset validation for this question when answer changes
-    const newHasChecked = [...hasCheckedAnswer];
-    newHasChecked[currentQuestionIndex] = false;
-    setHasCheckedAnswer(newHasChecked);
+    // In CLOSED mode, lock the answer immediately
+    if (examMode === 'CLOSED') {
+      const newLocked = [...isAnswerLocked];
+      newLocked[currentQuestionIndex] = true;
+      setIsAnswerLocked(newLocked);
+    } else {
+      // In OPEN mode, reset validation when answer changes
+      const newHasChecked = [...hasCheckedAnswer];
+      newHasChecked[currentQuestionIndex] = false;
+      setHasCheckedAnswer(newHasChecked);
+    }
   };
 
   const handleCheckAnswer = () => {
@@ -157,6 +181,13 @@ export default function ExamScreen() {
     const newHasChecked = [...hasCheckedAnswer];
     newHasChecked[currentQuestionIndex] = true;
     setHasCheckedAnswer(newHasChecked);
+    
+    // Play sound feedback
+    if (isCorrect) {
+      soundManager.playCorrect();
+    } else {
+      soundManager.playIncorrect();
+    }
   };
 
   const handleNextQuestion = () => {
@@ -176,13 +207,32 @@ export default function ExamScreen() {
   };
 
   const handleTimeExpired = () => {
-    setIsTimerActive(false);
-    handleSubmitExam();
+    logger.warn('ExamScreen', 'Exam time expired, auto-submitting');
+    Alert.alert(
+      'Time Expired',
+      'Your exam time has expired. The exam will be submitted automatically.',
+      [{ text: 'OK', onPress: () => {
+        setIsTimerActive(false);
+        handleSubmitExam();
+      }}]
+    );
   };
 
   const handleQuestionTimeExpired = () => {
-    // Auto-advance to next question when time expires
-    handleNextQuestion();
+    logger.debug('ExamScreen', 'Question time expired');
+    soundManager.playWarning();
+    
+    if (examMode === 'OPEN') {
+      // In OPEN mode, force check answer if selected, then move to next
+      if (answers[currentQuestionIndex] !== -1 && !hasCheckedAnswer[currentQuestionIndex]) {
+        handleCheckAnswer();
+      }
+    }
+    
+    // Auto-advance to next question
+    if (currentQuestionIndex < questions.length - 1) {
+      handleNextQuestion();
+    }
   };
 
   const handleSubmitExam = async () => {
@@ -359,11 +409,12 @@ export default function ExamScreen() {
           onAnswerSelect={handleAnswerSelect}
           hasValidation={hasCheckedAnswer[currentQuestionIndex]}
           isCorrect={answerValidation[currentQuestionIndex]}
-          isOpenExam={exam?.settings?.type === 'open'}
+          examMode={examMode}
+          disabled={examMode === 'CLOSED' && isAnswerLocked[currentQuestionIndex]}
         />
 
         {/* Explanation for Open Exams */}
-        {hasCheckedAnswer[currentQuestionIndex] && 
+        {examMode === 'OPEN' && hasCheckedAnswer[currentQuestionIndex] && 
           currentQuestion.explanation && (
             <View style={styles.explanationContainer}>
               <Text style={styles.explanationTitle}>Explanation:</Text>
@@ -379,7 +430,7 @@ export default function ExamScreen() {
         totalQuestions={questions.length}
         selectedAnswer={answers[currentQuestionIndex]}
         hasCheckedAnswer={hasCheckedAnswer[currentQuestionIndex]}
-        isOpenExam={true} // Always allow checking answers in this implementation
+        examMode={examMode}
         isSubmitting={isSubmitting}
         onPrevious={handlePreviousQuestion}
         onNext={handleNextQuestion}
@@ -439,5 +490,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#1976D2',
     lineHeight: 20,
+  },
+  examModeIndicator: {
+    backgroundColor: '#E3F2FD',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    alignSelf: 'flex-start',
+    marginBottom: 16,
+  },
+  examModeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#1976D2',
   },
 });

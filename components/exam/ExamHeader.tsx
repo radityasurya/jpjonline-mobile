@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { X } from 'lucide-react-native';
-import { router } from 'expo-router';
 import { ExamTimer } from './ExamTimer';
 
 interface ExamHeaderProps {
@@ -31,7 +30,11 @@ export function ExamHeader({
 }: ExamHeaderProps) {
   return (
     <View style={styles.header}>
-      <TouchableOpacity style={styles.headerButton} onPress={onExit}>
+      <TouchableOpacity 
+        style={styles.headerButton} 
+        onPress={onExit}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      >
         <X size={24} color="#333333" />
       </TouchableOpacity>
 

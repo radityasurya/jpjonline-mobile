@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Alert } from 'react-native';
 import { Clock, TriangleAlert as AlertTriangle } from 'lucide-react-native';
+import soundManager from '@/utils/soundManager';
 
 interface ExamTimerProps {
   mode: 'total' | 'per-question';
@@ -58,6 +59,7 @@ export function ExamTimer({
           // Warning at 5 minutes (300 seconds)
           if (prev === 300 && !hasWarned) {
             setHasWarned(true);
+            soundManager.playWarning();
             Alert.alert(
               'Time Warning',
               '5 minutes remaining!',
@@ -80,6 +82,7 @@ export function ExamTimer({
           // Warning at 10 seconds
           if (prev === 10 && !hasWarned) {
             setHasWarned(true);
+            soundManager.playWarning();
             Alert.alert(
               'Time Warning',
               '10 seconds remaining for this question!',

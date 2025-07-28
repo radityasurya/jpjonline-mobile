@@ -7,7 +7,8 @@ interface AnswerOptionsProps {
   onAnswerSelect: (index: number) => void;
   hasValidation: boolean;
   isCorrect: boolean;
-  isOpenExam: boolean;
+  examMode: 'OPEN' | 'CLOSED';
+  disabled?: boolean;
 }
 
 export function AnswerOptions({
@@ -16,7 +17,8 @@ export function AnswerOptions({
   onAnswerSelect,
   hasValidation,
   isCorrect,
-  isOpenExam,
+  examMode,
+  disabled = false,
 }: AnswerOptionsProps) {
   const [imageLoadingStates, setImageLoadingStates] = useState<{ [key: number]: boolean }>({});
   const [imageErrorStates, setImageErrorStates] = useState<{ [key: number]: boolean }>({});
@@ -33,7 +35,7 @@ export function AnswerOptions({
   const getAnswerOptionStyle = (optionIndex: number) => {
     const isSelected = selectedAnswer === optionIndex;
     
-    if (isOpenExam && hasValidation) {
+    if (examMode === 'OPEN' && hasValidation) {
       if (isSelected) {
         return {
           backgroundColor: isCorrect ? '#E8F5E8' : '#FFEBEE',
@@ -80,8 +82,10 @@ export function AnswerOptions({
               styles.optionButton,
               isImageOnlyOptions && styles.imageOnlyOptionButton,
               getAnswerOptionStyle(index),
+              disabled && styles.disabledOption,
             ]}
-            onPress={() => onAnswerSelect(index)}>
+            onPress={() => !disabled && onAnswerSelect(index)}
+            disabled={disabled}>
             
             {!isImageOnlyOptions && (
               <View style={[
@@ -265,5 +269,8 @@ const styles = StyleSheet.create({
   },
   hiddenText: {
     display: 'none',
+  },
+  disabledOption: {
+    opacity: 0.6,
   },
 });

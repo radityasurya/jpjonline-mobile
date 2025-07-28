@@ -10,9 +10,30 @@ import {
 import { useLocalSearchParams, router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/utils/logger';
-import api from '@/services/api';
-import { Exam, Question, ExamResult } from '@/types/api';
+import { getExamBySlug, submitExamResults } from '@/services';
 
+// Types for the new API structure
+interface ApiQuestion {
+  id: string;
+  text: string;
+  options: string[];
+  answerIndex: number;
+  explanation: string | null;
+  imageUrl: string | null;
+  order: number;
+}
+
+interface ApiExam {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  category: {
+    id: string;
+    name: string;
+  };
+  questions: ApiQuestion[];
+}
 // Import components
 import { ExamHeader } from '@/components/exam/ExamHeader';
 import { ExamProgress } from '@/components/exam/ExamProgress';
@@ -22,10 +43,10 @@ import { ExamNavigation } from '@/components/exam/ExamNavigation';
 import { QuestionSidebar } from '@/components/exam/QuestionSidebar';
 
 export default function ExamScreen() {
-  const { id } = useLocalSearchParams();
+  const { id: examSlug } = useLocalSearchParams();
   const { user } = useAuth();
-  const [exam, setExam] = useState<Exam | null>(null);
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [exam, setExam] = useState<ApiExam | null>(null);
+  const [questions, setQuestions] = useState<ApiQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
   const [answerValidation, setAnswerValidation] = useState<boolean[]>([]);
@@ -46,7 +67,7 @@ export default function ExamScreen() {
           text: 'Exit',
           style: 'destructive',
           onPress: () => {
-            logger.userAction('Exam exited', { examId: id });
+            logger.userAction('Exam exited', { examSlug });
             router.back();
           },
         },
@@ -56,29 +77,27 @@ export default function ExamScreen() {
 
   useEffect(() => {
     fetchExamData();
-  }, [id]);
+  }, [examSlug]);
 
   const fetchExamData = async () => {
     setIsLoading(true);
-    logger.info('ExamScreen', 'Loading exam data', { examId: id });
+    logger.info('ExamScreen', 'Loading exam data', { examSlug });
     try {
-      const response = await api.exams.fetchExamQuestions(id as string);
-      if (response.success) {
-        logger.info('ExamScreen', 'Exam data loaded successfully', {
-          examId: id,
-          questionsCount: response.data!.questions.length,
-          examTitle: response.data!.exam.title
-        });
-        setExam(response.data!.exam);
-        setQuestions(response.data!.questions);
-        setAnswers(new Array(response.data!.questions.length).fill(-1));
-        setAnswerValidation(
-          new Array(response.data!.questions.length).fill(false)
-        );
-        setHasCheckedAnswer(
-          new Array(response.data!.questions.length).fill(false)
-        );
-      }
+      const examData = await getExamBySlug(examSlug as string, user?.token || 'mock-token');
+      logger.info('ExamScreen', 'Exam data loaded successfully', {
+        examSlug,
+        questionsCount: examData.questions.length,
+        examTitle: examData.title
+      });
+      setExam(examData);
+      setQuestions(examData.questions);
+      setAnswers(new Array(examData.questions.length).fill(-1));
+      setAnswerValidation(
+        new Array(examData.questions.length).fill(false)
+      );
+      setHasCheckedAnswer(
+        new Array(examData.questions.length).fill(false)
+      );
     } catch (error) {
       logger.error('ExamScreen', 'Failed to load exam data', error);
       Alert.alert('Error', 'Failed to load exam. Please try again.');
@@ -113,12 +132,12 @@ export default function ExamScreen() {
     logger.userAction('Answer checked', { 
       questionIndex: currentQuestionIndex,
       selectedAnswer: answers[currentQuestionIndex],
-      correctAnswer: questions[currentQuestionIndex].correctAnswer
+      correctAnswer: questions[currentQuestionIndex].answerIndex
     });
     
     const currentQuestion = questions[currentQuestionIndex];
     const isCorrect =
-      answers[currentQuestionIndex] === currentQuestion.correctAnswer;
+      answers[currentQuestionIndex] === currentQuestion.answerIndex;
 
     const newValidation = [...answerValidation];
     newValidation[currentQuestionIndex] = isCorrect;
@@ -159,7 +178,7 @@ export default function ExamScreen() {
     if (isSubmitting) return;
 
     logger.info('ExamScreen', 'Exam submission initiated', {
-      examId: exam!.id,
+      examSlug: exam!.slug,
       answeredQuestions: answers.filter(answer => answer !== -1).length,
       totalQuestions: questions.length
     });
@@ -197,26 +216,29 @@ export default function ExamScreen() {
 
   const submitExam = async () => {
     setIsSubmitting(true);
-    logger.info('ExamScreen', 'Submitting exam answers', { examId: exam!.id });
+    logger.info('ExamScreen', 'Submitting exam answers', { examSlug: exam!.slug });
 
     try {
       // Calculate time spent (for now, use exam duration as fallback)
-      const timeSpent = exam!.duration;
-      const response = await api.exams.submitExamResult(
-        exam!.id,
-        answers,
-        Math.floor(timeSpent / 60)
+      const timeSpent = 30; // Mock time spent in minutes
+      const response = await submitExamResults(
+        exam!.slug,
+        {
+          answers: answers,
+          timeSpent: timeSpent
+        },
+        user?.token || 'mock-token'
       );
 
       if (response.success) {
         logger.info('ExamScreen', 'Exam submitted successfully', {
-          examId: exam!.id,
-          score: response.data!.score,
-          passed: response.data!.passed
+          examSlug: exam!.slug,
+          score: response.result.score,
+          passed: response.result.passed
         });
         router.replace(
-          `/exam/result/${exam!.id}?resultData=${encodeURIComponent(
-            JSON.stringify(response.data!)
+          `/exam/result/${exam!.slug}?resultData=${encodeURIComponent(
+            JSON.stringify(response.result)
           )}`
         );
       }
@@ -254,7 +276,7 @@ export default function ExamScreen() {
         currentQuestionIndex={currentQuestionIndex}
         totalQuestions={questions.length}
         timerMode="total"
-        totalDuration={exam.duration * 60}
+        totalDuration={30 * 60} // 30 minutes default
         onTimeExpired={handleTimeExpired}
         onQuestionTimeExpired={handleQuestionTimeExpired}
         isTimerActive={isTimerActive}
@@ -296,8 +318,8 @@ export default function ExamScreen() {
         />
 
         {/* Explanation for Open Exams */}
-        {exam?.settings?.type === 'open' &&
-          hasCheckedAnswer[currentQuestionIndex] && (
+        {hasCheckedAnswer[currentQuestionIndex] && 
+          currentQuestion.explanation && (
             <View style={styles.explanationContainer}>
               <Text style={styles.explanationTitle}>Explanation:</Text>
               <Text style={styles.explanationText}>
@@ -312,7 +334,7 @@ export default function ExamScreen() {
         totalQuestions={questions.length}
         selectedAnswer={answers[currentQuestionIndex]}
         hasCheckedAnswer={hasCheckedAnswer[currentQuestionIndex]}
-        isOpenExam={exam?.settings?.type === 'open'}
+        isOpenExam={true} // Always allow checking answers in this implementation
         isSubmitting={isSubmitting}
         onPrevious={handlePreviousQuestion}
         onNext={handleNextQuestion}

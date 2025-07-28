@@ -60,7 +60,7 @@ export function AnswerOptions({
 
   const options = typeof question.options === 'string' || Array.isArray(question.options) 
     ? question.options 
-    : question.options.choices;
+    : question.options?.choices || [];
 
   const isImageOnlyOptions = typeof question.options === 'object' && 
     question.options.type === 'image' && 

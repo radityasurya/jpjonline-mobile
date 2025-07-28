@@ -22,128 +22,148 @@ import {
   Search,
 } from 'lucide-react-native';
 import { router } from 'expo-router';
-import api from '@/services/api';
-import { Exam, ExamResult } from '@/types/api';
+import { getUserExams, getUserExamHistory } from '@/services';
+
+// Types for the new API structure
+interface ApiExam {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  questionCount: number;
+  premium: boolean;
+  accessible: boolean;
+}
+
+interface ExamCategory {
+  id: string;
+  name: string;
+  accessible: boolean;
+  exams: ApiExam[];
+}
+
+interface ExamsApiResponse {
+  categories: ExamCategory[];
+}
+
+interface ExamResult {
+  id: string;
+  examSlug: string;
+  examTitle: string;
+  score: number;
+  passed: boolean;
+  completedAt: string;
+  timeSpent: number;
+}
 
 export default function TestsScreen() {
   const { user } = useAuth();
-  const [allTests, setAllTests] = useState<Exam[]>([]);
-  const [filteredTests, setFilteredTests] = useState<Exam[]>([]);
+  const [examsData, setExamsData] = useState<ExamsApiResponse | null>(null);
+  const [filteredExams, setFilteredExams] = useState<ApiExam[]>([]);
   const [testResults, setTestResults] = useState<ExamResult[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
+  const [categories, setCategories] = useState<ExamCategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
   const [selectedTab, setSelectedTab] = useState<'available' | 'results'>(
     'available'
   );
 
   useEffect(() => {
-    fetchCategories();
-    fetchAllTests();
+    fetchAllExams();
     fetchTestResults();
   }, []);
 
   useEffect(() => {
     applyFilters();
-  }, [searchQuery, selectedCategory, allTests]);
+  }, [searchQuery, selectedCategory, examsData]);
 
-  const fetchCategories = async () => {
-    try {
-      const response = await api.exams.fetchCategories();
-      if (response.success) {
-        setCategories(response.data!);
-      }
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    }
-  };
-
-  const fetchAllTests = async () => {
+  const fetchAllExams = async () => {
     setIsLoading(true);
-    logger.debug('TestsScreen', 'Fetching available tests');
+    logger.debug('TestsScreen', 'Fetching available exams');
     try {
-      const response = await api.exams.fetchExams(user?.subscription);
-      if (response.success) {
-        logger.info('TestsScreen', 'Tests loaded successfully', { 
-          count: response.data!.length,
-          userTier: user?.subscription 
-        });
-        setAllTests(response.data!);
-        setHasMore(response.data!.length > 10);
-      } else {
-        logger.warn('TestsScreen', 'Failed to load tests', response.error);
-      }
+      const response = await getUserExams(user?.token || 'mock-token');
+      logger.info('TestsScreen', 'Exams loaded successfully', { 
+        categoriesCount: response.categories.length,
+        userTier: user?.subscription 
+      });
+      setExamsData(response);
+      setCategories([{ id: 'all', name: 'All', accessible: true, exams: [] }, ...response.categories]);
     } catch (error) {
-      logger.error('TestsScreen', 'Error fetching tests', error);
+      logger.error('TestsScreen', 'Error fetching exams', error);
     } finally {
       setIsLoading(false);
     }
   };
 
   const applyFilters = () => {
-    let filtered = [...allTests];
+    if (!examsData) {
+      setFilteredExams([]);
+      return;
+    }
+
+    // Flatten all exams from all categories
+    let allExams: ApiExam[] = [];
+    examsData.categories.forEach(category => {
+      allExams = [...allExams, ...category.exams];
+    });
+
+    let filtered = [...allExams];
 
     // Apply category filter
     if (selectedCategory !== 'All') {
-      filtered = filtered.filter((test) => test.category === selectedCategory);
+      const selectedCategoryData = categories.find(cat => cat.name === selectedCategory);
+      if (selectedCategoryData) {
+        filtered = selectedCategoryData.exams;
+      }
     }
 
     // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
-        (test) =>
-          test.title.toLowerCase().includes(query) ||
-          test.description.toLowerCase().includes(query) ||
-          test.category.toLowerCase().includes(query)
+        (exam) =>
+          exam.title.toLowerCase().includes(query) ||
+          (exam.description && exam.description.toLowerCase().includes(query))
       );
     }
 
-    setFilteredTests(filtered);
-    setPage(1);
+    setFilteredExams(filtered);
   };
 
   const fetchTestResults = async () => {
-    logger.debug('TestsScreen', 'Fetching test results');
+    logger.debug('TestsScreen', 'Fetching exam results');
     try {
-      const response = await api.exams.getExamResults();
-      if (response.success) {
-        logger.debug('TestsScreen', 'Test results loaded', { count: response.data!.length });
-        setTestResults(response.data!);
-      } else {
-        logger.warn('TestsScreen', 'Failed to load test results', response.error);
-      }
+      const response = await getUserExamHistory(user?.token || 'mock-token');
+      logger.debug('TestsScreen', 'Exam results loaded', { count: response.results.length });
+      setTestResults(response.results);
     } catch (error) {
-      logger.error('TestsScreen', 'Error fetching test results', error);
+      logger.error('TestsScreen', 'Error fetching exam results', error);
     }
   };
 
-  const startTest = (test: Exam) => {
-    logger.userAction('Test started', { 
-      testId: test.id, 
-      testTitle: test.title,
-      difficulty: test.difficulty,
-      isPremium: test.isPremium 
+  const startExam = (exam: ApiExam) => {
+    if (!exam.accessible) {
+      logger.warn('TestsScreen', 'Attempted to start inaccessible exam', { examSlug: exam.slug });
+      return;
+    }
+
+    logger.userAction('Exam started', { 
+      examId: exam.id, 
+      examSlug: exam.slug,
+      examTitle: exam.title,
+      isPremium: exam.premium 
     });
-    logger.navigation('Exam', { examId: test.id });
-    router.push(`/exam/${test.id}`);
+    logger.navigation('Exam', { examSlug: exam.slug });
+    router.push(`/exam/${exam.slug}`);
   };
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'Easy':
-        return '#4CAF50';
-      case 'Medium':
-        return '#FF9800';
-      case 'Hard':
-        return '#F44336';
-      default:
-        return '#666666';
-    }
+  const getExamTypeColor = (premium: boolean) => {
+    return premium ? '#FF9800' : '#4CAF50';
+  };
+
+  const getExamTypeText = (premium: boolean) => {
+    return premium ? 'Premium' : 'Free';
   };
 
   const formatDate = (dateString: string) => {
@@ -155,11 +175,12 @@ export default function TestsScreen() {
     });
   };
 
-  const renderTestItem = ({ item: test }: { item: Exam }) => (
-    <TestCard
-      test={test}
-      onPress={() => startTest(test)}
-      getDifficultyColor={getDifficultyColor}
+  const renderExamItem = ({ item: exam }: { item: ApiExam }) => (
+    <ExamCard
+      exam={exam}
+      onPress={() => startExam(exam)}
+      getExamTypeColor={getExamTypeColor}
+      getExamTypeText={getExamTypeText}
     />
   );
 
@@ -167,7 +188,7 @@ export default function TestsScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#facc15" />
-        <Text style={styles.loadingText}>Loading tests...</Text>
+        <Text style={styles.loadingText}>Loading exams...</Text>
       </View>
     );
   }
@@ -188,7 +209,7 @@ export default function TestsScreen() {
               selectedTab === 'available' && styles.activeTabText,
             ]}
           >
-            Available Tests
+            Available Exams
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -231,22 +252,26 @@ export default function TestsScreen() {
             >
               {categories.map((category) => (
                 <TouchableOpacity
-                  key={category}
+                  key={category.id}
                   style={[
                     styles.categoryButton,
-                    selectedCategory === category &&
+                    selectedCategory === category.name &&
                       styles.selectedCategoryButton,
+                    !category.accessible && styles.disabledCategoryButton,
                   ]}
-                  onPress={() => setSelectedCategory(category)}
+                  onPress={() => setSelectedCategory(category.name)}
+                  disabled={!category.accessible}
                 >
                   <Text
                     style={[
                       styles.categoryText,
-                      selectedCategory === category &&
+                      selectedCategory === category.name &&
                         styles.selectedCategoryText,
+                      !category.accessible && styles.disabledCategoryText,
                     ]}
                   >
-                    {category}
+                    {category.name}
+                    {!category.accessible && ' 🔒'}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -264,19 +289,19 @@ export default function TestsScreen() {
       <View style={styles.content}>
         {selectedTab === 'available' ? (
           <FlatList
-            data={filteredTests}
-            renderItem={renderTestItem}
+            data={filteredExams}
+            renderItem={renderExamItem}
             keyExtractor={(item) => item.id}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.listContainer}
             ListEmptyComponent={() => (
               <View style={styles.emptyState}>
                 <Trophy size={64} color="#CCCCCC" />
-                <Text style={styles.emptyTitle}>No Tests Found</Text>
+                <Text style={styles.emptyTitle}>No Exams Found</Text>
                 <Text style={styles.emptyMessage}>
                   {searchQuery
                     ? 'Try adjusting your search terms'
-                    : 'No tests available in this category'}
+                    : 'No exams available in this category'}
                 </Text>
               </View>
             )}
@@ -292,9 +317,7 @@ export default function TestsScreen() {
                 style={styles.resultCard}
                 onPress={() =>
                   router.push(
-                    `/exam/result/${
-                      result.examId
-                    }?resultData=${encodeURIComponent(JSON.stringify(result))}`
+                    `/exam/result/${result.examSlug}?resultData=${encodeURIComponent(JSON.stringify(result))}`
                   )
                 }
               >
@@ -320,11 +343,12 @@ export default function TestsScreen() {
                   Completed on {formatDate(result.completedAt)}
                 </Text>
                 <View style={styles.resultStats}>
-                  <Text style={styles.resultStat}>
-                    {result.correctAnswers} / {result.totalQuestions} correct
-                  </Text>
+                  <Text style={styles.resultStat}>Score: {result.score}%</Text>
                   <Text style={styles.resultStat}>
                     Status: {result.passed ? 'Passed' : 'Failed'}
+                  </Text>
+                  <Text style={styles.resultStat}>
+                    Time: {result.timeSpent} minutes
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -334,7 +358,7 @@ export default function TestsScreen() {
                 <Trophy size={64} color="#CCCCCC" />
                 <Text style={styles.emptyTitle}>No Results</Text>
                 <Text style={styles.emptyMessage}>
-                  You haven't completed any tests yet. Start your first test
+                  You haven't completed any exams yet. Start your first exam
                   now!
                 </Text>
               </View>
@@ -346,69 +370,62 @@ export default function TestsScreen() {
   );
 }
 
-// Separate TestCard component for better performance
-function TestCard({ test, onPress, getDifficultyColor }: any) {
+// Separate ExamCard component for better performance
+function ExamCard({ exam, onPress, getExamTypeColor, getExamTypeText }: any) {
   return (
-    <View style={styles.testCard}>
-      <View style={styles.testHeader}>
-        <View style={styles.testInfo}>
-          <Text style={styles.testTitle}>{test.title}</Text>
-          <Text style={styles.testDescription}>{test.description}</Text>
+    <View style={[styles.examCard, !exam.accessible && styles.disabledCard]}>
+      <View style={styles.examHeader}>
+        <View style={styles.examInfo}>
+          <Text style={styles.examTitle}>{exam.title}</Text>
+          {exam.description && (
+            <Text style={styles.examDescription}>{exam.description}</Text>
+          )}
         </View>
-        <View style={styles.testBadges}>
-          {test.isPremium && (
+        <View style={styles.examBadges}>
+          {exam.premium && (
             <Crown size={16} color="#FF9800" style={styles.badgeIcon} />
           )}
-          <Settings
-            size={16}
-            color={test.settings.type === 'open' ? '#4CAF50' : '#FF9800'}
-            style={styles.badgeIcon}
-          />
-          {!test.isAccessible && <Lock size={16} color="#CCCCCC" />}
+          {!exam.accessible && <Lock size={16} color="#CCCCCC" />}
         </View>
       </View>
 
-      <View style={styles.testDetails}>
+      <View style={styles.examDetails}>
         <View style={styles.detailItem}>
           <FileText size={16} color="#666666" />
-          <Text style={styles.detailText}>{test.questions} questions</Text>
+          <Text style={styles.detailText}>{exam.questionCount} questions</Text>
         </View>
         <View style={styles.detailItem}>
-          <Clock size={16} color="#666666" />
-          <Text style={styles.detailText}>{test.duration} min</Text>
-        </View>
-        <View style={styles.detailItem}>
-          <Trophy size={16} color={getDifficultyColor(test.difficulty)} />
+          <Trophy size={16} color={getExamTypeColor(exam.premium)} />
           <Text
             style={[
               styles.detailText,
-              { color: getDifficultyColor(test.difficulty) },
+              { color: getExamTypeColor(exam.premium) },
             ]}
           >
-            {test.difficulty}
+            {getExamTypeText(exam.premium)}
           </Text>
         </View>
       </View>
 
-      <View style={styles.testTypeIndicator}>
-        <Text style={styles.testTypeText}>
-          {test.settings.type === 'open'
-            ? 'Open Test (Immediate Feedback)'
-            : 'Closed Test (Review at End)'}
+      <View style={styles.examTypeIndicator}>
+        <Text style={styles.examTypeText}>
+          {exam.premium ? 'Premium Exam - Advanced Features' : 'Free Practice Exam'}
         </Text>
       </View>
 
-      <View style={styles.testFooter}>
+      <View style={styles.examFooter}>
         <View style={styles.categoryBadge}>
-          <Text style={styles.categoryBadgeText}>{test.category}</Text>
+          <Text style={styles.categoryBadgeText}>
+            {exam.premium ? 'Simulasi' : 'Latihan'}
+          </Text>
         </View>
         <TouchableOpacity
           style={[
             styles.startButton,
-            !test.isAccessible && styles.disabledButton,
+            !exam.accessible && styles.disabledButton,
           ]}
           onPress={onPress}
-          disabled={!test.isAccessible}
+          disabled={!exam.accessible}
         >
           <Play size={16} color="#FFFFFF" />
           <Text style={styles.startButtonText}>Start</Text>
@@ -526,18 +543,6 @@ const styles = StyleSheet.create({
     color: '#999999',
     fontWeight: 'bold',
   },
-  selectedCategoryButton: {
-    backgroundColor: '#333333',
-  },
-  categoryText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#666666',
-    textAlign: 'center',
-  },
-  selectedCategoryText: {
-    color: '#FFFFFF',
-  },
   categoryButton: {
     backgroundColor: '#F8F9FA',
     paddingHorizontal: 16,
@@ -548,6 +553,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  selectedCategoryButton: {
+    backgroundColor: '#333333',
+  },
+  disabledCategoryButton: {
+    backgroundColor: '#F0F0F0',
+    opacity: 0.6,
+  },
+  categoryText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#666666',
+    textAlign: 'center',
+  },
+  selectedCategoryText: {
+    color: '#FFFFFF',
+  },
+  disabledCategoryText: {
+    color: '#CCCCCC',
+  },
   content: {
     flex: 1,
   },
@@ -555,7 +579,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 20,
   },
-  testCard: {
+  examCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
@@ -566,37 +590,41 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  testHeader: {
+  disabledCard: {
+    opacity: 0.6,
+  },
+  examHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 12,
   },
-  testInfo: {
+  examInfo: {
     flex: 1,
     marginRight: 12,
   },
-  testBadges: {
+  examBadges: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   badgeIcon: {
     marginLeft: 4,
   },
-  testTitle: {
+  examTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333333',
     marginBottom: 4,
   },
-  testDescription: {
+  examDescription: {
     fontSize: 14,
     color: '#666666',
     lineHeight: 20,
   },
-  testDetails: {
+  examDetails: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
+    gap: 20,
     marginBottom: 16,
   },
   detailItem: {
@@ -608,19 +636,19 @@ const styles = StyleSheet.create({
     color: '#666666',
     marginLeft: 4,
   },
-  testTypeIndicator: {
+  examTypeIndicator: {
     backgroundColor: '#F0F8FF',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
     marginBottom: 12,
   },
-  testTypeText: {
+  examTypeText: {
     fontSize: 12,
     color: '#1976D2',
     fontWeight: '500',
   },
-  testFooter: {
+  examFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -635,12 +663,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
     color: '#1976D2',
-  },
-  premiumBadge: {
-    backgroundColor: '#FFF3E0',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
   },
   startButton: {
     flexDirection: 'row',
@@ -699,8 +721,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   resultStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: 8,
   },
   resultStat: {
     fontSize: 12,

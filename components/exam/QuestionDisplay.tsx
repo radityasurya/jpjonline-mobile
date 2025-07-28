@@ -45,8 +45,8 @@ export function QuestionDisplay({
         </View>
       )}
 
-      {question.question && question.question.trim() && (
-        <Text style={styles.questionText}>{question.question}</Text>
+      {question.text && question.text.trim() && (
+        <Text style={styles.questionText}>{question.text}</Text>
       )}
     </View>
   );

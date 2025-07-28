@@ -17,7 +17,7 @@ import { QuestionReview } from '@/components/exam/results/QuestionReview';
 import { ResultsActions } from '@/components/exam/results/ResultsActions';
 
 export default function ExamResultScreen() {
-  const { id, resultData } = useLocalSearchParams();
+  const { id: examSlug, resultData } = useLocalSearchParams();
   const [result, setResult] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSharing, setIsSharing] = useState(false);
@@ -38,42 +38,15 @@ export default function ExamResultScreen() {
         setResult(parsedResult);
 
         // Load questions for detailed review
-        if (parsedResult.examId) {
-          const examResponse = await api.exams.fetchExamQuestions(
-            parsedResult.examId
-          );
-          if (examResponse.success) {
-            setQuestions(examResponse.data!.questions);
-          }
+        if (parsedResult.examSlug) {
+          // TODO: Load questions for detailed review when needed
+          // const examData = await getExamBySlug(parsedResult.examSlug, user?.token);
+          // setQuestions(examData.questions);
         }
       } else {
-        // Try to load from localStorage using exam ID
-        const storedResults = await api.exams.getExamResults();
-        if (storedResults.success) {
-          const examResults = storedResults.data!.filter(
-            (r) => r.examId === id
-          );
-          if (examResults.length > 0) {
-            // Get the most recent result for this exam
-            const latestResult = examResults.sort(
-              (a, b) =>
-                new Date(b.completedAt).getTime() -
-                new Date(a.completedAt).getTime()
-            )[0];
-            setResult(latestResult);
-
-            // Load questions for detailed review
-            const examResponse = await api.exams.fetchExamQuestions(
-              id as string
-            );
-            if (examResponse.success) {
-              setQuestions(examResponse.data!.questions);
-            }
-          } else {
-            Alert.alert('Error', 'No results found for this exam.');
-            router.back();
-          }
-        }
+        // TODO: Load from exam history API when needed
+        Alert.alert('Error', 'No result data provided.');
+        router.back();
       }
     } catch (error) {
       console.error('Error loading result data:', error);
@@ -101,7 +74,7 @@ export default function ExamResultScreen() {
   };
 
   const retryExam = () => {
-    router.replace(`/exam/${id}`);
+    router.replace(`/exam/${examSlug}`);
   };
 
   const goHome = () => {

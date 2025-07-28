@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { logger } from '@/utils/logger';
 import { Book, FileText, Trophy, Clock, Crown } from 'lucide-react-native';
 import { useState, useEffect } from 'react';
-import { getDashboardSummary, updateStats } from '@/services';
+import { getDashboardSummary, updateStats, activityService, ACTIVITY_TYPES } from '@/services';
 
 export default function HomeScreen() {
   const { user, logout, isLoading } = useAuth();
@@ -69,6 +69,11 @@ export default function HomeScreen() {
       subtitle: 'Access learning materials',
       action: () => {
         logger.userAction('Quick action clicked', { action: 'study_notes' });
+        activityService.addActivity(ACTIVITY_TYPES.QUICK_ACTION, {
+          action: 'study_notes',
+          actionTitle: 'Study Notes',
+          userId: user?.id
+        });
         router.push('/(tabs)/notes');
       },
       color: '#4CAF50',
@@ -79,6 +84,11 @@ export default function HomeScreen() {
       subtitle: 'Start practice exam',
       action: () => {
         logger.userAction('Quick action clicked', { action: 'practice_tests' });
+        activityService.addActivity(ACTIVITY_TYPES.QUICK_ACTION, {
+          action: 'practice_tests',
+          actionTitle: 'Practice Tests',
+          userId: user?.id
+        });
         router.push('/(tabs)/tests');
       },
       color: '#2196F3',
@@ -89,6 +99,11 @@ export default function HomeScreen() {
       subtitle: 'View your progress',
       action: () => {
         logger.userAction('Quick action clicked', { action: 'my_progress' });
+        activityService.addActivity(ACTIVITY_TYPES.QUICK_ACTION, {
+          action: 'my_progress',
+          actionTitle: 'My Progress',
+          userId: user?.id
+        });
         router.push('/(tabs)/profile');
       },
       color: '#FF9800',
@@ -97,13 +112,21 @@ export default function HomeScreen() {
 
   const handleActivityClick = (activity: any) => {
     logger.userAction('Activity clicked', { type: activity.type, id: activity.id });
-    if (activity.type === 'exam_completed') {
-      // Navigate to results page, it will load data from localStorage
-      logger.navigation('ExamResult', { examId: activity.examId });
-      router.push(`/exam/result/${activity.examId}`);
-    } else if (activity.type === 'note_viewed' || activity.type === 'note_bookmarked') {
-      logger.navigation('NoteDetail', { noteId: activity.noteId });
-      router.push(`/notes/${activity.noteId}`);
+    
+    if (!activity.isClickable) return;
+    
+    const activityData = activity.data || {};
+    
+    if (activity.type === ACTIVITY_TYPES.EXAM_COMPLETED && activityData.examSlug) {
+      logger.navigation('ExamResult', { examSlug: activityData.examSlug });
+      router.push(`/exam/result/${activityData.examSlug}`);
+    } else if (
+      (activity.type === ACTIVITY_TYPES.NOTE_VIEWED || 
+       activity.type === ACTIVITY_TYPES.NOTE_BOOKMARKED) && 
+      activityData.noteSlug
+    ) {
+      logger.navigation('NoteDetail', { noteSlug: activityData.noteSlug });
+      router.push(`/notes/${activityData.noteSlug}`);
     }
   };
 
@@ -164,18 +187,21 @@ export default function HomeScreen() {
             <TouchableOpacity 
               key={index} 
               style={styles.activityItem}
+              disabled={!activity.isClickable}
               onPress={() => handleActivityClick(activity)}>
-              <Text style={styles.activityTitle}>
-                {activity.type === 'exam_completed' ? `Completed: ${activity.examTitle}` : 
-                 activity.type === 'note_bookmarked' ? 'Bookmarked a note' : 
-                 activity.type === 'note_viewed' ? `Viewed: ${activity.noteTitle}` :
-                 'Recent Activity'}
-              </Text>
-              <Text style={styles.activityDate}>
-                {new Date(activity.timestamp).toLocaleDateString()}
-              </Text>
-              {activity.score && (
-                <Text style={styles.activityScore}>Score: {activity.score}%</Text>
+              <View style={styles.activityHeader}>
+                <Text style={styles.activityIcon}>{activity.displayIcon}</Text>
+                <View style={styles.activityContent}>
+                  <Text style={styles.activityTitle}>
+                    {activity.displayDescription}
+                  </Text>
+                  <Text style={styles.activityDate}>
+                    {activity.timeAgo}
+                  </Text>
+                </View>
+              </View>
+              {activity.data?.score && (
+                <Text style={styles.activityScore}>Score: {activity.data.score}%</Text>
               )}
             </TouchableOpacity>
           ))
@@ -310,6 +336,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 8,
     marginBottom: 12,
+  },
+  activityHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  activityIcon: {
+    fontSize: 20,
+    marginRight: 12,
+  },
+  activityContent: {
+    flex: 1,
   },
   activityTitle: {
     fontSize: 14,

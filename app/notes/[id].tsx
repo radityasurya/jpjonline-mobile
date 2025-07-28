@@ -19,7 +19,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { getNoteBySlug } from '@/services';
 import { logger } from '@/utils/logger';
-import { updateStats } from '@/services';
+import { updateStats, activityService, ACTIVITY_TYPES } from '@/services';
 import bookmarkService from '@/services/bookmarkService';
 
 export default function NoteDetailScreen() {
@@ -45,6 +45,14 @@ export default function NoteDetailScreen() {
       setNote(noteData);
       
       // Track note reading
+      activityService.addActivity(ACTIVITY_TYPES.NOTE_VIEWED, {
+        noteId: noteData.id,
+        noteTitle: noteData.title,
+        noteSlug: noteData.slug,
+        category: noteData.topic?.category?.title,
+        userId: user?.id
+      });
+      
       updateStats('note_read', {
         noteId: noteData.id,
         noteTitle: noteData.title,
@@ -64,14 +72,21 @@ export default function NoteDetailScreen() {
   const handleToggleBookmark = async () => {
     logger.userAction('Bookmark toggle attempted', { noteId: note?.id });
     try {
-      // Track bookmark action
-      updateStats('note_bookmarked', {
-        noteId: note.id,
-        noteTitle: note.title
-      });
+      const isCurrentlyBookmarked = bookmarkService.isBookmarked(note.id);
       
       const newBookmarkStatus = bookmarkService.toggleBookmark(note.id);
       setNoteIsBookmarked(newBookmarkStatus);
+      
+      // Track activity
+      const activityType = newBookmarkStatus ? ACTIVITY_TYPES.NOTE_BOOKMARKED : ACTIVITY_TYPES.NOTE_UNBOOKMARKED;
+      activityService.addActivity(activityType, {
+        noteId: note.id,
+        noteTitle: note.title,
+        noteSlug: note.slug,
+        category: note.topic?.category?.title,
+        userId: user?.id
+      });
+      
       logger.info('NoteDetailScreen', 'Bookmark toggled successfully', { 
         noteId: note.id, 
         newStatus: newBookmarkStatus 

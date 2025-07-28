@@ -293,6 +293,24 @@ class ProgressService {
   }
 
   /**
+   * Update bookmark count (called by bookmark service)
+   */
+  updateBookmarkCount(count) {
+    try {
+      const currentProgress = this.getProgress();
+      currentProgress.learning.notesBookmarked = count;
+      currentProgress.lastUpdated = new Date().toISOString();
+      
+      const success = this.safeSetItem(STORAGE_KEYS.USER_PROGRESS, currentProgress);
+      if (success) {
+        logger.debug('ProgressService', 'Bookmark count updated', { count });
+      }
+    } catch (error) {
+      logger.error('ProgressService', 'Failed to update bookmark count', error);
+    }
+  }
+
+  /**
    * Update specific statistics
    */
   updateStats(statType, value, metadata = {}) {
@@ -688,14 +706,44 @@ class ProgressService {
       const progress = this.getProgress();
       const stats = this.getStats();
       
+      // Get actual bookmark count from bookmark service
+      let actualBookmarkCount = progress.learning.notesBookmarked;
+      try {
+        // Lazy load bookmark service to avoid circular dependency
+        const bookmarkService = require('./bookmarkService.js').default;
+        if (bookmarkService) {
+          actualBookmarkCount = bookmarkService.getBookmarks().length;
+          // Update progress if counts don't match
+          if (actualBookmarkCount !== progress.learning.notesBookmarked) {
+            this.updateBookmarkCount(actualBookmarkCount);
+          }
+        }
+      } catch (error) {
+        logger.warn('ProgressService', 'Could not sync bookmark count', error);
+      }
+      
+      // Get recent activities
+      let recentActivities = [];
+      try {
+        const activityService = require('./activityService.js').default;
+        if (activityService) {
+          const activities = activityService.getRecentActivities(5);
+          recentActivities = activities.map(activity => 
+            activityService.formatActivityForDisplay(activity)
+          );
+        }
+      } catch (error) {
+        logger.warn('ProgressService', 'Could not load recent activities', error);
+      }
+      
       const summary = {
         totalExams: progress.exams.totalAttempts,
         averageScore: progress.exams.averageScore,
         passedExams: progress.exams.totalPassed,
         totalStudyTime: progress.learning.totalReadingTime + progress.exams.totalTimeSpent,
-        bookmarkedNotes: progress.learning.notesBookmarked,
+        bookmarkedNotes: actualBookmarkCount,
         currentStreak: progress.activity.currentStreak,
-        recentActivity: this.getRecentActivity(),
+        recentActivity: recentActivities,
         lastActivity: progress.activity.lastActivityDate
       };
 

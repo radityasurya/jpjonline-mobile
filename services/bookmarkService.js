@@ -7,6 +7,28 @@
 
 import { logger } from '../utils/logger.js';
 
+// Import progress service for stats sync
+let progressService = null;
+
+// Lazy load progress service to avoid circular dependency
+const getProgressService = () => {
+  if (!progressService) {
+    progressService = require('./progressService.js').default;
+  }
+  return progressService;
+};
+
+// Import activity service for activity tracking
+let activityService = null;
+
+// Lazy load activity service to avoid circular dependency
+const getActivityService = () => {
+  if (!activityService) {
+    activityService = require('./activityService.js').default;
+  }
+  return activityService;
+};
+
 // Storage key for bookmarks
 const BOOKMARKS_STORAGE_KEY = '@jpj_bookmarks_v1';
 
@@ -86,6 +108,22 @@ class BookmarkService {
   }
 
   /**
+   * Update bookmark statistics in progress service
+   */
+  updateBookmarkStats() {
+    try {
+      const progressSvc = getProgressService();
+      if (progressSvc && progressSvc.updateBookmarkCount) {
+        const bookmarkCount = this.getBookmarks().length;
+        progressSvc.updateBookmarkCount(bookmarkCount);
+        logger.debug('BookmarkService', 'Updated bookmark stats', { count: bookmarkCount });
+      }
+    } catch (error) {
+      logger.error('BookmarkService', 'Failed to update bookmark stats', error);
+    }
+  }
+
+  /**
    * Add a note to bookmarks
    * @param {string} noteId - Note ID to bookmark
    * @returns {boolean} Success status
@@ -109,6 +147,23 @@ class BookmarkService {
         const success = this.safeSetItem(BOOKMARKS_STORAGE_KEY, bookmarks);
         
         if (success) {
+          // Update bookmark statistics
+          this.updateBookmarkStats();
+          
+          // Track activity
+          try {
+            const activitySvc = getActivityService();
+            if (activitySvc) {
+              activitySvc.addActivity('note_bookmarked', {
+                noteId: noteId,
+                noteTitle: 'Note', // Could be enhanced to include actual title
+                timestamp: new Date().toISOString()
+              });
+            }
+          } catch (error) {
+            logger.error('BookmarkService', 'Failed to track bookmark activity', error);
+          }
+          
           logger.info('BookmarkService', 'Bookmark added successfully', { noteId });
           return true;
         }
@@ -147,6 +202,23 @@ class BookmarkService {
         const success = this.safeSetItem(BOOKMARKS_STORAGE_KEY, filteredBookmarks);
         
         if (success) {
+          // Update bookmark statistics
+          this.updateBookmarkStats();
+          
+          // Track activity
+          try {
+            const activitySvc = getActivityService();
+            if (activitySvc) {
+              activitySvc.addActivity('note_unbookmarked', {
+                noteId: noteId,
+                noteTitle: 'Note', // Could be enhanced to include actual title
+                timestamp: new Date().toISOString()
+              });
+            }
+          } catch (error) {
+            logger.error('BookmarkService', 'Failed to track unbookmark activity', error);
+          }
+          
           logger.info('BookmarkService', 'Bookmark removed successfully', { noteId });
           return true;
         }

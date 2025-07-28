@@ -22,6 +22,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/utils/logger';
 import { getNotesGroupedByCategory } from '@/services';
 import bookmarkService from '@/services/bookmarkService';
+import { activityService, ACTIVITY_TYPES } from '@/services';
 
 const { width } = Dimensions.get('window');
 const cardWidth = (width - 60) / 2; // 2 columns with padding
@@ -176,11 +177,28 @@ export default function NotesScreen() {
   const handleToggleBookmark = async (noteId: string) => {
     logger.userAction('Bookmark toggled', { noteId });
     try {
+      // Find note details for activity tracking
+      const note = filteredNotes.find(n => n.id === noteId);
+      const isCurrentlyBookmarked = bookmarkService.isBookmarked(noteId);
+      
       const newBookmarkStatus = bookmarkService.toggleBookmark(noteId);
       setBookmarkStates(prev => ({
         ...prev,
         [noteId]: newBookmarkStatus
       }));
+      
+      // Track activity with note details
+      if (note) {
+        const activityType = newBookmarkStatus ? ACTIVITY_TYPES.NOTE_BOOKMARKED : ACTIVITY_TYPES.NOTE_UNBOOKMARKED;
+        activityService.addActivity(activityType, {
+          noteId: note.id,
+          noteTitle: note.title,
+          noteSlug: note.slug,
+          category: note.topic?.category?.title,
+          userId: user?.id
+        });
+      }
+      
       logger.info('NotesScreen', 'Bookmark toggled successfully', { noteId, newStatus: newBookmarkStatus });
     } catch (error) {
       logger.error('NotesScreen', 'Error toggling bookmark', error);
@@ -190,12 +208,14 @@ export default function NotesScreen() {
   const openNote = (note: ApiNote) => {
     logger.userAction('Note opened', { noteId: note.id, title: note.title, slug: note.slug });
     
-    // TODO: Add to activity history when API is ready
-    // api.user.saveActivity({
-    //   type: 'note_viewed',
-    //   noteId: note.id,
-    //   noteTitle: note.title,
-    // });
+    // Track note viewing activity
+    activityService.addActivity(ACTIVITY_TYPES.NOTE_VIEWED, {
+      noteId: note.id,
+      noteTitle: note.title,
+      noteSlug: note.slug,
+      category: note.topic?.category?.title,
+      userId: user?.id
+    });
 
     // Navigate to note detail screen using slug
     logger.navigation('NoteDetail', { noteSlug: note.slug });

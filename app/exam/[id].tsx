@@ -11,6 +11,7 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/utils/logger';
 import { getExamBySlug, submitExamResults, updateStats } from '@/services';
+import { activityService, ACTIVITY_TYPES } from '@/services';
 
 // Types for the new API structure
 interface ApiQuestion {
@@ -98,6 +99,16 @@ export default function ExamScreen() {
       setHasCheckedAnswer(
         new Array(examData.questions.length).fill(false)
       );
+      
+      // Track exam start activity
+      activityService.addActivity(ACTIVITY_TYPES.EXAM_STARTED, {
+        examId: examData.id,
+        examSlug: examData.slug,
+        examTitle: examData.title,
+        category: examData.category?.name,
+        userId: user?.id
+      });
+      
     } catch (error) {
       logger.error('ExamScreen', 'Failed to load exam data', error);
       Alert.alert('Error', 'Failed to load exam. Please try again.');
@@ -244,6 +255,30 @@ export default function ExamScreen() {
           timeSpent: response.result.timeSpent || timeSpent,
           examSlug: exam!.slug,
           examTitle: exam!.title
+        });
+        
+        // Track exam completion activity
+        const activityType = response.result.passed ? ACTIVITY_TYPES.EXAM_PASSED : ACTIVITY_TYPES.EXAM_FAILED;
+        activityService.addActivity(ACTIVITY_TYPES.EXAM_COMPLETED, {
+          examId: exam!.id,
+          examSlug: exam!.slug,
+          examTitle: exam!.title,
+          score: response.result.score,
+          passed: response.result.passed,
+          timeSpent: response.result.timeSpent || timeSpent,
+          category: exam!.category?.name,
+          userId: user?.id
+        });
+        
+        // Also track pass/fail specific activity
+        activityService.addActivity(activityType, {
+          examId: exam!.id,
+          examSlug: exam!.slug,
+          examTitle: exam!.title,
+          score: response.result.score,
+          timeSpent: response.result.timeSpent || timeSpent,
+          category: exam!.category?.name,
+          userId: user?.id
         });
         
         router.replace(

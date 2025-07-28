@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logger } from '@/utils/logger';
-import { progressService } from '@/services';
+import { progressService, activityService, ACTIVITY_TYPES } from '@/services';
 
 interface User {
   id: string;
@@ -95,6 +95,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Track login session
         progressService.updateStats('session_start', { timestamp: new Date().toISOString() });
         
+        // Track login activity
+        activityService.addActivity(ACTIVITY_TYPES.SESSION_STARTED, {
+          userId: userData.id,
+          userTier: userData.subscription,
+          timestamp: new Date().toISOString()
+        });
+        
         setUser(userData);
         return true;
       } else {
@@ -148,6 +155,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         progressService.updateStats('session_end', { 
           duration: 0, // Could track actual session duration
           timestamp: new Date().toISOString() 
+        });
+        
+        // Track logout activity
+        activityService.addActivity(ACTIVITY_TYPES.SESSION_ENDED, {
+          userId: user.id,
+          sessionDuration: 0, // Could calculate actual duration
+          timestamp: new Date().toISOString()
         });
       }
       

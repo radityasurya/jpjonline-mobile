@@ -71,6 +71,28 @@ export {
 // Export bookmark service instance
 export { default as bookmarkService } from './bookmarkService.js';
 
+// Activity services
+export {
+  getActivities,
+  addActivity,
+  getRecentActivities,
+  getActivitiesByType,
+  getActivitiesInRange,
+  getTodaysActivities,
+  calculateActivityStreak,
+  getActivityStats,
+  clearAllActivities,
+  formatActivityForDisplay,
+  isActivityClickable,
+  getTimeAgo,
+  exportActivities,
+  importActivities,
+  ACTIVITY_TYPES
+} from './activityService.js';
+
+// Export activity service instance
+export { default as activityService } from './activityService.js';
+
 // API configuration
 export { API_CONFIG, getAuthHeaders, buildApiUrl } from '../config/api.js';
 

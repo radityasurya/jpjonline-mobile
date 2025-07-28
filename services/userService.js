@@ -91,7 +91,7 @@ export const updateUserProfile = async (token, profileData) => {
     const currentUser = {
       id: isPremium ? "clx1234567890" : "clx0987654321",
       name: isPremium ? "Ahmad Faizal" : "Siti Aminah",
-      email: isPremium ? "premium@jpj.com" : "free@jpj.com",
+      email: isPremium ? "premium@jpj.com" : "user@jpj.com",
       tier: isPremium ? "PREMIUM" : "FREE",
       role: "USER",
       image: null

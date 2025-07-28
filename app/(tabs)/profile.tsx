@@ -101,6 +101,7 @@ export default function ProfileScreen() {
     } catch (error) {
       logger.error('ProfileScreen', 'Error loading stats', error);
     }
+  };
 
   const handleEditProfile = () => {
     logger.userAction('Profile edit initiated');

@@ -1,0 +1,1133 @@
+{
+  "q1": {
+    "id": "q1",
+    "question": "What is the maximum speed limit in residential areas?",
+    "options": ["30 km/h", "50 km/h", "60 km/h", "70 km/h"],
+    "correctAnswer": 1,
+    "explanation": "The speed limit in residential areas is 50 km/h to ensure the safety of residents."
+  },
+  "q2": {
+    "id": "q2",
+    "question": "How often do you need to renew your driving license?",
+    "options": ["Every year", "Every 2 years", "Every 3 years", "Every 5 years"],
+    "correctAnswer": 2,
+    "explanation": "Driving licenses need to be renewed every 3 years to ensure driver eligibility."
+  },
+  "q3": {
+    "id": "q3",
+    "question": "What does \"complete stop\" mean at an intersection?",
+    "options": [
+      "Slow down only",
+      "Stop completely and check left and right",
+      "Stop only if there are other vehicles",
+      "Honk and continue"
+    ],
+    "correctAnswer": 1,
+    "explanation": "Complete stop means the vehicle must stop completely and ensure safety before proceeding."
+  },
+  "q4": {
+    "id": "q4",
+    "question": "What is the minimum safe following distance?",
+    "options": ["1 meter", "2 seconds", "3 seconds", "5 meters"],
+    "correctAnswer": 2,
+    "explanation": "A 3-second following distance is the minimum safe distance to allow adequate reaction time."
+  },
+  "q5": {
+    "id": "q5",
+    "question": "When can you overtake another vehicle?",
+    "options": [
+      "Anytime",
+      "Only on the right side",
+      "When safe and permitted",
+      "Only on highways"
+    ],
+    "correctAnswer": 2,
+    "explanation": "Overtaking is only allowed when it is safe and does not violate traffic regulations."
+  },
+  "q6": {
+    "id": "q6",
+    "question": "What should you do if traffic lights are not working?",
+    "options": [
+      "Continue driving",
+      "Treat as a red light",
+      "Honk loudly",
+      "Drive quickly"
+    ],
+    "correctAnswer": 1,
+    "explanation": "Non-functioning traffic lights should be treated as red lights - stop and give way."
+  },
+  "q7": {
+    "id": "q7",
+    "question": "What is the main function of seat belts?",
+    "options": [
+      "Look stylish",
+      "Avoid fines",
+      "Protect from injury",
+      "Control seating position"
+    ],
+    "correctAnswer": 2,
+    "explanation": "Seat belts function to protect passengers from serious injury during accidents."
+  },
+  "q8": {
+    "id": "q8",
+    "question": "When should you use headlights?",
+    "options": [
+      "Only at night",
+      "When raining or visibility is limited",
+      "Only on highways",
+      "When driving fast"
+    ],
+    "correctAnswer": 1,
+    "explanation": "Headlights should be used when raining, foggy, or when visibility is limited."
+  },
+  "q9": {
+    "id": "q9",
+    "question": "What does \"right of way\" mean?",
+    "options": [
+      "Big cars go first",
+      "Right to pass first",
+      "Expensive cars go first",
+      "Male drivers go first"
+    ],
+    "correctAnswer": 1,
+    "explanation": "Right of way is the right to pass through an intersection or road first according to regulations."
+  },
+  "q10": {
+    "id": "q10",
+    "question": "What is the first action when an accident occurs?",
+    "options": [
+      "Run from the scene",
+      "Take photos for social media",
+      "Ensure safety and contact police",
+      "Argue with other drivers"
+    ],
+    "correctAnswer": 2,
+    "explanation": "The first action is to ensure the safety of all parties and contact authorities."
+  },
+  "q21": {
+    "id": "q21",
+    "question": "What does a red circle with a white bar in the middle mean?",
+    "options": ["Stop", "No Entry", "Slow Down", "Give Way"],
+    "correctAnswer": 1,
+    "explanation": "A red circle with a white bar means \"No Entry\" for all vehicles."
+  },
+  "q22": {
+    "id": "q22",
+    "question": "What does an inverted red and white triangle mean?",
+    "options": ["Stop", "Give Way", "Danger", "Prohibited"],
+    "correctAnswer": 1,
+    "explanation": "An inverted red and white triangle is a \"Give Way\" sign to other vehicles."
+  },
+  "q23": {
+    "id": "q23",
+    "question": "What does a red octagon with \"STOP\" text mean?",
+    "options": ["Slow Down", "Stop Completely", "Give Way", "Warning"],
+    "correctAnswer": 1,
+    "explanation": "A red octagon means you must stop completely before proceeding."
+  },
+  "q24": {
+    "id": "q24",
+    "question": "What does a blue circle with a white arrow mean?",
+    "options": ["Prohibited", "Mandatory Direction", "Warning", "Information"],
+    "correctAnswer": 1,
+    "explanation": "A blue circle with a white arrow is a mandatory direction that must be followed."
+  },
+  "q25": {
+    "id": "q25",
+    "question": "What does a yellow triangle with an exclamation mark mean?",
+    "options": ["Stop", "General Danger Warning", "Prohibited", "Information"],
+    "correctAnswer": 1,
+    "explanation": "A yellow triangle with an exclamation mark warns of general danger ahead."
+  },
+  "q26": {
+    "id": "q26",
+    "question": "What does a white \"P\" in a blue box mean?",
+    "options": ["No Parking", "Parking Area", "Police Station", "Petrol"],
+    "correctAnswer": 1,
+    "explanation": "A white \"P\" in a blue box indicates an authorized parking area."
+  },
+  "q27": {
+    "id": "q27",
+    "question": "What does a yellow line at the roadside mean?",
+    "options": ["Parking Allowed", "No Parking", "Decorative Line", "Waiting Area"],
+    "correctAnswer": 1,
+    "explanation": "A yellow line at the roadside means no parking or stopping is allowed."
+  },
+  "q28": {
+    "id": "q28",
+    "question": "What does a white \"H\" in a blue box indicate?",
+    "options": ["Hotel", "Hospital", "Entertainment", "Homestay"],
+    "correctAnswer": 1,
+    "explanation": "A white \"H\" in a blue box indicates the location of a hospital or medical facility."
+  },
+  "q29": {
+    "id": "q29",
+    "question": "What does a curved arrow in a yellow triangle mean?",
+    "options": ["Straight Road", "Dangerous Curve", "Intersection", "Safe Road"],
+    "correctAnswer": 1,
+    "explanation": "A curved arrow in a yellow triangle warns of a dangerous curve ahead."
+  },
+  "q30": {
+    "id": "q30",
+    "question": "What does a number in a red circle mean?",
+    "options": ["Distance in km", "Maximum Speed Limit", "Number of vehicles", "Road number"],
+    "correctAnswer": 1,
+    "explanation": "A number in a red circle indicates the maximum speed limit allowed."
+  },
+  "q31": {
+    "id": "q31",
+    "question": "What do broken white lines on the road mean?",
+    "options": ["No Overtaking", "Overtaking Allowed When Safe", "Decorative Lines", "Stopping Area"],
+    "correctAnswer": 1,
+    "explanation": "Broken white lines mean overtaking or lane changing is allowed when safe."
+  },
+  "q32": {
+    "id": "q32",
+    "question": "What does a yellow triangle with a skidding car mean?",
+    "options": ["Dry Road", "Slippery Road", "Car Wash", "Garage"],
+    "correctAnswer": 1,
+    "explanation": "This sign warns that the road is slippery and requires caution."
+  },
+  "q33": {
+    "id": "q33",
+    "question": "What does a flashing yellow traffic light mean?",
+    "options": ["Stop", "Continue", "Proceed with Caution", "Speed Up"],
+    "correctAnswer": 2,
+    "explanation": "A flashing yellow light means proceed with caution and give way when necessary."
+  },
+  "q34": {
+    "id": "q34",
+    "question": "What does a red circle with a white bicycle mean?",
+    "options": ["Bicycle Lane", "No Bicycles", "Bicycle Shop", "Bicycle Parking"],
+    "correctAnswer": 1,
+    "explanation": "A red circle with a white bicycle means bicycles are prohibited."
+  },
+  "q35": {
+    "id": "q35",
+    "question": "What does a blue square with an upward arrow mean?",
+    "options": ["One Way", "Uphill", "Mandatory Direction", "High Road"],
+    "correctAnswer": 2,
+    "explanation": "A blue square with an arrow indicates the mandatory direction to follow."
+  },
+  "q36": {
+    "id": "q36",
+    "question": "In an emergency situation, what is the first action to take?",
+    "options": [
+      "Call family",
+      "Ensure safety of self and others",
+      "Take photos",
+      "Leave the scene"
+    ],
+    "correctAnswer": 1,
+    "explanation": "Safety is the first priority in any emergency situation."
+  },
+  "q37": {
+    "id": "q37",
+    "question": "What is the safe braking distance at 60 km/h on dry road?",
+    "options": ["20 meters", "35 meters", "45 meters", "60 meters"],
+    "correctAnswer": 2,
+    "explanation": "At 60 km/h on dry road, the safe braking distance is approximately 45 meters."
+  },
+  "q38": {
+    "id": "q38",
+    "question": "What is \"aquaplaning\"?",
+    "options": [
+      "Flying over water",
+      "Tires losing grip with road due to water",
+      "Driving in water",
+      "Car cooling system"
+    ],
+    "correctAnswer": 1,
+    "explanation": "Aquaplaning occurs when tires lose contact with the road due to a layer of water."
+  },
+  "q39": {
+    "id": "q39",
+    "question": "In bad weather, how much should following distance be increased?",
+    "options": ["25%", "50%", "75%", "100%"],
+    "correctAnswer": 3,
+    "explanation": "In bad weather, following distance should be doubled (100% increase) for safety."
+  },
+  "q40": {
+    "id": "q40",
+    "question": "What is ESC in vehicles?",
+    "options": [
+      "Electronic Speed Control",
+      "Electronic Stability Control",
+      "Engine Start Control",
+      "Emergency Stop Control"
+    ],
+    "correctAnswer": 1,
+    "explanation": "ESC (Electronic Stability Control) helps maintain vehicle stability."
+  },
+  "q46": {
+    "id": "q46",
+    "question": "What should you do when driving at night?",
+    "options": [
+      "Drive faster to get home quickly",
+      "Reduce speed and increase following distance",
+      "Use high beams constantly",
+      "Drive in the center of the road"
+    ],
+    "correctAnswer": 1,
+    "explanation": "Night driving requires reduced speed and increased following distance due to limited visibility."
+  },
+  "q47": {
+    "id": "q47",
+    "question": "How should you handle a tire blowout while driving?",
+    "options": [
+      "Brake hard immediately",
+      "Gradually reduce speed and pull over safely",
+      "Continue driving",
+      "Turn the steering wheel quickly"
+    ],
+    "correctAnswer": 1,
+    "explanation": "During a tire blowout, gradually reduce speed without sudden braking and pull over safely."
+  },
+  "q48": {
+    "id": "q48",
+    "question": "What is the safest way to use a mobile phone while driving?",
+    "options": [
+      "Hold it with one hand",
+      "Use hands-free system only",
+      "Text while stopped at traffic lights",
+      "Use it only for emergencies"
+    ],
+    "correctAnswer": 1,
+    "explanation": "Mobile phones should only be used with hands-free systems while driving."
+  },
+  "q49": {
+    "id": "q49",
+    "question": "When should you check your blind spots?",
+    "options": [
+      "Only when parking",
+      "Before changing lanes or turning",
+      "Only on highways",
+      "Once per trip"
+    ],
+    "correctAnswer": 1,
+    "explanation": "Always check blind spots before changing lanes, turning, or merging."
+  },
+  "q50": {
+    "id": "q50",
+    "question": "What should you do in a school zone?",
+    "options": [
+      "Drive at normal speed",
+      "Reduce speed and watch for children",
+      "Honk to warn children",
+      "Avoid the area completely"
+    ],
+    "correctAnswer": 1,
+    "explanation": "In school zones, reduce speed and be extra vigilant for children crossing."
+  },
+  "q56": {
+    "id": "q56",
+    "question": "Looking at this intersection, what should you do when approaching from the bottom?",
+    "image": "https://images.pexels.com/photos/2199293/pexels-photo-2199293.jpeg?auto=compress&cs=tinysrgb&w=400",
+    "options": [
+      "Stop and give way to traffic from the right",
+      "Continue without stopping",
+      "Sound horn and proceed",
+      "Speed up to clear the intersection quickly"
+    ],
+    "correctAnswer": 0,
+    "explanation": "At intersections without traffic lights, you must give way to traffic approaching from your right."
+  },
+  "q57": {
+    "id": "q57",
+    "question": "What does this road marking indicate?",
+    "image": "https://images.pexels.com/photos/1563356/pexels-photo-1563356.jpeg?auto=compress&cs=tinysrgb&w=400",
+    "options": [
+      "No overtaking zone",
+      "Parking area",
+      "Speed limit zone",
+      "School zone"
+    ],
+    "correctAnswer": 0,
+    "explanation": "Solid white lines indicate no overtaking or lane changing is allowed."
+  },
+  "q58": {
+    "id": "q58",
+    "question": "In this weather condition, what is the most important safety measure?",
+    "image": "https://images.pexels.com/photos/1118873/pexels-photo-1118873.jpeg?auto=compress&cs=tinysrgb&w=400",
+    "options": [
+      "Increase speed to get through quickly",
+      "Reduce speed and increase following distance",
+      "Use high beam headlights",
+      "Drive in the center of the road"
+    ],
+    "correctAnswer": 1,
+    "explanation": "In wet conditions, reduce speed and increase following distance as braking distance increases significantly."
+  },
+  "q59": {
+    "id": "q59",
+    "question": "What should you do when you see this sign?",
+    "options": [
+      "Prepare to stop",
+      "Speed up",
+      "Change lanes immediately",
+      "Continue at current speed"
+    ],
+    "correctAnswer": 0,
+    "explanation": "Warning signs indicate potential hazards ahead and require you to prepare to stop or slow down."
+  },
+  "q60": {
+    "id": "q60",
+    "question": "When parking on a hill, which direction should your wheels face?",
+    "image": "https://images.pexels.com/photos/1545743/pexels-photo-1545743.jpeg?auto=compress&cs=tinysrgb&w=400",
+    "options": [
+      "Straight ahead",
+      "Towards the curb",
+      "Away from the curb",
+      "It doesn't matter"
+    ],
+    "correctAnswer": 1,
+    "explanation": "When parking on a hill, turn wheels towards the curb so the car won't roll into traffic if brakes fail."
+  },
+  "q66": {
+    "id": "q66",
+    "question": "What does ABS stand for in vehicle safety systems?",
+    "options": [
+      "Automatic Brake System",
+      "Anti-lock Braking System",
+      "Advanced Brake Support",
+      "Assisted Braking Service"
+    ],
+    "correctAnswer": 1,
+    "explanation": "ABS stands for Anti-lock Braking System, which prevents wheels from locking during emergency braking."
+  },
+  "q67": {
+    "id": "q67",
+    "question": "Which technology helps maintain vehicle stability during cornering?",
+    "image": "https://images.pexels.com/photos/3802510/pexels-photo-3802510.jpeg?auto=compress&cs=tinysrgb&w=400",
+    "options": [
+      "ABS",
+      "ESC (Electronic Stability Control)",
+      "Cruise Control",
+      "Power Steering"
+    ],
+    "correctAnswer": 1,
+    "explanation": "ESC helps maintain vehicle stability by detecting and reducing loss of traction during cornering."
+  },
+  "q68": {
+    "id": "q68",
+    "question": "What is the purpose of airbags in vehicles?",
+    "options": [
+      "Comfort during long drives",
+      "Protection during collisions",
+      "Better fuel efficiency",
+      "Improved visibility"
+    ],
+    "correctAnswer": 1,
+    "explanation": "Airbags provide crucial protection by cushioning occupants during collisions and reducing injury severity."
+  },
+  "q80": {
+    "id": "q80",
+    "question": "What should you do when approaching this intersection?",
+    "image": "https://images.pexels.com/photos/2199293/pexels-photo-2199293.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "options": {
+      "type": "image",
+      "choices": [
+        {
+          "text": "",
+          "image": "https://images.pexels.com/photos/1545743/pexels-photo-1545743.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "",
+          "image": "https://images.pexels.com/photos/3802510/pexels-photo-3802510.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "",
+          "image": "https://images.pexels.com/photos/1118873/pexels-photo-1118873.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "",
+          "image": "https://images.pexels.com/photos/1563356/pexels-photo-1563356.jpeg?auto=compress&cs=tinysrgb&w=300"
+        }
+      ]
+    },
+    "correctAnswer": 0,
+    "explanation": "At uncontrolled intersections, you must give way to traffic approaching from your right according to traffic rules."
+  },
+  "q81": {
+    "id": "q81",
+    "question": "What does this road marking indicate?",
+    "image": "https://images.pexels.com/photos/1563356/pexels-photo-1563356.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "options": {
+      "type": "image",
+      "choices": [
+        {
+          "text": "",
+          "image": "https://images.pexels.com/photos/2199293/pexels-photo-2199293.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "",
+          "image": "https://images.pexels.com/photos/1545743/pexels-photo-1545743.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "",
+          "image": "https://images.pexels.com/photos/3802510/pexels-photo-3802510.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "",
+          "image": "https://images.pexels.com/photos/1118873/pexels-photo-1118873.jpeg?auto=compress&cs=tinysrgb&w=300"
+        }
+      ]
+    },
+    "correctAnswer": 0,
+    "explanation": "Solid white lines indicate that overtaking or lane changing is prohibited in this area for safety reasons."
+  },
+  "q82": {
+    "id": "q82",
+    "question": "In this weather condition, what is the most important safety measure?",
+    "image": "https://images.pexels.com/photos/1118873/pexels-photo-1118873.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "options": [
+      "Increase speed to get through quickly",
+      "Reduce speed and increase following distance",
+      "Use high beam headlights",
+      "Drive in the center of the road"
+    ],
+    "correctAnswer": 1,
+    "explanation": "In wet conditions, reduce speed and increase following distance as braking distance increases significantly and visibility is reduced."
+  },
+  "q83": {
+    "id": "q83",
+    "question": "When parking on this type of road, which direction should your wheels face?",
+    "image": "https://images.pexels.com/photos/1545743/pexels-photo-1545743.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "options": [
+      "Straight ahead",
+      "Towards the curb",
+      "Away from the curb",
+      "Direction doesn't matter"
+    ],
+    "correctAnswer": 1,
+    "explanation": "When parking on a hill, turn wheels towards the curb so the vehicle won't roll into traffic if the parking brake fails."
+  },
+  "q84": {
+    "id": "q84",
+    "question": "What is the appropriate action when you see this traffic situation?",
+    "image": "https://images.pexels.com/photos/2199293/pexels-photo-2199293.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "options": [
+      "Honk and proceed immediately",
+      "Wait and assess the situation carefully",
+      "Flash headlights and continue",
+      "Reverse and find another route"
+    ],
+    "correctAnswer": 1,
+    "explanation": "Always assess traffic situations carefully before proceeding to ensure the safety of all road users."
+  },
+  "q85": {
+    "id": "q85",
+    "question": "Based on this road surface condition, what should be your primary concern?",
+    "image": "https://images.pexels.com/photos/1118873/pexels-photo-1118873.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "options": [
+      "Maintaining normal speed",
+      "Risk of skidding and loss of control",
+      "Fuel consumption increase",
+      "Engine overheating"
+    ],
+    "correctAnswer": 1,
+    "explanation": "Wet road surfaces significantly increase the risk of skidding and loss of vehicle control, requiring extra caution."
+  },
+  "q86": {
+    "id": "q86",
+    "question": "What type of vehicle technology is most relevant for this driving scenario?",
+    "image": "https://images.pexels.com/photos/3802510/pexels-photo-3802510.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "options": [
+      "Cruise control",
+      "Electronic Stability Control (ESC)",
+      "Air conditioning",
+      "GPS navigation"
+    ],
+    "correctAnswer": 1,
+    "explanation": "ESC helps maintain vehicle stability during cornering and adverse conditions, making it crucial for safe driving."
+  },
+  "q87": {
+    "id": "q87",
+    "question": "When driving in this type of environment, what should be your main focus?",
+    "image": "https://images.pexels.com/photos/1545743/pexels-photo-1545743.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "options": [
+      "Maintaining high speed",
+      "Constant vigilance for pedestrians and obstacles",
+      "Using horn frequently",
+      "Keeping windows closed"
+    ],
+    "correctAnswer": 1,
+    "explanation": "In residential or urban areas, constant vigilance for pedestrians, cyclists, and unexpected obstacles is essential."
+  },
+  "q88": {
+    "id": "q88",
+    "question": "What is the correct interpretation of this road situation?",
+    "image": "https://images.pexels.com/photos/2199293/pexels-photo-2199293.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "options": [
+      "Clear road with no restrictions",
+      "Intersection requiring careful navigation",
+      "Highway entrance ramp",
+      "Parking area entrance"
+    ],
+    "correctAnswer": 1,
+    "explanation": "This appears to be an intersection that requires careful navigation and adherence to right-of-way rules."
+  },
+  "q89": {
+    "id": "q89",
+    "question": "In this road condition, what is the recommended following distance?",
+    "image": "https://images.pexels.com/photos/1118873/pexels-photo-1118873.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "options": [
+      "Normal 3-second rule",
+      "Double the normal distance (6 seconds)",
+      "Half the normal distance",
+      "Following distance is not important"
+    ],
+    "correctAnswer": 1,
+    "explanation": "In wet conditions, you should double your following distance to account for increased braking distance and reduced visibility."
+  },
+  "q90": {
+    "id": "q90",
+    "question": "What type of hazard does this road configuration present?",
+    "image": "https://images.pexels.com/photos/1545743/pexels-photo-1545743.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "options": [
+      "No particular hazard",
+      "Steep gradient requiring engine braking",
+      "Sharp curves ahead",
+      "Construction zone"
+    ],
+    "correctAnswer": 1,
+    "explanation": "Steep roads require proper use of engine braking and careful speed management to maintain control."
+  },
+  "q91": {
+    "id": "q91",
+    "question": "What is the most important safety consideration for this driving scenario?",
+    "image": "https://images.pexels.com/photos/3802510/pexels-photo-3802510.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "options": [
+      "Radio volume adjustment",
+      "Proper seat adjustment and mirror positioning",
+      "Air freshener placement",
+      "Phone charging cable management"
+    ],
+    "correctAnswer": 1,
+    "explanation": "Proper seat adjustment and mirror positioning are fundamental safety requirements before starting any journey."
+  },
+  "q100": {
+    "id": "q100",
+    "question": "What should be your immediate action when approaching this traffic scenario?",
+    "image": "https://images.pexels.com/photos/2199293/pexels-photo-2199293.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "options": {
+      "type": "image",
+      "choices": [
+        {
+          "text": "Accelerate to clear the intersection quickly",
+          "image": "https://images.pexels.com/photos/3802510/pexels-photo-3802510.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "Stop and assess traffic from all directions",
+          "image": "https://images.pexels.com/photos/1545743/pexels-photo-1545743.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "Sound horn continuously",
+          "image": "https://images.pexels.com/photos/1118873/pexels-photo-1118873.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "Flash headlights and proceed",
+          "image": "https://images.pexels.com/photos/1563356/pexels-photo-1563356.jpeg?auto=compress&cs=tinysrgb&w=300"
+        }
+      ]
+    },
+    "correctAnswer": 1,
+    "explanation": "At complex intersections, always stop and carefully assess traffic from all directions before proceeding."
+  },
+  "q101": {
+    "id": "q101",
+    "question": "Based on this road surface condition, what driving technique should you employ?",
+    "image": "https://images.pexels.com/photos/1118873/pexels-photo-1118873.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "options": {
+      "type": "image",
+      "choices": [
+        {
+          "text": "Maintain normal driving speed",
+          "image": "https://images.pexels.com/photos/2199293/pexels-photo-2199293.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "Gentle steering and braking movements",
+          "image": "https://images.pexels.com/photos/1545743/pexels-photo-1545743.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "Rapid acceleration to maintain traction",
+          "image": "https://images.pexels.com/photos/3802510/pexels-photo-3802510.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "Frequent lane changes",
+          "image": "https://images.pexels.com/photos/1563356/pexels-photo-1563356.jpeg?auto=compress&cs=tinysrgb&w=300"
+        }
+      ]
+    },
+    "correctAnswer": 1,
+    "explanation": "On wet surfaces, use gentle steering and braking movements to maintain vehicle control and prevent skidding."
+  },
+  "q102": {
+    "id": "q102",
+    "question": "When navigating this type of road, what is your primary safety concern?",
+    "image": "https://images.pexels.com/photos/1545743/pexels-photo-1545743.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "options": {
+      "type": "image",
+      "choices": [
+        {
+          "text": "Fuel efficiency",
+          "image": "https://images.pexels.com/photos/2199293/pexels-photo-2199293.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "Vehicle rollback and brake fade",
+          "image": "https://images.pexels.com/photos/1118873/pexels-photo-1118873.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "Radio reception",
+          "image": "https://images.pexels.com/photos/3802510/pexels-photo-3802510.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "Air conditioning effectiveness",
+          "image": "https://images.pexels.com/photos/1563356/pexels-photo-1563356.jpeg?auto=compress&cs=tinysrgb&w=300"
+        }
+      ]
+    },
+    "correctAnswer": 1,
+    "explanation": "On steep inclines, the primary concerns are preventing vehicle rollback and managing brake fade from overuse."
+  },
+  "q103": {
+    "id": "q103",
+    "question": "What does this road marking pattern indicate to drivers?",
+    "image": "https://images.pexels.com/photos/1563356/pexels-photo-1563356.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "options": {
+      "type": "image",
+      "choices": [
+        {
+          "text": "Overtaking is encouraged",
+          "image": "https://images.pexels.com/photos/2199293/pexels-photo-2199293.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "Lane changing is prohibited",
+          "image": "https://images.pexels.com/photos/1545743/pexels-photo-1545743.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "Parking zone ahead",
+          "image": "https://images.pexels.com/photos/3802510/pexels-photo-3802510.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "Speed increase zone",
+          "image": "https://images.pexels.com/photos/1118873/pexels-photo-1118873.jpeg?auto=compress&cs=tinysrgb&w=300"
+        }
+      ]
+    },
+    "correctAnswer": 1,
+    "explanation": "Solid road markings indicate that lane changing or overtaking is prohibited for safety reasons."
+  },
+  "q104": {
+    "id": "q104",
+    "question": "In this driving environment, what should be your scanning pattern?",
+    "image": "https://images.pexels.com/photos/3802510/pexels-photo-3802510.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "options": [
+      "Focus only on the road ahead",
+      "Continuous scanning of mirrors and surroundings",
+      "Look only at the dashboard",
+      "Focus on other vehicles only"
+    ],
+    "correctAnswer": 1,
+    "explanation": "Safe driving requires continuous scanning of mirrors and surroundings to maintain situational awareness."
+  },
+  "q105": {
+    "id": "q105",
+    "question": "What is the most critical factor when driving in this weather condition?",
+    "image": "https://images.pexels.com/photos/1118873/pexels-photo-1118873.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "options": [
+      "Maintaining high speed",
+      "Visibility and traction management",
+      "Using air conditioning",
+      "Playing loud music"
+    ],
+    "correctAnswer": 1,
+    "explanation": "In wet conditions, managing visibility and traction are critical for safe vehicle operation."
+  },
+  "q106": {
+    "id": "q106",
+    "question": "When approaching this intersection type, what is the correct procedure?",
+    "image": "https://images.pexels.com/photos/2199293/pexels-photo-2199293.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "options": [
+      "Speed through without stopping",
+      "Apply right-of-way rules and proceed cautiously",
+      "Always turn right",
+      "Wait for police direction"
+    ],
+    "correctAnswer": 1,
+    "explanation": "At uncontrolled intersections, apply right-of-way rules and proceed with caution after ensuring safety."
+  },
+  "q107": {
+    "id": "q107",
+    "question": "What parking technique is most appropriate for this road gradient?",
+    "image": "https://images.pexels.com/photos/1545743/pexels-photo-1545743.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "options": [
+      "Park normally without special precautions",
+      "Turn wheels toward curb and engage parking brake",
+      "Leave vehicle in neutral",
+      "Park only in reverse"
+    ],
+    "correctAnswer": 1,
+    "explanation": "On hills, turn wheels toward the curb and engage the parking brake to prevent vehicle rollaway."
+  },
+  "q108": {
+    "id": "q108",
+    "question": "What vehicle system is most important for this driving condition?",
+    "image": "https://images.pexels.com/photos/3802510/pexels-photo-3802510.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "options": [
+      "Entertainment system",
+      "Electronic stability and traction control",
+      "Sunroof operation",
+      "Seat heating"
+    ],
+    "correctAnswer": 1,
+    "explanation": "Electronic stability and traction control systems are crucial for maintaining vehicle control in various driving conditions."
+  },
+  "q109": {
+    "id": "q109",
+    "question": "How should you adjust your following distance in this road condition?",
+    "image": "https://images.pexels.com/photos/1118873/pexels-photo-1118873.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "options": [
+      "Reduce following distance",
+      "Increase following distance significantly",
+      "Maintain normal distance",
+      "Following distance is irrelevant"
+    ],
+    "correctAnswer": 1,
+    "explanation": "In wet conditions, significantly increase following distance to account for longer braking distances."
+  },
+  "q110": {
+    "id": "q110",
+    "question": "What is the primary hazard when driving on this type of road surface?",
+    "image": "https://images.pexels.com/photos/1563356/pexels-photo-1563356.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "options": {
+      "type": "image",
+      "choices": [
+        {
+          "text": "Excessive speed",
+          "image": "https://images.pexels.com/photos/2199293/pexels-photo-2199293.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "Loss of lane discipline and vehicle control",
+          "image": "https://images.pexels.com/photos/1545743/pexels-photo-1545743.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "Poor fuel economy",
+          "image": "https://images.pexels.com/photos/3802510/pexels-photo-3802510.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "Radio interference",
+          "image": "https://images.pexels.com/photos/1118873/pexels-photo-1118873.jpeg?auto=compress&cs=tinysrgb&w=300"
+        }
+      ]
+    },
+    "correctAnswer": 1,
+    "explanation": "Poor road markings or surfaces can lead to loss of lane discipline and reduced vehicle control."
+  },
+  "q111": {
+    "id": "q111",
+    "question": "When navigating this intersection, what should be your primary focus?",
+    "image": "https://images.pexels.com/photos/2199293/pexels-photo-2199293.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "options": {
+      "type": "image",
+      "choices": [
+        {
+          "text": "Getting through quickly",
+          "image": "https://images.pexels.com/photos/3802510/pexels-photo-3802510.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "Observing all traffic movements and signals",
+          "image": "https://images.pexels.com/photos/1545743/pexels-photo-1545743.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "Honking at other drivers",
+          "image": "https://images.pexels.com/photos/1118873/pexels-photo-1118873.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "Checking mobile phone",
+          "image": "https://images.pexels.com/photos/1563356/pexels-photo-1563356.jpeg?auto=compress&cs=tinysrgb&w=300"
+        }
+      ]
+    },
+    "correctAnswer": 1,
+    "explanation": "At intersections, focus on observing all traffic movements and signals to ensure safe passage."
+  },
+  "q112": {
+    "id": "q112",
+    "question": "What driving technique is essential for this road gradient?",
+    "image": "https://images.pexels.com/photos/1545743/pexels-photo-1545743.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "options": {
+      "type": "image",
+      "choices": [
+        {
+          "text": "Constant acceleration",
+          "image": "https://images.pexels.com/photos/2199293/pexels-photo-2199293.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "Engine braking and controlled speed",
+          "image": "https://images.pexels.com/photos/1118873/pexels-photo-1118873.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "Riding the clutch",
+          "image": "https://images.pexels.com/photos/3802510/pexels-photo-3802510.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "Frequent gear changes",
+          "image": "https://images.pexels.com/photos/1563356/pexels-photo-1563356.jpeg?auto=compress&cs=tinysrgb&w=300"
+        }
+      ]
+    },
+    "correctAnswer": 1,
+    "explanation": "On steep grades, use engine braking and maintain controlled speed to prevent brake overheating."
+  },
+  "q113": {
+    "id": "q113",
+    "question": "In this driving scenario, what should be your speed management strategy?",
+    "image": "https://images.pexels.com/photos/3802510/pexels-photo-3802510.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "options": {
+      "type": "image",
+      "choices": [
+        {
+          "text": "Drive as fast as possible",
+          "image": "https://images.pexels.com/photos/2199293/pexels-photo-2199293.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "Adjust speed according to conditions and visibility",
+          "image": "https://images.pexels.com/photos/1545743/pexels-photo-1545743.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "Maintain constant high speed",
+          "image": "https://images.pexels.com/photos/1118873/pexels-photo-1118873.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "Speed is not important",
+          "image": "https://images.pexels.com/photos/1563356/pexels-photo-1563356.jpeg?auto=compress&cs=tinysrgb&w=300"
+        }
+      ]
+    },
+    "correctAnswer": 1,
+    "explanation": "Always adjust your speed according to road conditions, visibility, and traffic to maintain safety."
+  },
+  "q114": {
+    "id": "q114",
+    "question": "What is the most important safety consideration for this weather condition?",
+    "image": "https://images.pexels.com/photos/1118873/pexels-photo-1118873.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "options": {
+      "type": "image",
+      "choices": [
+        {
+          "text": "Maintaining normal speed",
+          "image": "https://images.pexels.com/photos/2199293/pexels-photo-2199293.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "Reduced visibility and increased stopping distance",
+          "image": "https://images.pexels.com/photos/1545743/pexels-photo-1545743.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "Fuel consumption",
+          "image": "https://images.pexels.com/photos/3802510/pexels-photo-3802510.jpeg?auto=compress&cs=tinysrgb&w=300"
+        },
+        {
+          "text": "Engine temperature",
+          "image": "https://images.pexels.com/photos/1563356/pexels-photo-1563356.jpeg?auto=compress&cs=tinysrgb&w=300"
+        }
+      ]
+    },
+    "correctAnswer": 1,
+    "explanation": "In wet weather, the main safety concerns are reduced visibility and significantly increased stopping distances."
+  },
+  "q115": {
+    "id": "q115",
+    "question": "What should you do when approaching this traffic scenario?",
+    "image": "https://images.pexels.com/photos/2199293/pexels-photo-2199293.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "options": {
+      "type": "image",
+      "choices": [
+        {
+          "text": "Stop and assess traffic from all directions",
+          "image": "https://images.pexels.com/photos/1545743/pexels-photo-1545743.jpeg?auto=compress&cs=tinysrgb&w=400"
+        },
+        {
+          "text": "Accelerate through quickly",
+          "image": "https://images.pexels.com/photos/3802510/pexels-photo-3802510.jpeg?auto=compress&cs=tinysrgb&w=400"
+        },
+        {
+          "text": "Sound horn and proceed",
+          "image": "https://images.pexels.com/photos/1118873/pexels-photo-1118873.jpeg?auto=compress&cs=tinysrgb&w=400"
+        },
+        {
+          "text": "Flash headlights and continue",
+          "image": "https://images.pexels.com/photos/1563356/pexels-photo-1563356.jpeg?auto=compress&cs=tinysrgb&w=400"
+        }
+      ]
+    },
+    "correctAnswer": 0,
+    "explanation": "At this intersection, you should stop and give way to traffic from the right according to traffic rules."
+  },
+  "q116": {
+    "id": "q116",
+    "question": "In this weather condition, what driving technique should you use?",
+    "image": "https://images.pexels.com/photos/1118873/pexels-photo-1118873.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "options": {
+      "type": "image",
+      "choices": [
+        {
+          "text": "Maintain normal speed",
+          "image": "https://images.pexels.com/photos/2199293/pexels-photo-2199293.jpeg?auto=compress&cs=tinysrgb&w=400"
+        },
+        {
+          "text": "Reduce speed and increase following distance",
+          "image": "https://images.pexels.com/photos/1545743/pexels-photo-1545743.jpeg?auto=compress&cs=tinysrgb&w=400"
+        },
+        {
+          "text": "Use high beam headlights",
+          "image": "https://images.pexels.com/photos/3802510/pexels-photo-3802510.jpeg?auto=compress&cs=tinysrgb&w=400"
+        },
+        {
+          "text": "Drive in center of road",
+          "image": "https://images.pexels.com/photos/1563356/pexels-photo-1563356.jpeg?auto=compress&cs=tinysrgb&w=400"
+        }
+      ]
+    },
+    "correctAnswer": 2,
+    "explanation": "In wet weather conditions, reduce speed and increase following distance for safety."
+  },
+  "q117": {
+    "id": "q117",
+    "question": "When parking on this type of road, what is the correct wheel position?",
+    "image": "https://images.pexels.com/photos/1545743/pexels-photo-1545743.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "options": {
+      "type": "image",
+      "choices": [
+        {
+          "text": "Turn wheels toward curb",
+          "image": "https://images.pexels.com/photos/2199293/pexels-photo-2199293.jpeg?auto=compress&cs=tinysrgb&w=400"
+        },
+        {
+          "text": "Keep wheels straight",
+          "image": "https://images.pexels.com/photos/1118873/pexels-photo-1118873.jpeg?auto=compress&cs=tinysrgb&w=400"
+        },
+        {
+          "text": "Turn wheels away from curb",
+          "image": "https://images.pexels.com/photos/3802510/pexels-photo-3802510.jpeg?auto=compress&cs=tinysrgb&w=400"
+        },
+        {
+          "text": "Wheel position doesn't matter",
+          "image": "https://images.pexels.com/photos/1563356/pexels-photo-1563356.jpeg?auto=compress&cs=tinysrgb&w=400"
+        }
+      ]
+    },
+    "correctAnswer": 0,
+    "explanation": "When parking on a hill, turn wheels toward the curb so the vehicle won't roll into traffic if brakes fail."
+  },
+  "q118": {
+    "id": "q118",
+    "question": "Which driving scenario requires the most attention to vehicle stability?",
+    "options": {
+      "type": "image",
+      "choices": [
+        {
+          "text": "Busy intersection",
+          "image": "https://images.pexels.com/photos/2199293/pexels-photo-2199293.jpeg?auto=compress&cs=tinysrgb&w=400"
+        },
+        {
+          "text": "Steep hill driving",
+          "image": "https://images.pexels.com/photos/1545743/pexels-photo-1545743.jpeg?auto=compress&cs=tinysrgb&w=400"
+        },
+        {
+          "text": "Wet road conditions",
+          "image": "https://images.pexels.com/photos/1118873/pexels-photo-1118873.jpeg?auto=compress&cs=tinysrgb&w=400"
+        },
+        {
+          "text": "Normal city driving",
+          "image": "https://images.pexels.com/photos/3802510/pexels-photo-3802510.jpeg?auto=compress&cs=tinysrgb&w=400"
+        }
+      ]
+    },
+    "correctAnswer": 2,
+    "explanation": "Wet road conditions require the most attention to vehicle stability due to reduced traction and increased risk of skidding."
+  },
+  "q119": {
+    "id": "q119",
+    "question": "Which driving scenario requires the most caution?",
+    "options": {
+      "type": "image",
+      "choices": [
+        {
+          "text": "Clear intersection",
+          "image": "https://images.pexels.com/photos/2199293/pexels-photo-2199293.jpeg?auto=compress&cs=tinysrgb&w=400"
+        },
+        {
+          "text": "Uphill driving",
+          "image": "https://images.pexels.com/photos/1545743/pexels-photo-1545743.jpeg?auto=compress&cs=tinysrgb&w=400"
+        },
+        {
+          "text": "Wet weather driving",
+          "image": "https://images.pexels.com/photos/1118873/pexels-photo-1118873.jpeg?auto=compress&cs=tinysrgb&w=400"
+        },
+        {
+          "text": "Regular traffic",
+          "image": "https://images.pexels.com/photos/3802510/pexels-photo-3802510.jpeg?auto=compress&cs=tinysrgb&w=400"
+        }
+      ]
+    },
+    "correctAnswer": 2,
+    "explanation": "Wet weather conditions require the most caution due to reduced visibility and traction."
+  },
+  "q120": {
+    "id": "q120",
+    "question": "",
+    "image": "https://images.pexels.com/photos/3802510/pexels-photo-3802510.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "options": {
+      "type": "image",
+      "choices": [
+        {
+          "text": "",
+          "image": "https://images.pexels.com/photos/2199293/pexels-photo-2199293.jpeg?auto=compress&cs=tinysrgb&w=400"
+        },
+        {
+          "text": "",
+          "image": "https://images.pexels.com/photos/1545743/pexels-photo-1545743.jpeg?auto=compress&cs=tinysrgb&w=400"
+        },
+        {
+          "text": "",
+          "image": "https://images.pexels.com/photos/1118873/pexels-photo-1118873.jpeg?auto=compress&cs=tinysrgb&w=400"
+        },
+        {
+          "text": "",
+          "image": "https://images.pexels.com/photos/1563356/pexels-photo-1563356.jpeg?auto=compress&cs=tinysrgb&w=400"
+        }
+      ]
+    },
+    "correctAnswer": 1,
+    "explanation": "This scenario requires careful attention to vehicle positioning and road conditions."
+  },
+  "q121": {
+    "id": "q121",
+    "question": "",
+    "image": "",
+    "options": {
+      "type": "image",
+      "choices": [
+        {
+          "text": "",
+          "image": "https://images.pexels.com/photos/2199293/pexels-photo-2199293.jpeg?auto=compress&cs=tinysrgb&w=400"
+        },
+        {
+          "text": "",
+          "image": "https://images.pexels.com/photos/1545743/pexels-photo-1545743.jpeg?auto=compress&cs=tinysrgb&w=400"
+        },
+        {
+          "text": "",
+          "image": "https://images.pexels.com/photos/1118873/pexels-photo-1118873.jpeg?auto=compress&cs=tinysrgb&w=400"
+        },
+        {
+          "text": "",
+          "image": "https://images.pexels.com/photos/3802510/pexels-photo-3802510.jpeg?auto=compress&cs=tinysrgb&w=400"
+        }
+      ]
+    },
+    "correctAnswer": 2,
+    "explanation": "This represents the most appropriate driving response for the given scenario."
+  }
+}

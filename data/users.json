@@ -1,0 +1,24 @@
+{
+  "demoUsers": [
+    {
+      "id": "1",
+      "name": "Ahmad Faizal",
+      "email": "premium@jpj.com",
+      "password": "premium123",
+      "subscription": "premium"
+    },
+    {
+      "id": "2",
+      "name": "Siti Aminah",
+      "email": "free@jpj.com",
+      "password": "free123",
+      "subscription": "free"
+    }
+  ],
+  "aboutData": {
+    "title": "About JPJOnline",
+    "content": "JPJOnline is Malaysia's premier digital learning platform for driving license preparation. Our comprehensive system provides:\n\n• Interactive learning materials covering all aspects of Malaysian traffic laws\n• Practice tests that simulate the actual JPJ examination\n• Real-time progress tracking and performance analytics\n• Expert-curated content updated regularly\n\nOur mission is to make driving education accessible, engaging, and effective for all Malaysians. With over 10,000 successful students, we're committed to helping you pass your driving test with confidence.\n\nFounded in 2024, JPJOnline combines modern technology with proven educational methods to deliver the best learning experience possible.",
+    "version": "1.0.0",
+    "lastUpdated": "2024-01-15"
+  }
+}

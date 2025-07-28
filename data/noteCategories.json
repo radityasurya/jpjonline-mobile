@@ -1,0 +1,104 @@
+{
+  "categories": [
+    {
+      "id": "1",
+      "name": "Traffic Laws",
+      "slug": "traffic-laws",
+      "description": "Comprehensive coverage of Malaysian traffic laws and regulations",
+      "count": 15,
+      "parent_id": null,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-15T10:30:00Z"
+    },
+    {
+      "id": "2",
+      "name": "Road Signs",
+      "slug": "road-signs",
+      "description": "Understanding traffic signs, signals, and road markings",
+      "count": 12,
+      "parent_id": null,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-14T09:15:00Z"
+    },
+    {
+      "id": "3",
+      "name": "Safety",
+      "slug": "safety",
+      "description": "Driving safety techniques and best practices",
+      "count": 18,
+      "parent_id": null,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-13T16:45:00Z"
+    },
+    {
+      "id": "4",
+      "name": "Driving",
+      "slug": "driving",
+      "description": "Practical driving skills and techniques",
+      "count": 20,
+      "parent_id": null,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-12T14:20:00Z"
+    },
+    {
+      "id": "5",
+      "name": "Technology",
+      "slug": "technology",
+      "description": "Modern vehicle technology and safety systems",
+      "count": 8,
+      "parent_id": null,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-11T11:10:00Z"
+    },
+    {
+      "id": "6",
+      "name": "Maintenance",
+      "slug": "maintenance",
+      "description": "Vehicle maintenance and inspection procedures",
+      "count": 10,
+      "parent_id": null,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-10T08:30:00Z"
+    },
+    {
+      "id": "7",
+      "name": "Emergency Procedures",
+      "slug": "emergency-procedures",
+      "description": "What to do in emergency situations while driving",
+      "count": 6,
+      "parent_id": "3",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-09T15:20:00Z"
+    },
+    {
+      "id": "8",
+      "name": "Weather Conditions",
+      "slug": "weather-conditions",
+      "description": "Driving in various weather conditions",
+      "count": 7,
+      "parent_id": "3",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-08T12:45:00Z"
+    },
+    {
+      "id": "9",
+      "name": "Parking",
+      "slug": "parking",
+      "description": "Parking techniques and regulations",
+      "count": 5,
+      "parent_id": "4",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-07T09:30:00Z"
+    },
+    {
+      "id": "10",
+      "name": "Highway Driving",
+      "slug": "highway-driving",
+      "description": "Special considerations for highway and expressway driving",
+      "count": 8,
+      "parent_id": "4",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-06T14:15:00Z"
+    }
+  ]
+}

@@ -1,0 +1,232 @@
+{
+  "categories": [
+    "All",
+    "Traffic Laws",
+    "Road Signs",
+    "Safety",
+    "Parking",
+    "Technology",
+    "Maintenance",
+    "Comprehensive"
+  ],
+  "exams": [
+    {
+      "id": "1",
+      "title": "Basic Traffic Laws - Free Open",
+      "description": "Basic test on Malaysian traffic laws with immediate feedback",
+      "questions": 10,
+      "duration": 15,
+      "difficulty": "Easy",
+      "isPremium": false,
+      "category": "Traffic Laws",
+      "passingScore": 80,
+      "settings": {
+        "type": "open",
+        "immediateValidation": true,
+        "showCorrectAnswer": true,
+        "allowReview": true
+      },
+      "questionIds": ["q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9", "q10"]
+    },
+    {
+      "id": "2",
+      "title": "Road Signs Test - Free Closed",
+      "description": "Test your knowledge of road signs and traffic signals",
+      "questions": 15,
+      "duration": 20,
+      "difficulty": "Easy",
+      "isPremium": false,
+      "category": "Road Signs",
+      "passingScore": 80,
+      "settings": {
+        "type": "closed",
+        "immediateValidation": false,
+        "showCorrectAnswer": false,
+        "allowReview": false
+      },
+      "questionIds": ["q21", "q22", "q23", "q24", "q25", "q26", "q27", "q28", "q29", "q30", "q31", "q32", "q33", "q34", "q35"]
+    },
+    {
+      "id": "3",
+      "title": "Comprehensive JPJ Test - Premium Closed",
+      "description": "Full test similar to actual JPJ examination",
+      "questions": 50,
+      "duration": 60,
+      "difficulty": "Hard",
+      "isPremium": true,
+      "category": "Comprehensive",
+      "passingScore": 85,
+      "settings": {
+        "type": "closed",
+        "immediateValidation": false,
+        "showCorrectAnswer": false,
+        "allowReview": false
+      },
+      "questionIds": ["q36", "q37", "q38", "q39", "q40", "q41", "q42", "q43", "q44", "q45"]
+    },
+    {
+      "id": "4",
+      "title": "Driving Safety - Premium Open",
+      "description": "Advanced test on driving safety and techniques with feedback",
+      "questions": 25,
+      "duration": 35,
+      "difficulty": "Medium",
+      "isPremium": true,
+      "category": "Safety",
+      "passingScore": 80,
+      "settings": {
+        "type": "open",
+        "immediateValidation": true,
+        "showCorrectAnswer": true,
+        "allowReview": true
+      },
+      "questionIds": ["q46", "q47", "q48", "q49", "q50", "q51", "q52", "q53", "q54", "q55"]
+    },
+    {
+      "id": "5",
+      "title": "Advanced Traffic Scenarios",
+      "description": "Complex traffic situations with visual aids",
+      "questions": 20,
+      "duration": 30,
+      "difficulty": "Medium",
+      "isPremium": false,
+      "category": "Traffic Laws",
+      "passingScore": 80,
+      "settings": {
+        "type": "open",
+        "immediateValidation": true,
+        "showCorrectAnswer": true,
+        "allowReview": true
+      },
+      "questionIds": ["q56", "q57", "q58", "q59", "q60", "q61", "q62", "q63", "q64", "q65"]
+    },
+    {
+      "id": "6",
+      "title": "Vehicle Technology Quiz",
+      "description": "Modern vehicle systems and safety features",
+      "questions": 15,
+      "duration": 25,
+      "difficulty": "Medium",
+      "isPremium": true,
+      "category": "Technology",
+      "passingScore": 75,
+      "settings": {
+        "type": "closed",
+        "immediateValidation": false,
+        "showCorrectAnswer": false,
+        "allowReview": false
+      },
+      "questionIds": ["q66", "q67", "q68", "q69", "q70", "q71", "q72", "q73", "q74", "q75"]
+    },
+    {
+      "id": "7",
+      "title": "Visual Road Assessment - Premium",
+      "description": "Complete visual assessment with real road scenarios and traffic situations",
+      "questions": 12,
+      "duration": 25,
+      "difficulty": "Medium",
+      "isPremium": true,
+      "category": "Road Signs",
+      "passingScore": 80,
+      "settings": {
+        "type": "closed",
+        "immediateValidation": false,
+        "showCorrectAnswer": false,
+        "allowReview": false
+      },
+      "questionIds": ["q80", "q81", "q82", "q83", "q84", "q85", "q86", "q87", "q88", "q89", "q90", "q91"]
+    },
+    {
+      "id": "8",
+      "title": "Complete Visual Driving Test",
+      "description": "Comprehensive visual test with all image-based questions covering real-world driving scenarios",
+      "questions": 15,
+      "duration": 30,
+      "difficulty": "Hard",
+      "isPremium": true,
+      "category": "Comprehensive",
+      "passingScore": 85,
+      "settings": {
+        "type": "closed",
+        "immediateValidation": false,
+        "showCorrectAnswer": false,
+        "allowReview": false
+      },
+      "questionIds": ["q100", "q101", "q102", "q103", "q104", "q105", "q106", "q107", "q108", "q109", "q110", "q111", "q112", "q113", "q114"]
+    },
+    {
+      "id": "9",
+      "title": "Visual Road Assessment With Image - Premium",
+      "description": "Complete visual assessment with real road scenarios and traffic situations",
+      "questions": 12,
+      "duration": 25,
+      "difficulty": "Medium",
+      "isPremium": true,
+      "category": "Road Signs",
+      "passingScore": 80,
+      "settings": {
+        "type": "closed",
+        "immediateValidation": false,
+        "showCorrectAnswer": false,
+        "allowReview": false
+      },
+      "questionIds": ["q80", "q81", "q82", "q83", "q84", "q85", "q86", "q87", "q88", "q89", "q90", "q91"]
+    },
+    {
+      "id": "10",
+      "title": "Complete Visual Driving Test",
+      "description": "Comprehensive visual test with all image-based questions covering real-world driving scenarios",
+      "questions": 15,
+      "duration": 30,
+      "difficulty": "Hard",
+      "isPremium": true,
+      "category": "Comprehensive",
+      "passingScore": 85,
+      "settings": {
+        "type": "closed",
+        "immediateValidation": false,
+        "showCorrectAnswer": false,
+        "allowReview": false
+      },
+      "questionIds": ["q100", "q101", "q102", "q103", "q104", "q105", "q106", "q107", "q108", "q109", "q110", "q111", "q112", "q113", "q114"]
+    },
+    {
+      "id": "11",
+      "title": "Pure Visual Assessment - Premium",
+      "description": "Advanced visual assessment combining image questions with image answers",
+      "questions": 8,
+      "duration": 15,
+      "difficulty": "Hard",
+      "isPremium": true,
+      "category": "Visual Assessment",
+      "passingScore": 85,
+      "settings": {
+        "type": "closed",
+        "immediateValidation": false,
+        "showCorrectAnswer": false,
+        "allowReview": false
+      },
+      "questionIds": ["q115", "q116", "q117", "q118", "q119", "q120", "q121", "q80"]
+    },
+    {
+      "id": "12",
+      "title": "Timed Question Challenge - Premium",
+      "description": "Per-question time limit test - 30 seconds per question",
+      "questions": 10,
+      "duration": 5,
+      "difficulty": "Medium",
+      "isPremium": true,
+      "category": "Challenge",
+      "passingScore": 80,
+      "settings": {
+        "type": "open",
+        "immediateValidation": true,
+        "showCorrectAnswer": true,
+        "allowReview": true,
+        "timerMode": "per-question",
+        "questionDuration": 30
+      },
+      "questionIds": ["q1", "q2", "q3", "q4", "q5", "q21", "q22", "q23", "q24", "q25"]
+    }
+  ]
+}

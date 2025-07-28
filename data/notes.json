@@ -1,0 +1,91 @@
+{
+  "categories": [
+    "All",
+    "Traffic Laws",
+    "Road Signs",
+    "Safety",
+    "Driving",
+    "Technology",
+    "Maintenance"
+  ],
+  "notes": [
+    {
+      "id": "1",
+      "title": "Basic Traffic Laws",
+      "content": "# Basic Traffic Laws\n\n## Introduction\nTraffic laws in Malaysia are regulated by the Road Transport Act 1987. This act establishes regulations and procedures that must be followed by all road users.\n\n## Main Regulations\n\n### 1. Driving License\n- All drivers must have a valid driving license\n- License must be renewed according to the specified period\n- New drivers must pass theory and practical tests\n\n### 2. Vehicle Registration\n- All vehicles must be registered with JPJ\n- Registration certificate must always be carried\n- Vehicle insurance is mandatory\n\n### 3. Speed Limits\n- Residential areas: 50 km/h\n- Main roads: 90 km/h\n- Highways: 110 km/h\n\n## Conclusion\nComplying with traffic laws is the responsibility of every road user to ensure mutual safety.",
+      "preview": "Traffic laws in Malaysia are regulated by the Road Transport Act 1987. This act establishes regulations and procedures...",
+      "category": "Traffic Laws",
+      "dateCreated": "2024-01-15T10:30:00Z",
+      "dateModified": "2024-01-16T14:20:00Z",
+      "readTime": 5,
+      "isBookmarked": false,
+      "isPremium": false,
+      "tags": ["basic", "laws", "traffic"]
+    },
+    {
+      "id": "2",
+      "title": "Road Signs and Signals",
+      "content": "# Road Signs and Signals\n\n## Types of Signs\n\n### Prohibition Signs\n- **No Entry**: Red circle with white bar\n- **No Left Turn**: Left arrow with red line\n- **Speed Limit**: Number in red circle\n\n### Warning Signs\n- **Dangerous Curve**: Triangle with curved arrow\n- **Intersection**: Triangle with intersection symbol\n- **Slippery Road**: Triangle with skidding car\n\n### Information Signs\n- **Hospital**: White H in blue box\n- **Gas Station**: Gas pump in blue box\n- **Parking**: White P in blue box\n\n## Importance of Understanding Signs\nUnderstanding road signs is important for:\n1. Driving safety\n2. Avoiding traffic violations\n3. Smooth travel\n\n## Practical Test\nIn the driving test, you will be tested on:\n- Identifying signs\n- Correct actions\n- Right of way",
+      "preview": "Understanding road signs and signals is an important foundation for safe driving. There are three main categories of signs...",
+      "category": "Road Signs",
+      "dateCreated": "2024-01-14T09:15:00Z",
+      "dateModified": "2024-01-14T09:15:00Z",
+      "readTime": 8,
+      "isBookmarked": true,
+      "isPremium": false,
+      "tags": ["signs", "road", "safety"]
+    },
+    {
+      "id": "3",
+      "title": "Night Driving Safety",
+      "content": "# Night Driving Safety\n\n## Night Driving Challenges\nDriving at night brings unique challenges that require special attention.\n\n### Limited Visibility\n- Visibility distance reduced by up to 60%\n- Difficult to judge distance and speed\n- Glare from other vehicle lights\n\n### Safety Tips\n\n#### Before Driving\n1. **Check Vehicle Lights**\n   - Headlights (high and low beam)\n   - Tail lights and brake lights\n   - Turn signals\n\n2. **Clean Mirrors and Windows**\n   - Windshield\n   - Side mirrors\n   - Rear window\n\n#### While Driving\n- Reduce speed\n- Increase following distance\n- Use low beams in urban areas\n- Avoid looking directly at oncoming lights\n\n## Special Situations\n### Rain at Night\n- Roads become more slippery\n- Light reflections disturb vision\n- Use fog lights if necessary\n\n### Rural Areas\n- No street lighting\n- Possibility of wild animals\n- Winding and hilly roads",
+      "preview": "Driving at night brings unique challenges that require special attention. Visibility distance is reduced...",
+      "category": "Safety",
+      "dateCreated": "2024-01-13T16:45:00Z",
+      "dateModified": "2024-01-15T11:30:00Z",
+      "readTime": 6,
+      "isBookmarked": false,
+      "isPremium": false,
+      "tags": ["safety", "night", "driving"]
+    },
+    {
+      "id": "4",
+      "title": "Parallel Parking Technique",
+      "content": "# Parallel Parking Technique\n\n## Preparation\nParallel parking is one of the important skills that will be tested in the driving test.\n\n### Parallel Parking Steps\n\n#### 1. Find Parking Space\n- Space must be 1.5 times your car length\n- Ensure no obstacles\n- Check parking signs\n\n#### 2. Initial Position\n- Stop car parallel to front car\n- Side distance: 60-90 cm\n- Side mirror aligned with front car's mirror\n\n#### 3. Start Reversing\n- Turn steering wheel full right\n- Reverse slowly\n- Monitor rear mirror\n\n#### 4. Correct Position\n- When car is at 45° angle, straighten steering\n- Continue reversing\n- Turn steering left to enter space\n\n#### 5. Final Position\n- Car parallel to other vehicles\n- Equal distance front and back\n- Distance from curb: 15-30 cm\n\n## Important Tips\n- Practice in safe areas first\n- Use cones or markers for practice\n- Don't rush\n- Use all mirrors properly",
+      "preview": "Parallel parking is one of the important skills that will be tested in the driving test. Proper technique requires...",
+      "category": "Driving",
+      "dateCreated": "2024-01-12T14:20:00Z",
+      "dateModified": "2024-01-12T14:20:00Z",
+      "readTime": 7,
+      "isBookmarked": true,
+      "isPremium": false,
+      "tags": ["parking", "skills", "test"]
+    },
+    {
+      "id": "5",
+      "title": "ABS Braking System",
+      "content": "# Anti-lock Braking System (ABS)\n\n## What is ABS?\nAnti-lock Braking System (ABS) is a safety system that prevents wheels from locking during emergency braking.\n\n### How ABS Works\n\n#### Main Components\n1. **Wheel Speed Sensors**\n   - Monitor speed of each wheel\n   - Detect when wheels start to lock\n\n2. **Electronic Control Unit (ECU)**\n   - Process data from sensors\n   - Control brake pressure\n\n3. **Hydraulic Pump**\n   - Control brake fluid pressure\n   - Allow brake release and application\n\n#### Working Process\n1. Driver presses brake pedal\n2. Sensors detect wheels starting to lock\n3. ECU reduces brake pressure\n4. Wheels start rotating again\n5. Process repeats 15-20 times per second\n\n## ABS Advantages\n- Maintain steering control\n- Reduce braking distance\n- Prevent car skidding\n- Increase safety\n\n## How to Use ABS\n- Press brake pedal firmly\n- Don't release even if you feel vibration\n- Steer in desired direction\n- Let the system work\n\n## Maintenance\n- Check ABS warning light\n- Service according to schedule\n- Replace with quality brake fluid",
+      "preview": "Anti-lock Braking System (ABS) is a safety system that prevents wheels from locking during emergency braking...",
+      "category": "Technology",
+      "dateCreated": "2024-01-11T11:10:00Z",
+      "dateModified": "2024-01-13T09:45:00Z",
+      "readTime": 10,
+      "isBookmarked": false,
+      "isPremium": false,
+      "tags": ["abs", "brakes", "technology", "safety"]
+    },
+    {
+      "id": "6",
+      "title": "Daily Vehicle Inspection",
+      "content": "# Daily Vehicle Inspection\n\n## Importance of Daily Inspection\nDaily inspection ensures the vehicle is in safe condition and prevents major damage.\n\n### Inspection Checklist\n\n#### Exterior Parts\n1. **Tires**\n   - Correct air pressure\n   - Tread depth\n   - Damage or bulges\n\n2. **Lights**\n   - Headlights\n   - Tail lights\n   - Turn signals\n   - Brake lights\n\n3. **Mirrors**\n   - Windshield (cracks or breaks)\n   - Side mirrors\n   - Rear mirror\n\n#### Interior Parts\n1. **Engine Oil**\n   - Check oil level\n   - Color and consistency\n   - Add if necessary\n\n2. **Radiator Water**\n   - Water level in tank\n   - Leaks\n   - Water color (green/red)\n\n3. **Brake Fluid**\n   - Level in reservoir\n   - Fluid color\n   - Leaks\n\n#### Internal Controls\n- Handbrake\n- Brake pedal\n- Clutch (manual cars)\n- Steering\n- Seat belts\n\n## Inspection Schedule\n- **Daily**: Tires, lights, engine oil\n- **Weekly**: Radiator water, brake fluid\n- **Monthly**: Comprehensive inspection\n\n## Warning Signs\n- Strange sounds from engine\n- Unusual vibrations\n- Burning smell\n- Warning lights on",
+      "preview": "Daily inspection ensures the vehicle is in safe condition and prevents major damage. Inspection checklist...",
+      "category": "Maintenance",
+      "dateCreated": "2024-01-10T08:30:00Z",
+      "dateModified": "2024-01-10T08:30:00Z",
+      "readTime": 12,
+      "isBookmarked": false,
+      "isPremium": false,
+      "tags": ["inspection", "maintenance", "daily"]
+    }
+  ]
+}

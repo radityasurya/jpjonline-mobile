@@ -25,7 +25,7 @@ const DEMO_USERS = [
   {
     id: '1',
     name: 'Ahmad Faizal',
-    email: 'premium@jpj.com',
+    email: 'premium@jpjonline.com',
     password: 'premium123',
     subscription: 'premium' as const,
   },

@@ -54,11 +54,11 @@ export default function LoginScreen() {
 
   const fillDemoCredentials = (type: 'premium' | 'free') => {
     if (type === 'premium') {
-      setEmail('premium@jpj.com');
+      setEmail('premium@jpjonline.com');
       setPassword('premium123');
     } else {
-      setEmail('free@jpj.com');
-      setPassword('free123');
+      setEmail('user@jpjonline.com');
+      setPassword('user123');
     }
   };
 

@@ -54,6 +54,23 @@ export {
 // Export progress service instance
 export { default as progressService } from './progressService.js';
 
+// Bookmark services
+export {
+  getBookmarks,
+  isBookmarked,
+  addBookmark,
+  removeBookmark,
+  toggleBookmark,
+  getBookmarkedNotes,
+  clearAllBookmarks,
+  getBookmarkStats,
+  exportBookmarks,
+  importBookmarks
+} from './bookmarkService.js';
+
+// Export bookmark service instance
+export { default as bookmarkService } from './bookmarkService.js';
+
 // API configuration
 export { API_CONFIG, getAuthHeaders, buildApiUrl } from '../config/api.js';
 

@@ -20,7 +20,7 @@ import {
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/utils/logger';
-import { getNotesGroupedByCategory } from '@/services';
+import { getNotesGroupedByCategory, isBookmarked, toggleBookmark } from '@/services';
 
 const { width } = Dimensions.get('window');
 const cardWidth = (width - 60) / 2; // 2 columns with padding
@@ -85,6 +85,7 @@ export default function NotesScreen() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [showBookmarksOnly, setShowBookmarksOnly] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [bookmarkStates, setBookmarkStates] = useState<{ [key: string]: boolean }>({});
 
   useEffect(() => {
     fetchNotesData();
@@ -94,6 +95,21 @@ export default function NotesScreen() {
     applyFilters();
   }, [searchQuery, selectedCategory, notesData, showBookmarksOnly]);
 
+  useEffect(() => {
+    loadBookmarkStates();
+  }, [notesData]);
+
+  const loadBookmarkStates = () => {
+    if (!notesData) return;
+    
+    const states: { [key: string]: boolean } = {};
+    Object.values(notesData.notesByCategory).forEach(categoryGroup => {
+      categoryGroup.notes.forEach(note => {
+        states[note.id] = isBookmarked(note.id);
+      });
+    });
+    setBookmarkStates(states);
+  };
   const fetchNotesData = async () => {
     setIsLoading(true);
     logger.debug('NotesScreen', 'Fetching notes grouped by category');
@@ -127,10 +143,9 @@ export default function NotesScreen() {
 
     let filtered = [...allNotes];
 
-    // TODO: Apply bookmark filter when bookmark API is integrated
-    // if (showBookmarksOnly) {
-    //   filtered = filtered.filter((note) => note.isBookmarked);
-    // }
+    if (showBookmarksOnly) {
+      filtered = filtered.filter((note) => bookmarkStates[note.id]);
+    }
 
     // Apply category filter
     if (selectedCategory !== 'All') {
@@ -157,15 +172,18 @@ export default function NotesScreen() {
     setFilteredNotes(filtered);
   };
 
-  const toggleBookmark = async (noteId: string) => {
+  const handleToggleBookmark = async (noteId: string) => {
     logger.userAction('Bookmark toggled', { noteId });
-    // TODO: Implement bookmark functionality when API is ready
-    // try {
-    //   const response = await toggleNoteBookmark(noteId);
-    //   // Update local state
-    // } catch (error) {
-    //   logger.error('NotesScreen', 'Error toggling bookmark', error);
-    // }
+    try {
+      const newBookmarkStatus = toggleBookmark(noteId);
+      setBookmarkStates(prev => ({
+        ...prev,
+        [noteId]: newBookmarkStatus
+      }));
+      logger.info('NotesScreen', 'Bookmark toggled successfully', { noteId, newStatus: newBookmarkStatus });
+    } catch (error) {
+      logger.error('NotesScreen', 'Error toggling bookmark', error);
+    }
   };
 
   const openNote = (note: ApiNote) => {
@@ -285,10 +303,12 @@ export default function NotesScreen() {
                 <Text style={styles.categoryBadgeText}>{note.topic.category.title}</Text>
               </View>
               <View style={styles.noteActions}>
-                {/* TODO: Add premium icon when implemented */}
-                <TouchableOpacity onPress={() => toggleBookmark(note.id)}>
-                  {/* TODO: Show bookmark status when implemented */}
-                  <Bookmark size={18} color="#CCCCCC" />
+                <TouchableOpacity onPress={() => handleToggleBookmark(note.id)}>
+                  {bookmarkStates[note.id] ? (
+                    <BookmarkCheck size={18} color="#facc15" />
+                  ) : (
+                    <Bookmark size={18} color="#CCCCCC" />
+                  )}
                 </TouchableOpacity>
               </View>
             </View>

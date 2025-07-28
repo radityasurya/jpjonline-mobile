@@ -10,7 +10,7 @@ import {
 import { useLocalSearchParams, router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/utils/logger';
-import { getExamBySlug, submitExamResults } from '@/services';
+import { getExamBySlug, submitExamResults, updateStats } from '@/services';
 
 // Types for the new API structure
 interface ApiQuestion {

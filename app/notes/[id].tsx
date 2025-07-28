@@ -26,7 +26,7 @@ export default function NoteDetailScreen() {
   const { user } = useAuth();
   const [note, setNote] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [noteIsBookmarked, setNoteIsBookmarked] = useState(false);
 
   useEffect(() => {
     fetchNote();
@@ -51,8 +51,8 @@ export default function NoteDetailScreen() {
         category: noteData.topic?.category?.slug
       });
       
-      // TODO: Check bookmark status when API is ready
-      // setIsBookmarked(noteData.isBookmarked);
+      // Check bookmark status
+      setNoteIsBookmarked(isBookmarked(noteData.id));
     } catch (error) {
       logger.error('NoteDetailScreen', 'Error fetching note', error);
     } finally {
@@ -60,9 +60,8 @@ export default function NoteDetailScreen() {
     }
   };
 
-  const toggleBookmark = async () => {
+  const handleToggleBookmark = async () => {
     logger.userAction('Bookmark toggle attempted', { noteId: note?.id });
-    // TODO: Implement bookmark functionality when API is ready
     try {
       // Track bookmark action
       updateStats('note_bookmarked', {
@@ -70,9 +69,12 @@ export default function NoteDetailScreen() {
         noteTitle: note.title
       });
       
-      // const response = await toggleNoteBookmark(note.id);
-      // setIsBookmarked(response.isBookmarked);
-      logger.info('NoteDetailScreen', 'Bookmark functionality not yet implemented');
+      const newBookmarkStatus = toggleBookmark(note.id);
+      setNoteIsBookmarked(newBookmarkStatus);
+      logger.info('NoteDetailScreen', 'Bookmark toggled successfully', { 
+        noteId: note.id, 
+        newStatus: newBookmarkStatus 
+      });
     } catch (error) {
       logger.error('NoteDetailScreen', 'Error toggling bookmark', error);
     }
@@ -195,9 +197,9 @@ export default function NoteDetailScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.headerButton}
-            onPress={toggleBookmark}
+            onPress={handleToggleBookmark}
           >
-            {isBookmarked ? (
+            {noteIsBookmarked ? (
               <BookmarkCheck size={22} color="#facc15" />
             ) : (
               <Bookmark size={22} color="#333333" />

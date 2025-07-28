@@ -4,10 +4,14 @@ import { router } from 'expo-router';
 import { logger } from '@/utils/logger';
 import { Book, FileText, Trophy, Clock, Crown } from 'lucide-react-native';
 import { useState, useEffect } from 'react';
-import { getDashboardSummary, updateStats, activityService, ACTIVITY_TYPES } from '@/services';
+import { getDashboardSummary, updateStats, activityService, ACTIVITY_TYPES, progressService } from '@/services';
 
 export default function HomeScreen() {
   const { user, logout, isLoading } = useAuth();
+  
+  // Check if features are supported on current platform
+  const featuresSupported = progressService.getPlatformInfo().supported;
+  
   const [stats, setStats] = useState({
     totalExams: 0,
     averageScore: 0,
@@ -44,6 +48,22 @@ export default function HomeScreen() {
   const loadStats = async () => {
     try {
       logger.debug('HomeScreen', 'Fetching user statistics');
+      
+      if (!featuresSupported) {
+        logger.info('HomeScreen', 'Progress tracking disabled on web platform');
+        setStats({
+          totalExams: 0,
+          averageScore: 0,
+          passedExams: 0,
+          totalStudyTime: 0,
+          bookmarkedNotes: 0,
+          recentActivity: [],
+          currentStreak: 0,
+          lastActivity: null
+        });
+        return;
+      }
+      
       const response = await getDashboardSummary();
       if (response.success) {
         logger.debug('HomeScreen', 'Stats loaded successfully', { 
@@ -119,6 +139,10 @@ export default function HomeScreen() {
   ];
 
   const handleActivityClick = (activity: any) => {
+    if (!featuresSupported) {
+      return;
+    }
+    
     logger.userAction('Activity clicked', { type: activity.type, id: activity.id });
     
     if (!activity.isClickable) return;

@@ -703,7 +703,7 @@ class ProgressService {
    */
   getDashboardSummary() {
     try {
-      const progress = this.getProgress();
+      const progress = this.getProgress(this.currentUserId);
       const stats = this.getStats();
       
       // Get actual bookmark count from bookmark service
@@ -750,7 +750,20 @@ class ProgressService {
       return { success: true, summary };
     } catch (error) {
       logger.error('ProgressService', 'Failed to get dashboard summary', error);
-      return { success: false, error: error.message };
+      // Return default summary on error
+      return { 
+        success: true, 
+        summary: {
+          totalExams: 0,
+          averageScore: 0,
+          passedExams: 0,
+          totalStudyTime: 0,
+          bookmarkedNotes: 0,
+          currentStreak: 0,
+          recentActivity: [],
+          lastActivity: null
+        }
+      };
     }
   }
 
@@ -779,7 +792,8 @@ export const {
   importData,
   getAchievements,
   calculateLearningCompletion,
-  getDashboardSummary
+  getDashboardSummary,
+  updateBookmarkCount
 } = progressService;
 
 // Export the service instance for direct access

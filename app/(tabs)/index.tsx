@@ -25,6 +25,14 @@ export default function HomeScreen() {
       router.replace('/auth/login');
       return;
     }
+    
+    // Initialize progress service for the user
+    try {
+      progressService.initializeUser(user.id);
+    } catch (error) {
+      logger.error('HomeScreen', 'Failed to initialize progress service', error);
+    }
+    
     logger.info('HomeScreen', 'Loading user stats', { userId: user.id });
     loadStats();
   }, [user]);

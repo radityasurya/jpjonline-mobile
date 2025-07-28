@@ -14,6 +14,15 @@ import soundManager from '@/utils/soundManager';
 import { getExamBySlug, submitExamResults, updateStats } from '@/services';
 import { activityService, ACTIVITY_TYPES } from '@/services';
 
+// Import components
+import { ExamHeader } from '@/components/exam/ExamHeader';
+import { ExamControls } from '@/components/exam/ExamControls';
+import { ExamProgress } from '@/components/exam/ExamProgress';
+import { QuestionDisplay } from '@/components/exam/QuestionDisplay';
+import { AnswerOptions } from '@/components/exam/AnswerOptions';
+import { ExamNavigation } from '@/components/exam/ExamNavigation';
+import { QuestionSidebar } from '@/components/exam/QuestionSidebar';
+
 // Types for the new API structure
 interface ApiQuestion {
   id: string;
@@ -36,13 +45,6 @@ interface ApiExam {
   };
   questions: ApiQuestion[];
 }
-// Import components
-import { ExamHeader } from '@/components/exam/ExamHeader';
-import { ExamProgress } from '@/components/exam/ExamProgress';
-import { QuestionDisplay } from '@/components/exam/QuestionDisplay';
-import { AnswerOptions } from '@/components/exam/AnswerOptions';
-import { ExamNavigation } from '@/components/exam/ExamNavigation';
-import { QuestionSidebar } from '@/components/exam/QuestionSidebar';
 
 export default function ExamScreen() {
   const { id: examSlug } = useLocalSearchParams();
@@ -58,7 +60,8 @@ export default function ExamScreen() {
   const [showQuestionSidebar, setShowQuestionSidebar] = useState(false);
   const [isTimerActive, setIsTimerActive] = useState(true);
   const [examMode, setExamMode] = useState<'OPEN' | 'CLOSED'>('OPEN');
-  const [isAnswerLocked, setIsAnswerLocked] = useState<boolean[]>([]);
+  const [isSoundEnabled, setIsSoundEnabled] = useState(true);
+  const [questionRetryStates, setQuestionRetryStates] = useState<boolean[]>([]);
 
   const handleExitExam = () => {
     logger.userAction('Exam exit requested');
@@ -107,7 +110,7 @@ export default function ExamScreen() {
       setHasCheckedAnswer(
         new Array(examData.questions.length).fill(false)
       );
-      setIsAnswerLocked(
+      setQuestionRetryStates(
         new Array(examData.questions.length).fill(false)
       );
       
@@ -130,10 +133,22 @@ export default function ExamScreen() {
   };
 
   const handleAnswerSelect = (answerIndex: number) => {
-    // In CLOSED mode, lock answer after selection
-    if (examMode === 'CLOSED' && isAnswerLocked[currentQuestionIndex]) {
-      logger.debug('ExamScreen', 'Answer locked in CLOSED mode');
+    // In CLOSED mode, answer is locked after first selection
+    if (examMode === 'CLOSED' && answers[currentQuestionIndex] !== -1) {
+      logger.debug('ExamScreen', 'Answer already selected in CLOSED mode');
       return;
+    }
+    
+    // In OPEN mode, if answer was checked and wrong, allow retry
+    if (examMode === 'OPEN' && hasCheckedAnswer[currentQuestionIndex]) {
+      // Reset validation state for retry
+      const newHasChecked = [...hasCheckedAnswer];
+      newHasChecked[currentQuestionIndex] = false;
+      setHasCheckedAnswer(newHasChecked);
+      
+      const newRetryStates = [...questionRetryStates];
+      newRetryStates[currentQuestionIndex] = true;
+      setQuestionRetryStates(newRetryStates);
     }
     
     logger.debug('ExamScreen', 'Answer selected', { 
@@ -143,18 +158,6 @@ export default function ExamScreen() {
     const newAnswers = [...answers];
     newAnswers[currentQuestionIndex] = answerIndex;
     setAnswers(newAnswers);
-
-    // In CLOSED mode, lock the answer immediately
-    if (examMode === 'CLOSED') {
-      const newLocked = [...isAnswerLocked];
-      newLocked[currentQuestionIndex] = true;
-      setIsAnswerLocked(newLocked);
-    } else {
-      // In OPEN mode, reset validation when answer changes
-      const newHasChecked = [...hasCheckedAnswer];
-      newHasChecked[currentQuestionIndex] = false;
-      setHasCheckedAnswer(newHasChecked);
-    }
   };
 
   const handleCheckAnswer = () => {
@@ -183,11 +186,28 @@ export default function ExamScreen() {
     setHasCheckedAnswer(newHasChecked);
     
     // Play sound feedback
-    if (isCorrect) {
+    if (isSoundEnabled && isCorrect) {
       soundManager.playCorrect();
-    } else {
+    } else if (isSoundEnabled) {
       soundManager.playIncorrect();
     }
+  };
+
+  const handleRetryQuestion = () => {
+    logger.userAction('Question retry', { questionIndex: currentQuestionIndex });
+    
+    // Reset answer and validation for current question
+    const newAnswers = [...answers];
+    newAnswers[currentQuestionIndex] = -1;
+    setAnswers(newAnswers);
+    
+    const newHasChecked = [...hasCheckedAnswer];
+    newHasChecked[currentQuestionIndex] = false;
+    setHasCheckedAnswer(newHasChecked);
+    
+    const newValidation = [...answerValidation];
+    newValidation[currentQuestionIndex] = false;
+    setAnswerValidation(newValidation);
   };
 
   const handleNextQuestion = () => {
@@ -220,7 +240,9 @@ export default function ExamScreen() {
 
   const handleQuestionTimeExpired = () => {
     logger.debug('ExamScreen', 'Question time expired');
-    soundManager.playWarning();
+    if (isSoundEnabled) {
+      soundManager.playWarning();
+    }
     
     if (examMode === 'OPEN') {
       // In OPEN mode, force check answer if selected, then move to next
@@ -233,6 +255,24 @@ export default function ExamScreen() {
     if (currentQuestionIndex < questions.length - 1) {
       handleNextQuestion();
     }
+  };
+
+  const handleToggleSound = () => {
+    const newSoundState = !isSoundEnabled;
+    setIsSoundEnabled(newSoundState);
+    soundManager.setEnabled(newSoundState);
+    logger.userAction('Sound toggled', { enabled: newSoundState });
+  };
+
+  const handleToggleMode = () => {
+    const newMode = examMode === 'OPEN' ? 'CLOSED' : 'OPEN';
+    setExamMode(newMode);
+    logger.userAction('Exam mode toggled', { mode: newMode });
+    
+    // Reset all validation states when switching modes
+    setHasCheckedAnswer(new Array(questions.length).fill(false));
+    setAnswerValidation(new Array(questions.length).fill(false));
+    setQuestionRetryStates(new Array(questions.length).fill(false));
   };
 
   const handleSubmitExam = async () => {
@@ -378,6 +418,13 @@ export default function ExamScreen() {
         onExit={handleExitExam}
       />
 
+      <ExamControls
+        isSoundEnabled={isSoundEnabled}
+        examMode={examMode}
+        onToggleSound={handleToggleSound}
+        onToggleMode={handleToggleMode}
+      />
+
       <ExamProgress
         questions={questions}
         currentQuestionIndex={currentQuestionIndex}
@@ -410,7 +457,13 @@ export default function ExamScreen() {
           hasValidation={hasCheckedAnswer[currentQuestionIndex]}
           isCorrect={answerValidation[currentQuestionIndex]}
           examMode={examMode}
-          disabled={examMode === 'CLOSED' && isAnswerLocked[currentQuestionIndex]}
+          canRetryQuestion={
+            examMode === 'OPEN' && 
+            hasCheckedAnswer[currentQuestionIndex] && 
+            !answerValidation[currentQuestionIndex]
+          }
+          onRetryQuestion={handleRetryQuestion}
+          disabled={false}
         />
 
         {/* Explanation for Open Exams */}

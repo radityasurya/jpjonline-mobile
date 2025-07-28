@@ -9,9 +9,11 @@ interface ExamNavigationProps {
   hasCheckedAnswer: boolean;
   examMode: 'OPEN' | 'CLOSED';
   isSubmitting: boolean;
+  canRetryQuestion: boolean;
   onPrevious: () => void;
   onNext: () => void;
   onCheckAnswer: () => void;
+  onRetryQuestion: () => void;
   onSubmit: () => void;
 }
 
@@ -22,15 +24,20 @@ export function ExamNavigation({
   hasCheckedAnswer,
   examMode,
   isSubmitting,
+  canRetryQuestion,
   onPrevious,
   onNext,
   onCheckAnswer,
+  onRetryQuestion,
   onSubmit,
 }: ExamNavigationProps) {
   const isLastQuestion = currentQuestionIndex === totalQuestions - 1;
-  const canProceed = examMode === 'CLOSED' || hasCheckedAnswer;
+  
+  // OPEN Mode: Must check answer before proceeding
+  // CLOSED Mode: Can proceed immediately after selecting
+  const canProceed = examMode === 'CLOSED' ? selectedAnswer !== -1 : hasCheckedAnswer;
   const showCheckButton = examMode === 'OPEN' && !hasCheckedAnswer && selectedAnswer !== -1;
-  const canMoveNext = examMode === 'CLOSED' ? selectedAnswer !== -1 : hasCheckedAnswer;
+  const showRetryButton = examMode === 'OPEN' && hasCheckedAnswer && canRetryQuestion;
 
   return (
     <View style={styles.navigation}>
@@ -53,7 +60,13 @@ export function ExamNavigation({
       </View>
 
       <View style={styles.rightSection}>
-        {showCheckButton ? (
+        {showRetryButton ? (
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={onRetryQuestion}>
+            <Text style={styles.retryButtonText}>Try Again</Text>
+          </TouchableOpacity>
+        ) : showCheckButton ? (
           <TouchableOpacity
             style={styles.checkButton}
             onPress={onCheckAnswer}>
@@ -70,7 +83,7 @@ export function ExamNavigation({
               <Text style={styles.submitButtonText}>Submit</Text>
             )}
           </TouchableOpacity>
-        ) : !isLastQuestion && canMoveNext ? (
+        ) : !isLastQuestion && canProceed ? (
           <TouchableOpacity
             style={styles.navButton}
             onPress={onNext}>
@@ -121,6 +134,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   checkButtonText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  retryButton: {
+    backgroundColor: '#FF9800',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    minWidth: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  retryButtonText: {
     fontSize: 14,
     fontWeight: 'bold',
     color: '#FFFFFF',

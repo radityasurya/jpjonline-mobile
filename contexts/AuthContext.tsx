@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logger } from '@/utils/logger';
+import { progressService } from '@/services';
 
 interface User {
   id: string;
@@ -32,8 +33,8 @@ const DEMO_USERS = [
   {
     id: '2',
     name: 'Siti Aminah',
-    email: 'free@jpjonline.com',
-    password: 'free123',
+    email: 'user@jpjonline.com',
+    password: 'user123',
     subscription: 'free' as const,
   },
 ];
@@ -53,6 +54,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (userData) {
         const user = JSON.parse(userData);
         logger.info('AuthContext', 'User found in storage', { userId: user.id });
+        // Initialize progress tracking for returning user
+        progressService.initializeUser(user.id);
         setUser(user);
       } else {
         logger.debug('AuthContext', 'No user found in storage');
@@ -85,6 +88,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
         await AsyncStorage.setItem('user', JSON.stringify(userData));
         await AsyncStorage.setItem('token', 'mock-jwt-token');
+        
+        // Initialize progress tracking for new session
+        progressService.initializeUser(userData.id);
+        
+        // Track login session
+        progressService.updateStats('session_start', { timestamp: new Date().toISOString() });
+        
         setUser(userData);
         return true;
       } else {
@@ -115,6 +125,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
       await AsyncStorage.setItem('user', JSON.stringify(userData));
       await AsyncStorage.setItem('token', 'mock-jwt-token');
+      
+      // Initialize progress tracking for new user
+      progressService.initializeUser(userData.id);
+      
       setUser(userData);
       return true;
     } catch (error) {
@@ -128,6 +142,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       logger.info('AuthContext', 'User logout initiated');
+      
+      // Track session end before logout
+      if (user) {
+        progressService.updateStats('session_end', { 
+          duration: 0, // Could track actual session duration
+          timestamp: new Date().toISOString() 
+        });
+      }
+      
       await AsyncStorage.removeItem('user');
       await AsyncStorage.removeItem('token');
       setUser(null);

@@ -36,6 +36,24 @@ export {
   getUserExamHistory
 } from './examsService.js';
 
+// Progress and Statistics services
+export {
+  initializeUser,
+  saveProgress,
+  getProgress,
+  updateStats,
+  getStats,
+  clearProgress,
+  exportData,
+  importData,
+  getAchievements,
+  calculateLearningCompletion,
+  getDashboardSummary
+} from './progressService.js';
+
+// Export progress service instance
+export { default as progressService } from './progressService.js';
+
 // API configuration
 export { API_CONFIG, getAuthHeaders, buildApiUrl } from '../config/api.js';
 

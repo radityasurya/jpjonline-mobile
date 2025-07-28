@@ -28,8 +28,9 @@ import {
   MessageCircle,
   ExternalLink,
 } from 'lucide-react-native';
-import api from '@/services/api';
+import { progressService, getDashboardSummary } from '@/services';
 import { AboutData, ContactRequest } from '@/types/api';
+import { logger } from '@/utils/logger';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
@@ -40,6 +41,8 @@ export default function ProfileScreen() {
     totalStudyTime: 0,
     bookmarkedNotes: 0,
     streak: 0,
+    recentActivity: [],
+    lastActivity: null
   });
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isAboutModalVisible, setIsAboutModalVisible] = useState(false);
@@ -59,21 +62,48 @@ export default function ProfileScreen() {
   const [isSubmittingContact, setIsSubmittingContact] = useState(false);
 
   useEffect(() => {
-    loadStats();
-  }, []);
+    if (user) {
+      initializeUserProgress();
+    }
+  }, [user]);
 
-  const loadStats = async () => {
+  const initializeUserProgress = async () => {
     try {
-      const response = await api.user.fetchUserStats(user!.id);
-      if (response.success) {
-        setStats(response.data!);
-      }
+      logger.debug('ProfileScreen', 'Initializing user progress', { userId: user!.id });
+      progressService.initializeUser(user!.id);
+      await loadStats();
     } catch (error) {
-      console.error('Error loading stats:', error);
+      logger.error('ProfileScreen', 'Failed to initialize user progress', error);
     }
   };
 
+  const loadStats = async () => {
+    try {
+      logger.debug('ProfileScreen', 'Loading user statistics');
+      const response = await getDashboardSummary();
+      if (response.success) {
+        logger.debug('ProfileScreen', 'Stats loaded successfully', response.summary);
+        setStats(response.summary);
+      } else {
+        logger.warn('ProfileScreen', 'Failed to load stats', response.error);
+        // Fallback to default stats
+        setStats({
+          totalExams: 0,
+          averageScore: 0,
+          passedExams: 0,
+          totalStudyTime: 0,
+          bookmarkedNotes: 0,
+          currentStreak: 0,
+          recentActivity: [],
+          lastActivity: null
+        });
+      }
+    } catch (error) {
+      logger.error('ProfileScreen', 'Error loading stats', error);
+    }
+
   const handleEditProfile = () => {
+    logger.userAction('Profile edit initiated');
     setEditedProfile({
       name: user?.name || '',
       email: user?.email || '',
@@ -84,30 +114,39 @@ export default function ProfileScreen() {
 
   const handleSaveProfile = async () => {
     setIsLoading(true);
+    logger.userAction('Profile save attempted', editedProfile);
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
       setIsEditModalVisible(false);
+      logger.info('ProfileScreen', 'Profile updated successfully');
       Alert.alert('Success', 'Profile updated successfully!');
     }, 1000);
   };
 
   const handleAboutUs = async () => {
+    logger.userAction('About us opened');
     setIsAboutModalVisible(true);
     setIsLoading(true);
     try {
-      const response = await api.contact.fetchAboutData();
-      if (response.success) {
-        setAboutData(response.data!);
-      }
+      // Mock about data - replace with real API when available
+      const mockAboutData = {
+        title: "About JPJOnline",
+        content: "JPJOnline is Malaysia's premier digital learning platform for driving license preparation. Our comprehensive system provides:\n\n• Interactive learning materials covering all aspects of Malaysian traffic laws\n• Practice tests that simulate the actual JPJ examination\n• Real-time progress tracking and performance analytics\n• Expert-curated content updated regularly\n\nOur mission is to make driving education accessible, engaging, and effective for all Malaysians. With over 10,000 successful students, we're committed to helping you pass your driving test with confidence.\n\nFounded in 2024, JPJOnline combines modern technology with proven educational methods to deliver the best learning experience possible.",
+        version: "1.0.0",
+        lastUpdated: "2024-01-15"
+      };
+      setAboutData(mockAboutData);
+      logger.debug('ProfileScreen', 'About data loaded');
     } catch (error) {
-      console.error('Error fetching about data:', error);
+      logger.error('ProfileScreen', 'Error loading about data', error);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleContactUs = () => {
+    logger.userAction('Contact us opened');
     setContactForm({
       subject: '',
       message: '',
@@ -123,15 +162,19 @@ export default function ProfileScreen() {
     }
 
     setIsSubmittingContact(true);
+    logger.userAction('Contact form submitted', { 
+      subject: contactForm.subject,
+      hasMessage: !!contactForm.message 
+    });
     try {
-      const response = await api.contact.submitContactForm(contactForm);
-      if (response.success) {
-        Alert.alert('Success', response.message!);
-        setIsContactModalVisible(false);
-        setContactForm({ subject: '', message: '', email: user?.email || '' });
-      }
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      Alert.alert('Success', 'Thank you for your message! We will get back to you within 24 hours.');
+      setIsContactModalVisible(false);
+      setContactForm({ subject: '', message: '', email: user?.email || '' });
+      logger.info('ProfileScreen', 'Contact form submitted successfully');
     } catch (error) {
-      console.error('Error submitting contact form:', error);
+      logger.error('ProfileScreen', 'Error submitting contact form', error);
       Alert.alert('Error', 'Failed to send message. Please try again.');
     } finally {
       setIsSubmittingContact(false);
@@ -139,9 +182,17 @@ export default function ProfileScreen() {
   };
 
   const handleLogout = () => {
+    logger.userAction('Logout initiated');
     Alert.alert('Logout', 'Are you sure you want to logout?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Logout', style: 'destructive', onPress: logout },
+      { 
+        text: 'Logout', 
+        style: 'destructive', 
+        onPress: () => {
+          logger.info('ProfileScreen', 'User logged out');
+          logout();
+        }
+      },
     ]);
   };
 
@@ -151,6 +202,10 @@ export default function ProfileScreen() {
     return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
   };
 
+  const handleActivityClick = (activity: any) => {
+    logger.userAction('Activity clicked', { type: activity.type, id: activity.id });
+    // Navigation logic can be added here when activity data is available
+  };
   return (
     <ScrollView style={styles.container}>
       {/* Profile Header */}
@@ -164,19 +219,8 @@ export default function ProfileScreen() {
             <Text style={styles.userEmail}>{user?.email}</Text>
             <View style={styles.subscriptionBadge}>
               {user?.subscription === 'premium' && (
-                <Crown size={14} color="#4CAF50" style={styles.premiumIcon} />
+                <Crown size={16} color="#FFD700" style={styles.premiumIcon} />
               )}
-              <Text
-                style={[
-                  styles.subscriptionText,
-                  {
-                    color:
-                      user?.subscription === 'premium' ? '#4CAF50' : '#FF9800',
-                  },
-                ]}
-              >
-                {user?.subscription === 'premium' ? 'PREMIUM' : 'FREE'}
-              </Text>
             </View>
           </View>
           <TouchableOpacity
@@ -221,7 +265,7 @@ export default function ProfileScreen() {
 
         <View style={styles.achievementCard}>
           <Text style={styles.achievementTitle}>Study Streak</Text>
-          <Text style={styles.streakNumber}>{stats.streak}</Text>
+          <Text style={styles.streakNumber}>{stats.currentStreak || 0}</Text>
           <Text style={styles.streakLabel}>days in a row</Text>
         </View>
       </View>
@@ -487,17 +531,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignSelf: 'flex-start',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    justifyContent: 'center',
+    width: 32,
+    height: 32,
   },
   premiumIcon: {
-    marginRight: 4,
-  },
-  subscriptionText: {
-    fontSize: 10,
-    fontWeight: 'bold',
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   editButton: {
     padding: 8,

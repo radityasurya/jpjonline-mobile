@@ -236,6 +236,16 @@ export default function ExamScreen() {
           score: response.result.score,
           passed: response.result.passed
         });
+        
+        // Track exam completion in progress service
+        updateStats('exam_completed', {
+          score: response.result.score,
+          passed: response.result.passed,
+          timeSpent: response.result.timeSpent || timeSpent,
+          examSlug: exam!.slug,
+          examTitle: exam!.title
+        });
+        
         router.replace(
           `/exam/result/${exam!.slug}?resultData=${encodeURIComponent(
             JSON.stringify(response.result)

@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { logger } from '@/utils/logger';
 import { Book, FileText, Trophy, Clock, Crown } from 'lucide-react-native';
 import { useState, useEffect } from 'react';
-import api from '@/services/api';
+import { getDashboardSummary, updateStats } from '@/services';
 
 export default function HomeScreen() {
   const { user, logout, isLoading } = useAuth();
@@ -15,7 +15,8 @@ export default function HomeScreen() {
     totalStudyTime: 0,
     bookmarkedNotes: 0,
     recentActivity: [],
-    streak: 0
+    currentStreak: 0,
+    lastActivity: null
   });
 
   useEffect(() => {
@@ -35,15 +36,26 @@ export default function HomeScreen() {
   const loadStats = async () => {
     try {
       logger.debug('HomeScreen', 'Fetching user statistics');
-      const response = await api.user.fetchUserStats(user!.id);
+      const response = await getDashboardSummary();
       if (response.success) {
         logger.debug('HomeScreen', 'Stats loaded successfully', { 
-          totalExams: response.data!.totalExams,
-          averageScore: response.data!.averageScore 
+          totalExams: response.summary.totalExams,
+          averageScore: response.summary.averageScore 
         });
-        setStats(response.data!);
+        setStats(response.summary);
       } else {
         logger.warn('HomeScreen', 'Failed to load stats', response.error);
+        // Set default stats on error
+        setStats({
+          totalExams: 0,
+          averageScore: 0,
+          passedExams: 0,
+          totalStudyTime: 0,
+          bookmarkedNotes: 0,
+          recentActivity: [],
+          currentStreak: 0,
+          lastActivity: null
+        });
       }
     } catch (error) {
       logger.error('HomeScreen', 'Error loading stats', error);
@@ -55,21 +67,30 @@ export default function HomeScreen() {
       icon: Book,
       title: 'Study Notes',
       subtitle: 'Access learning materials',
-      action: () => router.push('/(tabs)/notes'),
+      action: () => {
+        logger.userAction('Quick action clicked', { action: 'study_notes' });
+        router.push('/(tabs)/notes');
+      },
       color: '#4CAF50',
     },
     {
       icon: FileText,
       title: 'Practice Tests',
       subtitle: 'Start practice exam',
-      action: () => router.push('/(tabs)/tests'),
+      action: () => {
+        logger.userAction('Quick action clicked', { action: 'practice_tests' });
+        router.push('/(tabs)/tests');
+      },
       color: '#2196F3',
     },
     {
       icon: Trophy,
       title: 'My Progress',
       subtitle: 'View your progress',
-      action: () => router.push('/(tabs)/profile'),
+      action: () => {
+        logger.userAction('Quick action clicked', { action: 'my_progress' });
+        router.push('/(tabs)/profile');
+      },
       color: '#FF9800',
     },
   ];
@@ -85,6 +106,7 @@ export default function HomeScreen() {
       router.push(`/notes/${activity.noteId}`);
     }
   };
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.headerContainer}>
@@ -92,14 +114,8 @@ export default function HomeScreen() {
         <Text style={styles.userName}>{user.name}</Text>
         <View style={styles.subscriptionBadge}>
           {user.subscription === 'premium' && (
-            <Crown size={14} color="#4CAF50" style={styles.premiumIcon} />
+            <Crown size={18} color="#FFD700" style={styles.premiumIcon} />
           )}
-          <Text style={[
-            styles.subscriptionText,
-            { color: user.subscription === 'premium' ? '#4CAF50' : '#FF9800' }
-          ]}>
-            {user.subscription === 'premium' ? 'PREMIUM' : 'FREE'}
-          </Text>
         </View>
       </View>
 
@@ -199,18 +215,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignSelf: 'flex-start',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
+    justifyContent: 'center',
+    width: 36,
+    height: 36,
     marginTop: 8,
   },
   premiumIcon: {
-    marginRight: 4,
-  },
-  subscriptionText: {
-    fontSize: 12,
-    fontWeight: 'bold',
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   statsContainer: {
     flexDirection: 'row',

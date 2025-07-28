@@ -19,6 +19,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { getNoteBySlug } from '@/services';
 import { logger } from '@/utils/logger';
+import { updateStats } from '@/services';
 
 export default function NoteDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -41,6 +42,15 @@ export default function NoteDetailScreen() {
         title: noteData.title 
       });
       setNote(noteData);
+      
+      // Track note reading
+      updateStats('note_read', {
+        noteId: noteData.id,
+        noteTitle: noteData.title,
+        readTime: Math.ceil(noteData.content.length / 200), // Estimate read time
+        category: noteData.topic?.category?.slug
+      });
+      
       // TODO: Check bookmark status when API is ready
       // setIsBookmarked(noteData.isBookmarked);
     } catch (error) {
@@ -54,6 +64,12 @@ export default function NoteDetailScreen() {
     logger.userAction('Bookmark toggle attempted', { noteId: note?.id });
     // TODO: Implement bookmark functionality when API is ready
     try {
+      // Track bookmark action
+      updateStats('note_bookmarked', {
+        noteId: note.id,
+        noteTitle: note.title
+      });
+      
       // const response = await toggleNoteBookmark(note.id);
       // setIsBookmarked(response.isBookmarked);
       logger.info('NoteDetailScreen', 'Bookmark functionality not yet implemented');

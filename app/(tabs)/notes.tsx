@@ -20,7 +20,8 @@ import {
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/utils/logger';
-import { getNotesGroupedByCategory, isBookmarked, toggleBookmark } from '@/services';
+import { getNotesGroupedByCategory } from '@/services';
+import { isBookmarked, toggleBookmark } from '@/services/bookmarkService';
 
 const { width } = Dimensions.get('window');
 const cardWidth = (width - 60) / 2; // 2 columns with padding

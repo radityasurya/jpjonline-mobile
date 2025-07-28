@@ -32,7 +32,7 @@ const DEMO_USERS = [
   {
     id: '2',
     name: 'Siti Aminah',
-    email: 'free@jpj.com',
+    email: 'free@jpjonline.com',
     password: 'free123',
     subscription: 'free' as const,
   },

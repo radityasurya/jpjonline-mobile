@@ -27,8 +27,9 @@ export const getUserExams = async (token) => {
     logger.info('ExamsService', 'Fetching user exams');
     logger.apiRequest('GET', API_CONFIG.ENDPOINTS.EXAMS.USER_EXAMS);
     
-    const response = await makeAuthenticatedRequest(buildApiUrl(API_CONFIG.ENDPOINTS.EXAMS.USER_EXAMS), {
+    const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.EXAMS.USER_EXAMS), {
       method: 'GET',
+      headers: getAuthHeaders(authToken),
     });
     
     if (!response.ok) {
@@ -119,9 +120,8 @@ export const getExamBySlug = async (slug, token) => {
     logger.info('ExamsService', 'Fetching exam by slug', { slug });
     logger.apiRequest('GET', `/api/exams/${slug}/full`);
     
-    const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.EXAMS.BY_SLUG}/${slug}/full`), {
+    const response = await makeAuthenticatedRequest(buildApiUrl(`${API_CONFIG.ENDPOINTS.EXAMS.BY_SLUG}/${slug}/full`), {
       method: 'GET',
-      headers: getAuthHeaders(authToken),
     });
     
     if (!response.ok) {

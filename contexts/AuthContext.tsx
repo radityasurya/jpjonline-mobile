@@ -226,6 +226,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Listen for authentication errors and logout user
+  useEffect(() => {
+    const handleAuthError = () => {
+      logger.warn('AuthContext', 'Authentication error detected, logging out user');
+      logout();
+    };
+
+    // You can add event listeners here if needed
+    // For now, the makeAuthenticatedRequest function handles token refresh automatically
+    
+    return () => {
+      // Cleanup if needed
+    };
+  }, []);
+
   return (
     <AuthContext.Provider value={{ user, login, logout, register, isLoading }}>
       {children}

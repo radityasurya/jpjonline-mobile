@@ -251,8 +251,7 @@ export const searchNotes = async (query, token = null) => {
     logger.apiResponse('GET', API_CONFIG.ENDPOINTS.NOTES.SEARCH, 200, { 
       success: true, 
       resultsCount: data.total || 0
-    }
-    )
+    });
     logger.apiResponse('GET', `${API_CONFIG.ENDPOINTS.NOTES.BY_ID}/${id}`, 200, { success: true });
     
     return data.note;

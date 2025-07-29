@@ -25,7 +25,7 @@ export const API_CONFIG = {
     },
     NOTES: {
       GROUPED_BY_CATEGORY: '/api/notes',
-      BY_SLUG: '/api/notes',
+      BY_ID: '/api/notes',
       SEARCH: '/api/notes/search',
     },
     EXAMS: {

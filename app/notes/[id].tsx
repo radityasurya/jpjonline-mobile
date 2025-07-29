@@ -18,7 +18,7 @@ import {
   User,
 } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import { getNoteBySlug } from '@/services';
+import { getNoteById } from '@/services';
 import { logger } from '@/utils/logger';
 import { progressService, activityService, ACTIVITY_TYPES } from '@/services';
 import bookmarkService from '@/services/bookmarkService';
@@ -59,8 +59,8 @@ export default function NoteDetailScreen() {
       activityService.addActivity(ACTIVITY_TYPES.NOTE_VIEWED, {
         noteId: noteData.id,
         noteTitle: noteData.title,
-        noteSlug: noteData.slug,
-        category: noteData.topic?.category?.title,
+        noteSlug: noteData.slug || '',
+        category: noteData.topic?.category?.title || 'General',
         userId: user?.id
       });
       
@@ -68,7 +68,7 @@ export default function NoteDetailScreen() {
         noteId: noteData.id,
         noteTitle: noteData.title,
         readTime: Math.ceil(noteData.content.length / 200), // Estimate read time
-        category: noteData.topic?.category?.slug
+        category: noteData.topic?.category?.slug || 'general'
       });
       
       // Check bookmark status
@@ -100,8 +100,8 @@ export default function NoteDetailScreen() {
       activityService.addActivity(activityType, {
         noteId: note.id,
         noteTitle: note.title,
-        noteSlug: note.slug,
-        category: note.topic?.category?.title,
+        noteSlug: note.slug || '',
+        category: note.topic?.category?.title || 'General',
         userId: user?.id
       });
       
@@ -281,14 +281,14 @@ export default function NoteDetailScreen() {
           <Text style={styles.noteTitle}>{note.title}</Text>
           
           <View style={styles.categoryBadge}>
-            <Text style={styles.categoryText}>{note.topic?.category?.title || 'General'}</Text>
+            <Text style={styles.categoryText}>General</Text>
           </View>
           
           <View style={styles.metaInfo}>
             <View style={styles.authorInfo}>
               <User size={14} color="#666666" />
               <Text style={styles.authorText}>
-                {note.author?.name || 'JPJOnline'}
+                JPJOnline
               </Text>
             </View>
             <View style={styles.readTime}>
@@ -301,19 +301,13 @@ export default function NoteDetailScreen() {
           
           <View style={styles.dateInfo}>
             <Text style={styles.dateText}>
-              Last updated: {formatDate(note.updatedAt)}
+              Last updated: {formatDate(note.updatedAt || note.createdAt)}
             </Text>
           </View>
         </View>
 
         <View style={styles.articleContent}>{renderContent(note.content)}</View>
 
-        {note.topic && (
-          <View style={styles.topicInfo}>
-            <Text style={styles.topicTitle}>Topic:</Text>
-            <Text style={styles.topicText}>{note.topic.title}</Text>
-          </View>
-        )}
       </ScrollView>
     </View>
   );

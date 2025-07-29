@@ -239,9 +239,9 @@ export default function NotesScreen() {
       userId: user?.id
     });
 
-    // Navigate to note detail screen using slug
-    logger.navigation('NoteDetail', { noteSlug: note.slug });
-    router.push(`/notes/${note.slug}`);
+    // Navigate to note detail screen using ID
+    logger.navigation('NoteDetail', { noteId: note.id });
+    router.push(`/notes/${note.id}`);
   };
 
   const formatDate = (dateString: string) => {

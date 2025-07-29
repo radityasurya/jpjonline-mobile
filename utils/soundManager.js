@@ -2,10 +2,10 @@
  * Sound Manager for Exam Feedback
  * 
  * Manages audio feedback for correct/incorrect answers during exams.
- * Uses expo-av for cross-platform audio support.
+ * Uses expo-audio for cross-platform audio support with local assets.
  */
 
-import { Audio } from 'expo-av';
+import { Audio } from 'expo-audio';
 import { Platform } from 'react-native';
 import { logger } from './logger.js';
 
@@ -23,6 +23,7 @@ class SoundManager {
   async initializeAudio() {
     try {
       if (Platform.OS !== 'web') {
+        // Configure audio session for mobile
         await Audio.setAudioModeAsync({
           allowsRecordingIOS: false,
           staysActiveInBackground: false,
@@ -42,30 +43,30 @@ class SoundManager {
   }
 
   /**
-   * Load sound files
+   * Load sound files from local assets
    */
   async loadSounds() {
     try {
       // Load correct answer sound
-      const { sound: correctSound } = await Audio.Sound.createAsync(
-        { uri: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav' },
+      const correctSound = await Audio.Sound.createAsync(
+        require('../assets/sounds/correct.wav'),
         { shouldPlay: false, volume: 0.5 }
       );
-      this.sounds.correct = correctSound;
+      this.sounds.correct = correctSound.sound;
 
       // Load incorrect answer sound
-      const { sound: incorrectSound } = await Audio.Sound.createAsync(
-        { uri: 'https://www.soundjay.com/misc/sounds/fail-buzzer-02.wav' },
+      const incorrectSound = await Audio.Sound.createAsync(
+        require('../assets/sounds/incorrect.wav'),
         { shouldPlay: false, volume: 0.5 }
       );
-      this.sounds.incorrect = incorrectSound;
+      this.sounds.incorrect = incorrectSound.sound;
 
       // Load timer warning sound
-      const { sound: warningSound } = await Audio.Sound.createAsync(
-        { uri: 'https://www.soundjay.com/misc/sounds/clock-ticking-3.wav' },
+      const warningSound = await Audio.Sound.createAsync(
+        require('../assets/sounds/warning.wav'),
         { shouldPlay: false, volume: 0.3 }
       );
-      this.sounds.warning = warningSound;
+      this.sounds.warning = warningSound.sound;
 
       logger.info('SoundManager', 'All sounds loaded successfully');
     } catch (error) {

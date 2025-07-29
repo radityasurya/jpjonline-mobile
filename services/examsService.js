@@ -315,18 +315,30 @@ export const submitExamResults = async (examSlug, results, token) => {
  */
 export const getUserExamHistory = async (token) => {
   try {
-    logger.info('ExamsService', 'Fetching user exam history from local storage');
+    logger.info('ExamsService', 'Fetching user exam history');
+    logger.apiRequest('GET', '/api/me/exam-history');
     
-    const results = await getExamResults();
-    
-    logger.info('ExamsService', 'Exam history fetched successfully', { 
-      resultsCount: results.length
+    const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.EXAMS.EXAM_HISTORY), {
+      method: 'GET',
+      headers: getAuthHeaders(token),
     });
     
-    return {
-      results: results,
-      total: results.length
-    };
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to fetch exam history');
+    }
+    
+    const data = await response.json();
+    
+    logger.info('ExamsService', 'Exam history fetched successfully', { 
+      resultsCount: data.results?.length || 0
+    });
+    logger.apiResponse('GET', API_CONFIG.ENDPOINTS.EXAMS.EXAM_HISTORY, 200, { 
+      success: true, 
+      resultsCount: data.results?.length || 0
+    });
+    
+    return data;
 
     // Mock response - kept for debugging
     // logger.debug('ExamsService', 'Using mock exam history response');
@@ -369,4 +381,139 @@ export const getUserExamHistory = async (token) => {
     logger.error('ExamsService', 'Failed to fetch exam history', error);
     throw error;
   }
+};
+
+/**
+ * Save Exam Result to Local Storage
+ * @param {Object} examResult - Exam result object
+ * @returns {Promise<Object>} Saved result or null if failed
+ */
+const saveExamResult = async (examResult) => {
+  if (!storageService.isAvailable()) {
+    logger.warn('ExamsService', 'Storage not available, cannot save exam result');
+    return null;
+  }
+
+  try {
+    const existingResults = await getExamResults();
+    const newResults = [examResult, ...existingResults].slice(0, MAX_RESULTS);
+    
+    const success = await storageService.setItem(EXAM_RESULTS_STORAGE_KEY, newResults);
+    
+    if (success) {
+      logger.debug('ExamsService', 'Exam result saved successfully', { 
+        examSlug: examResult.examSlug,
+        score: examResult.score 
+      });
+      return examResult;
+    }
+  } catch (error) {
+    logger.error('ExamsService', 'Failed to save exam result', error);
+  }
+  
+  return null;
+};
+
+/**
+ * Get All Exam Results from Local Storage
+ * @returns {Promise<Array>} Array of exam results
+ */
+const getExamResults = async () => {
+  if (!storageService.isAvailable()) {
+    logger.warn('ExamsService', 'Storage not available, returning empty results');
+    return [];
+  }
+
+  try {
+    const results = await storageService.getItem(EXAM_RESULTS_STORAGE_KEY);
+    return Array.isArray(results) ? results : [];
+  } catch (error) {
+    logger.error('ExamsService', 'Failed to get exam results', error);
+    return [];
+  }
+};
+
+/**
+ * Get Exam Results for Specific Exam
+ * @param {string} examSlug - Exam slug
+ * @returns {Promise<Array>} Array of results for the exam
+ */
+export const getExamResultsForExam = async (examSlug) => {
+  try {
+    const allResults = await getExamResults();
+    return allResults.filter(result => result.examSlug === examSlug);
+  } catch (error) {
+    logger.error('ExamsService', 'Failed to get exam results for exam', error);
+    return [];
+  }
+};
+
+/**
+ * Clear All Exam Results
+ * @returns {Promise<boolean>} Success status
+ */
+export const clearExamResults = async () => {
+  if (!storageService.isAvailable()) {
+    logger.warn('ExamsService', 'Storage not available, cannot clear results');
+    return false;
+  }
+
+  try {
+    const success = await storageService.removeItem(EXAM_RESULTS_STORAGE_KEY);
+    if (success) {
+      logger.info('ExamsService', 'All exam results cleared successfully');
+    }
+    return success;
+  } catch (error) {
+    logger.error('ExamsService', 'Failed to clear exam results', error);
+    return false;
+  }
+};
+
+/**
+ * Export Exam Results for Backup
+ * @returns {Promise<Object>} Export data
+ */
+export const exportExamResults = async () => {
+  const results = await getExamResults();
+  
+  return {
+    version: '1.0.0',
+    exportDate: new Date().toISOString(),
+    results: results,
+    count: results.length,
+    platform: storageService.platform || 'unknown'
+  };
+};
+
+/**
+ * Import Exam Results from Backup
+ * @param {Object} importData - Import data object
+ * @returns {Promise<boolean>} Success status
+ */
+export const importExamResults = async (importData) => {
+  if (!storageService.isAvailable()) {
+    logger.warn('ExamsService', 'Storage not available, cannot import results');
+    return false;
+  }
+
+  if (!importData || !Array.isArray(importData.results)) {
+    logger.error('ExamsService', 'Invalid import data structure');
+    return false;
+  }
+
+  try {
+    const success = await storageService.setItem(EXAM_RESULTS_STORAGE_KEY, importData.results);
+    
+    if (success) {
+      logger.info('ExamsService', 'Exam results imported successfully', { 
+        count: importData.results.length 
+      });
+      return true;
+    }
+  } catch (error) {
+    logger.error('ExamsService', 'Failed to import exam results', error);
+  }
+  
+  return false;
 };

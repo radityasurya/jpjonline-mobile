@@ -90,7 +90,9 @@ export default function TestsScreen() {
       setExamsData(response);
       
       // Filter out categories that are not accessible to the user
-      const accessibleCategories = response.categories.filter(category => category.accessible);
+      const accessibleCategories = response.categories.filter(category => 
+        category.accessible && category.name !== 'Premium Only'
+      );
       setCategories([{ id: 'all', name: 'All', accessible: true, exams: [] }, ...accessibleCategories]);
     } catch (error) {
       logger.error('TestsScreen', 'Error fetching exams', error);

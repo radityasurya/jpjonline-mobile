@@ -137,13 +137,13 @@ export const getNotesGroupedByCategory = async (token = null, params = {}) => {
  * @param {string} [token] - JWT token (optional for mobile)
  * @returns {Promise<Object>} Note details
  */
-export const getNoteById = async (id, token = null) => {
+export const getNoteBySlug = async (slug, token = null) => {
   try {
     // Get token from storage if not provided
     const authToken = token || await storageService.getItem('accessToken');
 
-    logger.info('NotesService', 'Fetching note by ID', { id });
-    logger.apiRequest('GET', `${API_CONFIG.ENDPOINTS.NOTES.BY_ID}/${id}`);
+    logger.info('NotesService', 'Fetching note by ID', { slug });
+    logger.apiRequest('GET', `${API_CONFIG.ENDPOINTS.NOTES.BY_SLUG}/${slug}`);
 
     const headers = authToken ? getAuthHeaders(authToken) : API_CONFIG.HEADERS;
     const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.NOTES.BY_SLUG}/${slug}`), {
@@ -159,7 +159,7 @@ export const getNoteById = async (id, token = null) => {
     const data = await response.json();
 
     logger.info('NotesService', 'Note fetched successfully', {
-      noteId: data.id,
+      noteSlug: data.slug,
       slug: data.slug
     });
     logger.apiResponse('GET', `${API_CONFIG.ENDPOINTS.NOTES.BY_SLUG}/${slug}`, 200, { success: true });

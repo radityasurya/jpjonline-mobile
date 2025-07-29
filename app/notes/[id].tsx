@@ -19,7 +19,6 @@ import {
 } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { getNoteById } from '@/services';
-import { getNoteById } from '@/services';
 import { logger } from '@/utils/logger';
 import { progressService, activityService, ACTIVITY_TYPES } from '@/services';
 import bookmarkService from '@/services/bookmarkService';

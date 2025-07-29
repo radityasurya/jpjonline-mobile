@@ -256,12 +256,15 @@ export const refreshAccessToken = async (refreshToken) => {
  */
 export const getSession = async (token) => {
   try {
+    // Get token from storage if not provided
+    const authToken = token || await storageService.getItem('accessToken');
+    
     logger.debug('AuthService', 'Validating user session');
     logger.apiRequest('GET', API_CONFIG.ENDPOINTS.AUTH.SESSION);
     
     const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.AUTH.SESSION), {
       method: 'GET',
-      headers: getAuthHeaders(token),
+      headers: getAuthHeaders(authToken),
     });
     
     if (!response.ok) {

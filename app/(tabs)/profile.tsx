@@ -34,6 +34,10 @@ import { logger } from '@/utils/logger';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
+  
+  // Check if features are supported on current platform
+  const featuresSupported = progressService.getPlatformInfo().supported;
+  
   const [stats, setStats] = useState({
     totalExams: 0,
     averageScore: 0,
@@ -68,6 +72,11 @@ export default function ProfileScreen() {
   }, [user]);
 
   const initializeUserProgress = async () => {
+    if (!featuresSupported) {
+      logger.info('ProfileScreen', 'Progress tracking disabled on web platform');
+      return;
+    }
+    
     try {
       logger.debug('ProfileScreen', 'Initializing user progress', { userId: user!.id });
       progressService.initializeUser(user!.id);
@@ -78,6 +87,21 @@ export default function ProfileScreen() {
   };
 
   const loadStats = async () => {
+    if (!featuresSupported) {
+      logger.info('ProfileScreen', 'Progress tracking disabled on web platform');
+      setStats({
+        totalExams: 0,
+        averageScore: 0,
+        passedExams: 0,
+        totalStudyTime: 0,
+        bookmarkedNotes: 0,
+        currentStreak: 0,
+        recentActivity: [],
+        lastActivity: null
+      });
+      return;
+    }
+    
     try {
       logger.debug('ProfileScreen', 'Loading user statistics');
       const response = await getDashboardSummary();
@@ -240,34 +264,47 @@ export default function ProfileScreen() {
         <View style={styles.statsGrid}>
           <View style={styles.statCard}>
             <Trophy size={24} color="#4CAF50" />
-            <Text style={styles.statNumber}>{stats.totalExams}</Text>
+            <Text style={styles.statNumber}>
+              {featuresSupported ? stats.totalExams : 'N/A'}
+            </Text>
             <Text style={styles.statLabel}>Tests Completed</Text>
           </View>
 
           <View style={styles.statCard}>
-            <Text style={styles.statNumber}>{stats.averageScore}%</Text>
+            <Text style={styles.statNumber}>
+              {featuresSupported ? `${stats.averageScore}%` : 'N/A'}
+            </Text>
             <Text style={styles.statLabel}>Average Score</Text>
           </View>
 
           <View style={styles.statCard}>
             <Clock size={24} color="#2196F3" />
             <Text style={styles.statNumber}>
-              {formatStudyTime(stats.totalStudyTime)}
+              {featuresSupported ? formatStudyTime(stats.totalStudyTime) : 'N/A'}
             </Text>
             <Text style={styles.statLabel}>Study Time</Text>
           </View>
 
-          <View style={styles.statCard}>
-            <BookOpen size={24} color="#FF9800" />
-            <Text style={styles.statNumber}>{stats.bookmarkedNotes}</Text>
-            <Text style={styles.statLabel}>Bookmarks</Text>
+          <View style={styles.userNameContainer}>
+            <Text style={styles.userName}>{user?.name}</Text>
+            {user?.subscription === 'premium' && (
+              <Crown size={18} color="#FFD700" style={styles.premiumIcon} />
+            )}
           </View>
+            <BookOpen size={24} color="#FF9800" />
         </View>
 
         <View style={styles.achievementCard}>
           <Text style={styles.achievementTitle}>Study Streak</Text>
-          <Text style={styles.streakNumber}>{stats.currentStreak || 0}</Text>
+          <Text style={styles.streakNumber}>
+            {featuresSupported ? (stats.currentStreak || 0) : 'N/A'}
+          </Text>
           <Text style={styles.streakLabel}>days in a row</Text>
+          {!featuresSupported && (
+            <Text style={styles.platformNote}>
+              Statistics available on mobile app
+            </Text>
+          )}
         </View>
       </View>
 
@@ -517,6 +554,10 @@ const styles = StyleSheet.create({
   userDetails: {
     flex: 1,
   },
+  userNameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   userName: {
     fontSize: 20,
     fontWeight: 'bold',
@@ -528,15 +569,8 @@ const styles = StyleSheet.create({
     color: '#666666',
     marginBottom: 8,
   },
-  subscriptionBadge: {
-    flexDirection: 'row',
-    alignSelf: 'flex-start',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 32,
-    height: 32,
-  },
   premiumIcon: {
+    marginLeft: 8,
     shadowColor: '#FFD700',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
@@ -602,6 +636,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#1976D2',
     marginTop: 4,
+  },
+  platformNote: {
+    fontSize: 12,
+    color: '#999999',
+    marginTop: 8,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
   settingsSection: {
     padding: 20,

@@ -62,6 +62,7 @@ export default function ExamScreen() {
   const [examMode, setExamMode] = useState<'OPEN' | 'CLOSED'>('OPEN');
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const [questionRetryStates, setQuestionRetryStates] = useState<boolean[]>([]);
+  const [startTime, setStartTime] = useState<Date>(new Date());
 
   const handleExitExam = () => {
     logger.userAction('Exam exit requested');
@@ -100,8 +101,11 @@ export default function ExamScreen() {
       setQuestions(examData.questions);
       
       // Set exam mode based on exam settings or default to OPEN
-      const mode = examData.settings?.type === 'closed' ? 'CLOSED' : 'OPEN';
+      const mode = examData.examMode === 'CLOSED' ? 'CLOSED' : 'OPEN';
       setExamMode(mode);
+      
+      // Set start time for duration calculation
+      setStartTime(new Date());
       
       setAnswers(new Array(examData.questions.length).fill(-1));
       setAnswerValidation(
@@ -133,13 +137,11 @@ export default function ExamScreen() {
   };
 
   const handleAnswerSelect = (answerIndex: number) => {
-    // In CLOSED mode, answer is locked after first selection
-    if (examMode === 'CLOSED' && answers[currentQuestionIndex] !== -1) {
-      logger.debug('ExamScreen', 'Answer already selected in CLOSED mode');
-      return;
-    }
+    // In both modes, allow reselection until moving to next question
+    // CLOSED mode: can reselect until clicking Next
+    // OPEN mode: can reselect until checking answer
     
-    // In OPEN mode, if answer was checked and wrong, allow retry
+    // In OPEN mode, if answer was checked, reset validation state for retry
     if (examMode === 'OPEN' && hasCheckedAnswer[currentQuestionIndex]) {
       // Reset validation state for retry
       const newHasChecked = [...hasCheckedAnswer];
@@ -186,9 +188,9 @@ export default function ExamScreen() {
     setHasCheckedAnswer(newHasChecked);
     
     // Play sound feedback
-    if (isSoundEnabled && isCorrect) {
+    if (examMode === 'OPEN' && isSoundEnabled && isCorrect) {
       soundManager.playCorrect();
-    } else if (isSoundEnabled) {
+    } else if (examMode === 'OPEN' && isSoundEnabled) {
       soundManager.playIncorrect();
     }
   };
@@ -278,6 +280,10 @@ export default function ExamScreen() {
   const handleSubmitExam = async () => {
     if (isSubmitting) return;
 
+    // Calculate actual time spent
+    const endTime = new Date();
+    const timeSpentMinutes = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60));
+
     logger.info('ExamScreen', 'Exam submission initiated', {
       examSlug: exam!.slug,
       answeredQuestions: answers.filter(answer => answer !== -1).length,
@@ -317,16 +323,19 @@ export default function ExamScreen() {
 
   const submitExam = async () => {
     setIsSubmitting(true);
+    
+    // Calculate actual time spent
+    const endTime = new Date();
+    const timeSpentMinutes = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60));
+    
     logger.info('ExamScreen', 'Submitting exam answers', { examSlug: exam!.slug });
 
     try {
-      // Calculate time spent (for now, use exam duration as fallback)
-      const timeSpent = 30; // Mock time spent in minutes
       const response = await submitExamResults(
         exam!.slug,
         {
           answers: answers,
-          timeSpent: timeSpent
+          timeSpent: timeSpentMinutes
         },
         user?.token || 'mock-token'
       );
@@ -411,18 +420,11 @@ export default function ExamScreen() {
         currentQuestionIndex={currentQuestionIndex}
         totalQuestions={questions.length}
         timerMode="total"
-        totalDuration={30 * 60} // 30 minutes default
+        totalDuration={exam.totalTimeDuration || (30 * 60)} // Use exam duration or 30 min default
         onTimeExpired={handleTimeExpired}
         onQuestionTimeExpired={handleQuestionTimeExpired}
         isTimerActive={isTimerActive}
         onExit={handleExitExam}
-      />
-
-      <ExamControls
-        isSoundEnabled={isSoundEnabled}
-        examMode={examMode}
-        onToggleSound={handleToggleSound}
-        onToggleMode={handleToggleMode}
       />
 
       <ExamProgress
@@ -433,6 +435,10 @@ export default function ExamScreen() {
         onToggleQuestionSidebar={() =>
           setShowQuestionSidebar(!showQuestionSidebar)
         }
+        isSoundEnabled={isSoundEnabled}
+        examMode={examMode}
+        onToggleSound={handleToggleSound}
+        onToggleMode={handleToggleMode}
       />
 
       <QuestionSidebar
@@ -485,9 +491,15 @@ export default function ExamScreen() {
         hasCheckedAnswer={hasCheckedAnswer[currentQuestionIndex]}
         examMode={examMode}
         isSubmitting={isSubmitting}
+        canRetryQuestion={
+          examMode === 'OPEN' && 
+          hasCheckedAnswer[currentQuestionIndex] && 
+          !answerValidation[currentQuestionIndex]
+        }
         onPrevious={handlePreviousQuestion}
         onNext={handleNextQuestion}
         onCheckAnswer={handleCheckAnswer}
+        onRetryQuestion={handleRetryQuestion}
         onSubmit={handleSubmitExam}
       />
     </View>

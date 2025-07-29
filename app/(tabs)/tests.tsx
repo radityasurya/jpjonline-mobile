@@ -88,7 +88,10 @@ export default function TestsScreen() {
         userTier: user?.subscription 
       });
       setExamsData(response);
-      setCategories([{ id: 'all', name: 'All', accessible: true, exams: [] }, ...response.categories]);
+      
+      // Filter out categories that are not accessible to the user
+      const accessibleCategories = response.categories.filter(category => category.accessible);
+      setCategories([{ id: 'all', name: 'All', accessible: true, exams: [] }, ...accessibleCategories]);
     } catch (error) {
       logger.error('TestsScreen', 'Error fetching exams', error);
     } finally {

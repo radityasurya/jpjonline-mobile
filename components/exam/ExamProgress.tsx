@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { CircleCheck as CheckCircle, Menu } from 'lucide-react-native';
+import { CircleCheck as CheckCircle, Menu, Volume2, VolumeX, Lock, Unlock } from 'lucide-react-native';
 
 interface ExamProgressProps {
   questions: any[];
@@ -8,6 +8,10 @@ interface ExamProgressProps {
   answers: number[];
   onQuestionSelect: (index: number) => void;
   onToggleQuestionSidebar: () => void;
+  isSoundEnabled: boolean;
+  examMode: 'OPEN' | 'CLOSED';
+  onToggleSound: () => void;
+  onToggleMode: () => void;
 }
 
 export function ExamProgress({
@@ -16,14 +20,39 @@ export function ExamProgress({
   answers,
   onQuestionSelect,
   onToggleQuestionSidebar,
+  isSoundEnabled,
+  examMode,
+  onToggleSound,
+  onToggleMode,
 }: ExamProgressProps) {
   return (
     <View style={styles.questionNumbersBar}>
       <TouchableOpacity 
-        style={styles.questionsButton}
-        onPress={onToggleQuestionSidebar}>
-        <Menu size={20} color="#333333" />
+        style={styles.controlButton}
+        onPress={onToggleSound}>
+        {isSoundEnabled ? (
+          <Volume2 size={18} color="#4CAF50" />
+        ) : (
+          <VolumeX size={18} color="#FF3B30" />
+        )}
       </TouchableOpacity>
+      
+      <TouchableOpacity 
+        style={styles.controlButton}
+        onPress={onToggleMode}>
+        {examMode === 'CLOSED' ? (
+          <Lock size={18} color="#FF9800" />
+        ) : (
+          <Unlock size={18} color="#2196F3" />
+        )}
+      </TouchableOpacity>
+      
+      <TouchableOpacity 
+        style={styles.controlButton}
+        onPress={onToggleQuestionSidebar}>
+        <Menu size={18} color="#333333" />
+      </TouchableOpacity>
+      
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         {questions.map((_, index) => (
           <TouchableOpacity
@@ -58,7 +87,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
   },
-  questionsButton: {
+  controlButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -73,6 +102,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
+    marginRight: 8,
   },
   questionNumberButton: {
     width: 36,

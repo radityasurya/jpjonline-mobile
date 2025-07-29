@@ -166,10 +166,12 @@ export default function HomeScreen() {
     <ScrollView style={styles.container}>
       <View style={styles.headerContainer}>
         <Text style={styles.greeting}>Welcome back,</Text>
-        <Text style={styles.userName}>{user.name}</Text>
-        <View style={styles.subscriptionBadge}>
+        <View style={styles.userNameContainer}>
+          <Text style={styles.userName}>{user.name}</Text>
           {user.subscription === 'premium' && (
-            <Crown size={18} color="#FFD700" style={styles.premiumIcon} />
+            <View style={styles.subscriptionBadge}>
+              <Crown size={18} color="#FFD700" style={styles.premiumIcon} />
+            </View>
           )}
         </View>
       </View>
@@ -269,14 +271,12 @@ const styles = StyleSheet.create({
     color: '#333333',
     marginTop: 4,
   },
-  subscriptionBadge: {
+  userNameContainer: {
     flexDirection: 'row',
-    alignSelf: 'flex-start',
     alignItems: 'center',
-    justifyContent: 'center',
-    width: 36,
-    height: 36,
-    marginTop: 8,
+  },
+  subscriptionBadge: {
+    marginLeft: 8,
   },
   premiumIcon: {
     shadowColor: '#FFD700',

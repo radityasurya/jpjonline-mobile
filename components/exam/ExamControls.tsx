@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Volume2, VolumeX, Eye, EyeOff } from 'lucide-react-native';
+import { Volume2, VolumeX, Lock, Unlock } from 'lucide-react-native';
 
 interface ExamControlsProps {
   isSoundEnabled: boolean;
@@ -38,14 +38,14 @@ export function ExamControls({
         style={[styles.controlButton, styles.modeButton]}
         onPress={onToggleMode}
       >
-        {examMode === 'OPEN' ? (
-          <Eye size={18} color="#2196F3" />
+        {examMode === 'CLOSED' ? (
+          <Lock size={18} color="#FF9800" />
         ) : (
-          <EyeOff size={18} color="#FF9800" />
+          <Unlock size={18} color="#2196F3" />
         )}
         <Text style={[
           styles.controlText,
-          { color: examMode === 'OPEN' ? '#2196F3' : '#FF9800' }
+          { color: examMode === 'CLOSED' ? '#FF9800' : '#2196F3' }
         ]}>
           {examMode} Mode
         </Text>

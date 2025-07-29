@@ -144,8 +144,10 @@ export const getNoteBySlug = async (slug, token = null) => {
     logger.info('NotesService', 'Fetching note by slug', { slug });
     logger.apiRequest('GET', `${API_CONFIG.ENDPOINTS.NOTES.BY_SLUG}/${slug}`);
     
-    const response = await makeAuthenticatedRequest(buildApiUrl(`${API_CONFIG.ENDPOINTS.NOTES.BY_SLUG}/${slug}`), {
+    const headers = authToken ? getAuthHeaders(authToken) : API_CONFIG.HEADERS;
+    const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.NOTES.BY_SLUG}/${slug}`), {
       method: 'GET',
+      headers,
     });
     
     if (!response.ok) {
@@ -231,10 +233,8 @@ export const searchNotes = async (query, token = null) => {
     logger.info('NotesService', 'Searching notes', { query });
     logger.apiRequest('GET', `${API_CONFIG.ENDPOINTS.NOTES.SEARCH}?q=${encodeURIComponent(query)}`);
     
-    const headers = getAuthHeaders(authToken);
-    const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.NOTES.SEARCH}?q=${encodeURIComponent(query)}`), {
+    const response = await makeAuthenticatedRequest(buildApiUrl(`${API_CONFIG.ENDPOINTS.NOTES.SEARCH}?q=${encodeURIComponent(query)}`), {
       method: 'GET',
-      headers,
     });
     
     if (!response.ok) {

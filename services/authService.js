@@ -398,3 +398,6 @@ export const resetPassword = async (data) => {
     throw error;
   }
 };
+
+// Add missing import
+import storageService from './storage.js';

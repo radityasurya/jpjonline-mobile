@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Volume2, VolumeX, Lock, Unlock } from 'lucide-react-native';
+import { Volume2, VolumeX, Lock, Clock as Unlock } from 'lucide-react-native';
 
 interface ExamControlsProps {
   isSoundEnabled: boolean;

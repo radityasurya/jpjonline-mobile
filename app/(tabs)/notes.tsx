@@ -20,7 +20,6 @@ import {
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/utils/logger';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getNotesGroupedByCategory } from '@/services';
 import bookmarkService from '@/services/bookmarkService';
 import { activityService, ACTIVITY_TYPES } from '@/services';
@@ -126,8 +125,7 @@ export default function NotesScreen() {
     setIsLoading(true);
     logger.debug('NotesScreen', 'Fetching notes grouped by category');
     try {
-      const token = await AsyncStorage.getItem('accessToken');
-      const response = await getNotesGroupedByCategory(token);
+      const response = await getNotesGroupedByCategory();
       logger.debug('NotesScreen', 'Notes data loaded', { 
         categoriesCount: response.allCategories.length,
         totalNotes: response.total 

@@ -1,5 +1,6 @@
 import { API_CONFIG, buildApiUrl, getAuthHeaders } from '../config/api.js';
 import { logger } from '../utils/logger.js';
+import storageService from './storage.js';
 
 /**
  * Notes Service
@@ -18,6 +19,9 @@ import { logger } from '../utils/logger.js';
  */
 export const getNotesGroupedByCategory = async (token = null, params = {}) => {
   try {
+    // Get token from storage if not provided
+    const authToken = token || await storageService.getItem('accessToken');
+    
     const queryParams = new URLSearchParams({
       groupByCategory: 'true',
       page: params.page || 1,
@@ -28,7 +32,7 @@ export const getNotesGroupedByCategory = async (token = null, params = {}) => {
     logger.info('NotesService', 'Fetching notes grouped by category', params);
     logger.apiRequest('GET', `${API_CONFIG.ENDPOINTS.NOTES.GROUPED_BY_CATEGORY}?${queryParams.toString()}`);
     
-    const headers = getAuthHeaders(token);
+    const headers = getAuthHeaders(authToken);
     const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.NOTES.GROUPED_BY_CATEGORY}?${queryParams.toString()}`), {
       method: 'GET',
       headers,
@@ -133,10 +137,13 @@ export const getNotesGroupedByCategory = async (token = null, params = {}) => {
  */
 export const getNoteBySlug = async (slug, token = null) => {
   try {
+    // Get token from storage if not provided
+    const authToken = token || await storageService.getItem('accessToken');
+    
     logger.info('NotesService', 'Fetching note by slug', { slug });
     logger.apiRequest('GET', `${API_CONFIG.ENDPOINTS.NOTES.BY_SLUG}/${slug}`);
     
-    const headers = token ? getAuthHeaders(token) : API_CONFIG.HEADERS;
+    const headers = authToken ? getAuthHeaders(authToken) : API_CONFIG.HEADERS;
     const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.NOTES.BY_SLUG}/${slug}`), {
       method: 'GET',
       headers,
@@ -219,10 +226,13 @@ export const getNoteBySlug = async (slug, token = null) => {
  */
 export const searchNotes = async (query, token = null) => {
   try {
+    // Get token from storage if not provided
+    const authToken = token || await storageService.getItem('accessToken');
+    
     logger.info('NotesService', 'Searching notes', { query });
     logger.apiRequest('GET', `${API_CONFIG.ENDPOINTS.NOTES.SEARCH}?q=${encodeURIComponent(query)}`);
     
-    const headers = getAuthHeaders(token);
+    const headers = getAuthHeaders(authToken);
     const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.NOTES.SEARCH}?q=${encodeURIComponent(query)}`), {
       method: 'GET',
       headers,

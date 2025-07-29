@@ -21,12 +21,15 @@ const MAX_RESULTS = 100; // Keep last 100 results for performance
  */
 export const getUserExams = async (token) => {
   try {
+    // Get token from storage if not provided
+    const authToken = token || await storageService.getItem('accessToken');
+    
     logger.info('ExamsService', 'Fetching user exams');
     logger.apiRequest('GET', API_CONFIG.ENDPOINTS.EXAMS.USER_EXAMS);
     
     const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.EXAMS.USER_EXAMS), {
       method: 'GET',
-      headers: getAuthHeaders(token),
+      headers: getAuthHeaders(authToken),
     });
     
     if (!response.ok) {
@@ -111,12 +114,15 @@ export const getUserExams = async (token) => {
  */
 export const getExamBySlug = async (slug, token) => {
   try {
+    // Get token from storage if not provided
+    const authToken = token || await storageService.getItem('accessToken');
+    
     logger.info('ExamsService', 'Fetching exam by slug', { slug });
     logger.apiRequest('GET', `/api/exams/${slug}/full`);
     
     const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.EXAMS.BY_SLUG}/${slug}/full`), {
       method: 'GET',
-      headers: getAuthHeaders(token),
+      headers: getAuthHeaders(authToken),
     });
     
     if (!response.ok) {

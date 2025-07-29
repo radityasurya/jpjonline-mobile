@@ -11,7 +11,6 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/utils/logger';
 import soundManager from '@/utils/soundManager';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getExamBySlug, submitExamResults, progressService } from '@/services';
 import { activityService, ACTIVITY_TYPES } from '@/services';
 
@@ -92,7 +91,7 @@ export default function ExamScreen() {
     setIsLoading(true);
     logger.info('ExamScreen', 'Loading exam data', { examSlug });
     try {
-      const examData = await getExamBySlug(examSlug as string, user?.token || 'mock-token');
+      const examData = await getExamBySlug(examSlug as string);
       logger.info('ExamScreen', 'Exam data loaded successfully', {
         examSlug,
         questionsCount: examData.questions.length,
@@ -338,7 +337,7 @@ export default function ExamScreen() {
           answers: answers,
           timeSpent: timeSpentMinutes
         },
-        token
+        null // Token will be retrieved from storage by the service
       );
 
       if (response.success) {

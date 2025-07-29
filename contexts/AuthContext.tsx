@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logger } from '@/utils/logger';
 import { progressService, activityService, ACTIVITY_TYPES } from '@/services';
 import { login as loginAPI, refreshAccessToken } from '@/services/authService';
+import storageService from '@/services/storage';
 
 interface User {
   id: string;
@@ -59,9 +59,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const checkAuthState = async () => {
     try {
       logger.debug('AuthContext', 'Checking authentication state');
-      const userData = await AsyncStorage.getItem('user');
+      const userData = await storageService.getItem('user');
       if (userData) {
-        const user = JSON.parse(userData);
+        const user = userData;
         logger.info('AuthContext', 'User found in storage', { userId: user.id });
         // Initialize progress tracking for returning user
         progressService?.initializeUser?.(user.id);
@@ -93,12 +93,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           premiumUntil: response.user.premiumUntil,
           isActive: response.user.isActive,
         };
-        await AsyncStorage.setItem('user', JSON.stringify(userData));
+        await storageService.setItem('user', userData);
         if (response.token) {
-          await AsyncStorage.setItem('accessToken', response.token);
+          await storageService.setItem('accessToken', response.token);
         }
         if (response.refreshToken) {
-          await AsyncStorage.setItem('refreshToken', response.refreshToken);
+          await storageService.setItem('refreshToken', response.refreshToken);
         }
         
         // Initialize progress tracking for new session
@@ -181,8 +181,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role: 'USER',
         isActive: true,
       };
-      await AsyncStorage.setItem('user', JSON.stringify(userData));
-      await AsyncStorage.setItem('accessToken', 'demo-jwt-token');
+      await storageService.setItem('user', userData);
+      await storageService.setItem('accessToken', 'demo-jwt-token');
       
       // Initialize progress tracking for new user
       progressService?.initializeUser?.(userData.id);
@@ -216,9 +216,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       }
       
-      await AsyncStorage.removeItem('user');
-      await AsyncStorage.removeItem('accessToken');
-      await AsyncStorage.removeItem('refreshToken');
+      await storageService.removeItem('user');
+      await storageService.removeItem('accessToken');
+      await storageService.removeItem('refreshToken');
       setUser(null);
       logger.info('AuthContext', 'User logout completed');
     } catch (error) {

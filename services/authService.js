@@ -78,6 +78,32 @@ export const signup = async (userData) => {
     // return mockResponse;
   } catch (error) {
     logger.error('AuthService', 'Signup failed', error);
+    // Mock response - kept for debugging
+    // logger.debug('AuthService', 'Using mock signup response');
+    // await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+    // 
+    // // Simulate email already exists error for demo
+    // if (userData.email === 'existing@jpjonline.com') {
+    //   logger.warn('AuthService', 'Signup failed - email already exists', { email: userData.email });
+    //   throw new Error('Email already exists');
+    // }
+    //
+    // const mockResponse = {
+    //   success: true,
+    //   user: {
+    //     id: `clx${Date.now()}`,
+    //     name: userData.name,
+    //     email: userData.email,
+    //     tier: "FREE",
+    //     role: "USER",
+    //     image: null
+    //   }
+    // };
+    // 
+    // logger.info('AuthService', 'Signup successful', { userId: mockResponse.user.id });
+    // logger.apiResponse('POST', API_CONFIG.ENDPOINTS.AUTH.SIGNUP, 200, { success: true });
+    // return mockResponse;
+    
     throw error;
   }
 };
@@ -138,39 +164,41 @@ export const login = async (credentials) => {
   } catch (error) {
     logger.error('AuthService', 'Login failed', error);
     
-    // Fallback to mock response for debugging
-    logger.debug('AuthService', 'API failed, using mock login response');
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+    // Mock response - kept for debugging
+    // logger.debug('AuthService', 'API failed, using mock login response');
+    // await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+    // 
+    // // Simulate invalid credentials for demo
+    // if (credentials.email !== 'premium@jpjonline.com' && credentials.email !== 'free@jpjonline.com') {
+    //   logger.warn('AuthService', 'Login failed - invalid credentials', { email: credentials.email });
+    //   throw new Error('Invalid email or password');
+    // }
+    //
+    // const isPremium = credentials.email === 'premium@jpjonline.com';
+    // 
+    // const mockResponse = {
+    //   success: true,
+    //   token: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.mock.token.${Date.now()}`,
+    //   refreshToken: `refresh.mock.token.${Date.now()}`,
+    //   user: {
+    //     id: isPremium ? "clx1234567890" : "clx0987654321",
+    //     name: isPremium ? "Ahmad Faizal" : "Siti Aminah",
+    //     email: credentials.email,
+    //     tier: isPremium ? "PREMIUM" : "FREE",
+    //     role: "USER",
+    //     premiumUntil: isPremium ? "2026-07-25T13:41:01.520Z" : undefined,
+    //     isActive: true
+    //   }
+    // };
+    // 
+    // logger.info('AuthService', 'Mock login successful', { 
+    //   userId: mockResponse.user.id, 
+    //   tier: mockResponse.user.tier 
+    // });
+    // logger.apiResponse('POST', API_CONFIG.ENDPOINTS.AUTH.LOGIN, 200, { success: true });
+    // return mockResponse;
     
-    // Simulate invalid credentials for demo
-    if (credentials.email !== 'premium@jpjonline.com' && credentials.email !== 'free@jpjonline.com') {
-      logger.warn('AuthService', 'Login failed - invalid credentials', { email: credentials.email });
-      throw new Error('Invalid email or password');
-    }
-
-    const isPremium = credentials.email === 'premium@jpjonline.com';
-    
-    const mockResponse = {
-      success: true,
-      token: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.mock.token.${Date.now()}`,
-      refreshToken: `refresh.mock.token.${Date.now()}`,
-      user: {
-        id: isPremium ? "clx1234567890" : "clx0987654321",
-        name: isPremium ? "Ahmad Faizal" : "Siti Aminah",
-        email: credentials.email,
-        tier: isPremium ? "PREMIUM" : "FREE",
-        role: "USER",
-        premiumUntil: isPremium ? "2026-07-25T13:41:01.520Z" : undefined,
-        isActive: true
-      }
-    };
-    
-    logger.info('AuthService', 'Mock login successful', { 
-      userId: mockResponse.user.id, 
-      tier: mockResponse.user.tier 
-    });
-    logger.apiResponse('POST', API_CONFIG.ENDPOINTS.AUTH.LOGIN, 200, { success: true });
-    return mockResponse;
+    throw error;
   }
 };
 
@@ -245,29 +273,31 @@ export const getSession = async (token) => {
   } catch (error) {
     logger.error('AuthService', 'Session validation failed', error);
     
-    // Fallback to mock response for debugging
-    logger.debug('AuthService', 'API failed, using mock session response');
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+    // Mock response - kept for debugging
+    // logger.debug('AuthService', 'API failed, using mock session response');
+    // await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+    // 
+    // // Extract mock user data from token (in real implementation, backend validates token)
+    // const isPremium = token.includes('premium');
+    // 
+    // const mockResponse = {
+    //   user: {
+    //     id: isPremium ? "clx1234567890" : "clx0987654321",
+    //     name: isPremium ? "Ahmad Faizal" : "Siti Aminah",
+    //     email: isPremium ? "premium@jpjonline.com" : "free@jpjonline.com",
+    //     tier: isPremium ? "PREMIUM" : "FREE",
+    //     role: "USER",
+    //     premiumUntil: isPremium ? "2026-07-25T13:41:01.520Z" : undefined,
+    //     isActive: true
+    //   },
+    //   expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours from now
+    // };
+    // 
+    // logger.debug('AuthService', 'Mock session validation successful', { userId: mockResponse.user.id });
+    // logger.apiResponse('GET', API_CONFIG.ENDPOINTS.AUTH.SESSION, 200);
+    // return mockResponse;
     
-    // Extract mock user data from token (in real implementation, backend validates token)
-    const isPremium = token.includes('premium');
-    
-    const mockResponse = {
-      user: {
-        id: isPremium ? "clx1234567890" : "clx0987654321",
-        name: isPremium ? "Ahmad Faizal" : "Siti Aminah",
-        email: isPremium ? "premium@jpjonline.com" : "free@jpjonline.com",
-        tier: isPremium ? "PREMIUM" : "FREE",
-        role: "USER",
-        premiumUntil: isPremium ? "2026-07-25T13:41:01.520Z" : undefined,
-        isActive: true
-      },
-      expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours from now
-    };
-    
-    logger.debug('AuthService', 'Mock session validation successful', { userId: mockResponse.user.id });
-    logger.apiResponse('GET', API_CONFIG.ENDPOINTS.AUTH.SESSION, 200);
-    return mockResponse;
+    throw error;
   }
 };
 
@@ -298,18 +328,20 @@ export const forgotPassword = async (data) => {
   } catch (error) {
     logger.error('AuthService', 'Forgot password failed', error);
     
-    // Fallback to mock response for debugging
-    logger.debug('AuthService', 'API failed, using mock forgot password response');
-    await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate network delay
+    // Mock response - kept for debugging
+    // logger.debug('AuthService', 'API failed, using mock forgot password response');
+    // await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate network delay
+    // 
+    // const mockResponse = {
+    //   success: true,
+    //   message: "Password reset email sent"
+    // };
+    // 
+    // logger.info('AuthService', 'Mock password reset email sent', { email: data.email });
+    // logger.apiResponse('POST', API_CONFIG.ENDPOINTS.AUTH.FORGOT_PASSWORD, 200);
+    // return mockResponse;
     
-    const mockResponse = {
-      success: true,
-      message: "Password reset email sent"
-    };
-    
-    logger.info('AuthService', 'Mock password reset email sent', { email: data.email });
-    logger.apiResponse('POST', API_CONFIG.ENDPOINTS.AUTH.FORGOT_PASSWORD, 200);
-    return mockResponse;
+    throw error;
   }
 };
 
@@ -341,23 +373,25 @@ export const resetPassword = async (data) => {
   } catch (error) {
     logger.error('AuthService', 'Reset password failed', error);
     
-    // Fallback to mock response for debugging
-    logger.debug('AuthService', 'API failed, using mock reset password response');
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+    // Mock response - kept for debugging
+    // logger.debug('AuthService', 'API failed, using mock reset password response');
+    // await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+    // 
+    // // Simulate invalid token for demo
+    // if (data.token === 'invalid-token') {
+    //   logger.warn('AuthService', 'Password reset failed - invalid token');
+    //   throw new Error('Invalid or expired reset token');
+    // }
+    // 
+    // const mockResponse = {
+    //   success: true,
+    //   message: "Password has been reset"
+    // };
+    // 
+    // logger.info('AuthService', 'Mock password reset successful');
+    // logger.apiResponse('POST', API_CONFIG.ENDPOINTS.AUTH.RESET_PASSWORD, 200);
+    // return mockResponse;
     
-    // Simulate invalid token for demo
-    if (data.token === 'invalid-token') {
-      logger.warn('AuthService', 'Password reset failed - invalid token');
-      throw new Error('Invalid or expired reset token');
-    }
-    
-    const mockResponse = {
-      success: true,
-      message: "Password has been reset"
-    };
-    
-    logger.info('AuthService', 'Mock password reset successful');
-    logger.apiResponse('POST', API_CONFIG.ENDPOINTS.AUTH.RESET_PASSWORD, 200);
-    return mockResponse;
+    throw error;
   }
 };

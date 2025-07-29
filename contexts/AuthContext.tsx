@@ -120,43 +120,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return false;
     } catch (error) {
       logger.error('AuthContext', 'Login error', error);
-      
-      // Fallback to demo users for development
-      logger.debug('AuthContext', 'Falling back to demo users');
-      const foundUser = DEMO_USERS.find(
-        u => u.email === email && u.password === password
-      );
-
-      if (foundUser) {
-        logger.info('AuthContext', 'Demo login successful', { userId: foundUser.id, tier: foundUser.tier });
-        const userData = {
-          id: foundUser.id,
-          name: foundUser.name,
-          email: foundUser.email,
-          tier: foundUser.tier,
-          role: foundUser.role,
-          premiumUntil: foundUser.premiumUntil,
-          isActive: foundUser.isActive,
-        };
-        await AsyncStorage.setItem('user', JSON.stringify(userData));
-        await AsyncStorage.setItem('accessToken', 'demo-jwt-token');
-        
-        // Initialize progress tracking for new session
-        progressService?.initializeUser?.(userData.id);
-        
-        // Track login session
-        progressService?.updateStats?.('session_start', { timestamp: new Date().toISOString() });
-        
-        // Track login activity
-        activityService?.addActivity?.(ACTIVITY_TYPES.SESSION_STARTED, {
-          userId: userData.id,
-          userTier: userData.tier,
-          timestamp: new Date().toISOString()
-        });
-        
-        setUser(userData);
-        return true;
-      }
+      // Demo users fallback - kept for debugging
+      // logger.debug('AuthContext', 'Falling back to demo users');
+      // const foundUser = DEMO_USERS.find(
+      //   u => u.email === email && u.password === password
+      // );
+      //
+      // if (foundUser) {
+      //   logger.info('AuthContext', 'Demo login successful', { userId: foundUser.id, tier: foundUser.tier });
+      //   const userData = {
+      //     id: foundUser.id,
+      //     name: foundUser.name,
+      //     email: foundUser.email,
+      //     tier: foundUser.tier,
+      //     role: foundUser.role,
+      //     premiumUntil: foundUser.premiumUntil,
+      //     isActive: foundUser.isActive,
+      //   };
+      //   await AsyncStorage.setItem('user', JSON.stringify(userData));
+      //   await AsyncStorage.setItem('accessToken', 'demo-jwt-token');
+      //   
+      //   // Initialize progress tracking for new session
+      //   progressService?.initializeUser?.(userData.id);
+      //   
+      //   // Track login session
+      //   progressService?.updateStats?.('session_start', { timestamp: new Date().toISOString() });
+      //   
+      //   // Track login activity
+      //   activityService?.addActivity?.(ACTIVITY_TYPES.SESSION_STARTED, {
+      //     userId: userData.id,
+      //     userTier: userData.tier,
+      //     timestamp: new Date().toISOString()
+      //   });
+      //   
+      //   setUser(userData);
+      //   return true;
+      // }
       
       return false;
     } finally {

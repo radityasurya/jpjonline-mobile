@@ -70,9 +70,16 @@ export default function TestsScreen() {
   );
 
   useEffect(() => {
+    // Check if user is logged in before fetching exams
+    if (!user) {
+      logger.warn('TestsScreen', 'User not logged in, redirecting to login');
+      router.replace('/auth/login');
+      return;
+    }
+    
     fetchAllExams();
     fetchTestResults();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     applyFilters();

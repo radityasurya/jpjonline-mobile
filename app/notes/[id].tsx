@@ -34,8 +34,15 @@ export default function NoteDetailScreen() {
   const featuresSupported = bookmarkService?.getPlatformInfo()?.supported || false;
 
   useEffect(() => {
+    // Check if user is logged in before fetching note
+    if (!user) {
+      logger.warn('NoteDetailScreen', 'User not logged in, redirecting to login');
+      router.replace('/auth/login');
+      return;
+    }
+    
     fetchNote();
-  }, [id]);
+  }, [id, user]);
 
   const fetchNote = async () => {
     setIsLoading(true);

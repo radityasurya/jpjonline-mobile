@@ -1,14 +1,19 @@
 import { Platform } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logger } from '../utils/logger.js';
+
+// Import AsyncStorage only on mobile platforms
+let AsyncStorage = null;
+if (Platform.OS !== 'web') {
+  AsyncStorage = require('@react-native-async-storage/async-storage').default;
+}
 
 /**
  * Universal Storage Service
- * Uses AsyncStorage on mobile, disabled on web
+ * Uses AsyncStorage on mobile, localStorage on web
  */
 class StorageService {
   constructor() {
-    this.isSupported = Platform.OS !== 'web';
+    this.isSupported = true; // Support both web and mobile
     this.platform = Platform.OS;
     this.initializeStorage();
   }
@@ -17,18 +22,20 @@ class StorageService {
    * Initialize storage
    */
   async initializeStorage() {
-    if (!this.isSupported) {
-      logger.warn('Storage', 'Storage not available on web platform');
-      return;
-    }
-
     try {
-      // Test AsyncStorage functionality
-      await AsyncStorage.setItem('test-key', 'test-value');
-      await AsyncStorage.removeItem('test-key');
-      logger.info('Storage', 'AsyncStorage initialized successfully');
+      if (Platform.OS === 'web') {
+        // Test localStorage functionality
+        localStorage.setItem('test-key', 'test-value');
+        localStorage.removeItem('test-key');
+        logger.info('Storage', 'localStorage initialized successfully');
+      } else {
+        // Test AsyncStorage functionality
+        await AsyncStorage.setItem('test-key', 'test-value');
+        await AsyncStorage.removeItem('test-key');
+        logger.info('Storage', 'AsyncStorage initialized successfully');
+      }
     } catch (error) {
-      logger.error('Storage', 'Failed to initialize AsyncStorage', error);
+      logger.error('Storage', 'Failed to initialize storage', error);
       this.isSupported = false;
     }
   }
@@ -44,14 +51,14 @@ class StorageService {
    * Get item from storage
    */
   async getItem(key) {
-    if (!this.isSupported) {
-      logger.warn('Storage', 'Storage not available on web platform');
-      return null;
-    }
-
     try {
-      const value = await AsyncStorage.getItem(key);
-      return value ? JSON.parse(value) : null;
+      if (Platform.OS === 'web') {
+        const value = localStorage.getItem(key);
+        return value ? JSON.parse(value) : null;
+      } else {
+        const value = await AsyncStorage.getItem(key);
+        return value ? JSON.parse(value) : null;
+      }
     } catch (error) {
       logger.error('Storage', 'Failed to get item', { key, error });
       return null;
@@ -62,14 +69,14 @@ class StorageService {
    * Set item in storage
    */
   async setItem(key, value) {
-    if (!this.isSupported) {
-      logger.warn('Storage', 'Storage not available on web platform');
-      return false;
-    }
-
     try {
-      await AsyncStorage.setItem(key, JSON.stringify(value));
-      return true;
+      if (Platform.OS === 'web') {
+        localStorage.setItem(key, JSON.stringify(value));
+        return true;
+      } else {
+        await AsyncStorage.setItem(key, JSON.stringify(value));
+        return true;
+      }
     } catch (error) {
       logger.error('Storage', 'Failed to set item', { key, error });
       return false;
@@ -80,14 +87,14 @@ class StorageService {
    * Remove item from storage
    */
   async removeItem(key) {
-    if (!this.isSupported) {
-      logger.warn('Storage', 'Storage not available on web platform');
-      return false;
-    }
-
     try {
-      await AsyncStorage.removeItem(key);
-      return true;
+      if (Platform.OS === 'web') {
+        localStorage.removeItem(key);
+        return true;
+      } else {
+        await AsyncStorage.removeItem(key);
+        return true;
+      }
     } catch (error) {
       logger.error('Storage', 'Failed to remove item', { key, error });
       return false;
@@ -98,14 +105,14 @@ class StorageService {
    * Clear all storage
    */
   async clear() {
-    if (!this.isSupported) {
-      logger.warn('Storage', 'Storage not available on web platform');
-      return false;
-    }
-
     try {
-      await AsyncStorage.clear();
-      return true;
+      if (Platform.OS === 'web') {
+        localStorage.clear();
+        return true;
+      } else {
+        await AsyncStorage.clear();
+        return true;
+      }
     } catch (error) {
       logger.error('Storage', 'Failed to clear storage', error);
       return false;
@@ -116,13 +123,12 @@ class StorageService {
    * Get all keys
    */
   async getAllKeys() {
-    if (!this.isSupported) {
-      logger.warn('Storage', 'Storage not available on web platform');
-      return [];
-    }
-
     try {
-      return await AsyncStorage.getAllKeys();
+      if (Platform.OS === 'web') {
+        return Object.keys(localStorage);
+      } else {
+        return await AsyncStorage.getAllKeys();
+      }
     } catch (error) {
       logger.error('Storage', 'Failed to get all keys', error);
       return [];
@@ -133,13 +139,13 @@ class StorageService {
    * Check if key exists
    */
   async hasKey(key) {
-    if (!this.isSupported) {
-      return false;
-    }
-
     try {
-      const value = await AsyncStorage.getItem(key);
-      return value !== null;
+      if (Platform.OS === 'web') {
+        return localStorage.getItem(key) !== null;
+      } else {
+        const value = await AsyncStorage.getItem(key);
+        return value !== null;
+      }
     } catch (error) {
       logger.error('Storage', 'Failed to check key existence', { key, error });
       return false;
@@ -150,15 +156,12 @@ class StorageService {
    * Get storage size info
    */
   async getStorageInfo() {
-    if (!this.isSupported) {
-      return { supported: false, platform: this.platform };
-    }
-
     try {
-      const keys = await AsyncStorage.getAllKeys();
+      const keys = await this.getAllKeys();
       return {
         supported: true,
         platform: this.platform,
+        storageType: Platform.OS === 'web' ? 'localStorage' : 'AsyncStorage',
         keyCount: keys.length,
         keys: keys
       };

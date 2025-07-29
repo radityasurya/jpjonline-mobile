@@ -93,16 +93,24 @@ export default function NotesScreen() {
   const featuresSupported = bookmarkService?.getPlatformInfo()?.supported || false;
 
   useEffect(() => {
+    // Check if user is logged in before fetching notes
+    if (!user) {
+      logger.warn('NotesScreen', 'User not logged in, redirecting to login');
+      router.replace('/auth/login');
+      return;
+    }
+    
     fetchNotesData();
   }, []);
 
   useEffect(() => {
     applyFilters();
-  }, [searchQuery, selectedCategory, notesData, showBookmarksOnly]);
+  }, [searchQuery, selectedCategory, notesData, showBookmarksOnly, user]);
 
   useEffect(() => {
+    if (!notesData || !user) return;
     loadBookmarkStates();
-  }, [notesData]);
+  }, [notesData, user]);
 
   const loadBookmarkStates = () => {
     if (!notesData) return;

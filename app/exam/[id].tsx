@@ -84,8 +84,15 @@ export default function ExamScreen() {
   };
 
   useEffect(() => {
+    // Check if user is logged in before fetching exam
+    if (!user) {
+      logger.warn('ExamScreen', 'User not logged in, redirecting to login');
+      router.replace('/auth/login');
+      return;
+    }
+    
     fetchExamData();
-  }, [examSlug]);
+  }, [examSlug, user]);
 
   const fetchExamData = async () => {
     setIsLoading(true);

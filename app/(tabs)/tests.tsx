@@ -85,7 +85,7 @@ export default function TestsScreen() {
       const response = await getUserExams(user?.token || 'mock-token');
       logger.info('TestsScreen', 'Exams loaded successfully', { 
         categoriesCount: response.categories.length,
-        userTier: user?.subscription 
+        userTier: user?.tier 
       });
       setExamsData(response);
       

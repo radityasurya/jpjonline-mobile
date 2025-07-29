@@ -23,6 +23,7 @@ export const getNotesGroupedByCategory = async (token = null, params = {}) => {
     // Get token from storage if not provided
     const authToken = token || await storageService.getItem('accessToken');
 
+
     const queryParams = new URLSearchParams({
       groupByCategory: 'true',
       page: params.page || 1,
@@ -282,18 +283,20 @@ export const searchNotes = async (query, token = null) => {
       throw new Error(errorData.error || 'Search failed');
     }
 
+
     const data = await response.json();
 
     logger.info('NotesService', 'Search completed', {
-      query,
-      resultsCount: data.total || 0
+      noteId: data.note.id,
+      slug: data.note.slug
     });
     logger.apiResponse('GET', API_CONFIG.ENDPOINTS.NOTES.SEARCH, 200, {
       success: true,
       resultsCount: data.total || 0
     });
+    logger.apiResponse('GET', `${API_CONFIG.ENDPOINTS.NOTES.BY_ID}/${id}`, 200, { success: true });
 
-    return data;
+    return data.note;
 
     // Mock response - kept for debugging
     // logger.debug('NotesService', 'Using mock search response');

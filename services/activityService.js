@@ -1,10 +1,12 @@
 /**
  * Activity Tracking Service
  * 
- * Manages user activity tracking using localStorage.
- * Provides comprehensive tracking for user interactions, learning activities, and engagement metrics.
+ * Manages user activity tracking using MMKV storage on mobile.
+ * Disabled on web platform.
  */
 
+import { Platform } from 'react-native';
+import storageService from './storage.js';
 import { logger } from '../utils/logger.js';
 
 // Storage key for activities
@@ -32,58 +34,21 @@ export const ACTIVITY_TYPES = {
  */
 class ActivityService {
   constructor() {
-    this.isSupported = this.checkLocalStorageSupport();
-  }
-
-  /**
-   * Check if localStorage is supported
-   */
-  checkLocalStorageSupport() {
-    try {
-      const test = '__localStorage_test__';
-      localStorage.setItem(test, test);
-      localStorage.removeItem(test);
-      return true;
-    } catch (error) {
-      logger.error('ActivityService', 'localStorage not supported', error);
-      return false;
-    }
-  }
-
-  /**
-   * Safe localStorage operations
-   */
-  safeGetItem(key) {
-    try {
-      const item = localStorage.getItem(key);
-      return item ? JSON.parse(item) : null;
-    } catch (error) {
-      logger.error('ActivityService', 'Failed to get item from localStorage', { key, error });
-      return null;
-    }
-  }
-
-  safeSetItem(key, value) {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-      return true;
-    } catch (error) {
-      logger.error('ActivityService', 'Failed to set item in localStorage', { key, error });
-      return false;
-    }
+    this.isSupported = storageService.isAvailable();
+    this.platform = Platform.OS;
   }
 
   /**
    * Get all activities
    * @returns {Array} Array of activity objects
    */
-  getActivities() {
+  async getActivities() {
     if (!this.isSupported) {
-      logger.warn('ActivityService', 'localStorage not supported, returning empty activities');
+      logger.warn('ActivityService', `Activity tracking not supported on ${this.platform} platform`);
       return [];
     }
 
-    const activities = this.safeGetItem(ACTIVITY_STORAGE_KEY);
+    const activities = await storageService.getItem(ACTIVITY_STORAGE_KEY);
     return Array.isArray(activities) ? activities : [];
   }
 
@@ -93,19 +58,19 @@ class ActivityService {
    * @param {Object} data - Activity data
    * @returns {Object|null} Created activity or null if failed
    */
-  addActivity(type, data = {}) {
+  async addActivity(type, data = {}) {
     if (!type) {
       logger.warn('ActivityService', 'No activity type provided');
       return null;
     }
 
     if (!this.isSupported) {
-      logger.warn('ActivityService', 'localStorage not supported, cannot add activity');
+      logger.warn('ActivityService', `Activity tracking not supported on ${this.platform} platform`);
       return null;
     }
 
     try {
-      const activities = this.getActivities();
+      const activities = await this.getActivities();
       
       const newActivity = {
         id: Date.now().toString(),
@@ -121,7 +86,7 @@ class ActivityService {
       // Keep only the last MAX_ACTIVITIES items
       const trimmedActivities = activities.slice(0, MAX_ACTIVITIES);
 
-      const success = this.safeSetItem(ACTIVITY_STORAGE_KEY, trimmedActivities);
+      const success = await storageService.setItem(ACTIVITY_STORAGE_KEY, trimmedActivities);
       
       if (success) {
         logger.debug('ActivityService', 'Activity added successfully', { type, activityId: newActivity.id });
@@ -139,8 +104,8 @@ class ActivityService {
    * @param {number} limit - Number of activities to return
    * @returns {Array} Array of recent activities
    */
-  getRecentActivities(limit = 10) {
-    const activities = this.getActivities();
+  async getRecentActivities(limit = 10) {
+    const activities = await this.getActivities();
     return activities.slice(0, limit);
   }
 
@@ -150,8 +115,8 @@ class ActivityService {
    * @param {number} limit - Number of activities to return
    * @returns {Array} Array of filtered activities
    */
-  getActivitiesByType(type, limit = 10) {
-    const activities = this.getActivities();
+  async getActivitiesByType(type, limit = 10) {
+    const activities = await this.getActivities();
     return activities.filter(activity => activity.type === type).slice(0, limit);
   }
 
@@ -186,6 +151,10 @@ class ActivityService {
    * @returns {number} Number of consecutive days with activity
    */
   calculateActivityStreak() {
+    if (!this.isSupported) {
+      return 0;
+    }
+
     const activities = this.getActivities();
     if (activities.length === 0) return 0;
 
@@ -218,8 +187,20 @@ class ActivityService {
    * Get activity statistics
    * @returns {Object} Activity statistics
    */
-  getActivityStats() {
-    const activities = this.getActivities();
+  async getActivityStats() {
+    if (!this.isSupported) {
+      return {
+        totalActivities: 0,
+        todaysActivities: 0,
+        streak: 0,
+        lastActivity: null,
+        typeBreakdown: {},
+        supported: false,
+        platform: this.platform
+      };
+    }
+
+    const activities = await this.getActivities();
     const todaysActivities = this.getTodaysActivities();
     
     const stats = {
@@ -227,7 +208,9 @@ class ActivityService {
       todaysActivities: todaysActivities.length,
       streak: this.calculateActivityStreak(),
       lastActivity: activities.length > 0 ? activities[0].timestamp : null,
-      typeBreakdown: {}
+      typeBreakdown: {},
+      supported: true,
+      platform: this.platform
     };
 
     // Calculate type breakdown
@@ -242,16 +225,18 @@ class ActivityService {
    * Clear all activities
    * @returns {boolean} Success status
    */
-  clearAllActivities() {
+  async clearAllActivities() {
     if (!this.isSupported) {
-      logger.warn('ActivityService', 'localStorage not supported, cannot clear activities');
+      logger.warn('ActivityService', `Activity tracking not supported on ${this.platform} platform`);
       return false;
     }
 
     try {
-      localStorage.removeItem(ACTIVITY_STORAGE_KEY);
-      logger.info('ActivityService', 'All activities cleared successfully');
-      return true;
+      const success = await storageService.removeItem(ACTIVITY_STORAGE_KEY);
+      if (success) {
+        logger.info('ActivityService', 'All activities cleared successfully');
+      }
+      return success;
     } catch (error) {
       logger.error('ActivityService', 'Failed to clear activities', error);
       return false;
@@ -337,6 +322,10 @@ class ActivityService {
    * @returns {boolean} Whether activity is clickable
    */
   isActivityClickable(activity) {
+    if (!this.isSupported) {
+      return false;
+    }
+
     return [
       ACTIVITY_TYPES.NOTE_VIEWED,
       ACTIVITY_TYPES.NOTE_BOOKMARKED,
@@ -383,7 +372,9 @@ class ActivityService {
       exportDate: new Date().toISOString(),
       activities: activities,
       count: activities.length,
-      stats: this.getActivityStats()
+      stats: this.getActivityStats(),
+      platform: this.platform,
+      supported: this.isSupported
     };
   }
 
@@ -393,13 +384,18 @@ class ActivityService {
    * @returns {boolean} Success status
    */
   importActivities(importData) {
+    if (!this.isSupported) {
+      logger.warn('ActivityService', `Activity tracking not supported on ${this.platform} platform`);
+      return false;
+    }
+
     if (!importData || !Array.isArray(importData.activities)) {
       logger.error('ActivityService', 'Invalid import data structure');
       return false;
     }
 
     try {
-      const success = this.safeSetItem(ACTIVITY_STORAGE_KEY, importData.activities);
+      const success = storageService.setItem(ACTIVITY_STORAGE_KEY, importData.activities);
       
       if (success) {
         logger.info('ActivityService', 'Activities imported successfully', { 
@@ -412,6 +408,23 @@ class ActivityService {
     }
     
     return false;
+  }
+
+  /**
+   * Get platform support info
+   * @returns {Object} Platform support information
+   */
+  getPlatformInfo() {
+    return {
+      platform: this.platform,
+      supported: this.isSupported,
+      storageType: this.isSupported ? 'MMKV' : 'None',
+      features: {
+        activityTracking: this.isSupported,
+        persistence: this.isSupported,
+        encryption: this.isSupported
+      }
+    };
   }
 }
 
@@ -433,34 +446,9 @@ export const {
   isActivityClickable,
   getTimeAgo,
   exportActivities,
-  importActivities
+  importActivities,
+  getPlatformInfo
 } = activityService;
 
 // Export the service instance
 export default activityService;
-
-/**
- * Usage Examples:
- * 
- * // Track note viewing
- * activityService.addActivity(ACTIVITY_TYPES.NOTE_VIEWED, {
- *   noteId: 'note123',
- *   noteTitle: 'Traffic Laws',
- *   userId: 'user456'
- * });
- * 
- * // Track exam completion
- * activityService.addActivity(ACTIVITY_TYPES.EXAM_COMPLETED, {
- *   examId: 'exam789',
- *   examTitle: 'Basic Test',
- *   score: 85,
- *   passed: true,
- *   userId: 'user456'
- * });
- * 
- * // Get recent activities for display
- * const recentActivities = activityService.getRecentActivities(5);
- * const formattedActivities = recentActivities.map(activity => 
- *   activityService.formatActivityForDisplay(activity)
- * );
- */

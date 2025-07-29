@@ -9,7 +9,7 @@
  */
 
 export const API_CONFIG = {
-  BASE_URL: 'https://api.jpjonline.com',
+  BASE_URL: 'https://jpjonline.com',
   ENDPOINTS: {
     AUTH: {
       SIGNUP: '/api/mobile/auth/signup',

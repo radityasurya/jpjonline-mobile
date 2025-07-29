@@ -1,6 +1,7 @@
 import { API_CONFIG, buildApiUrl, getAuthHeaders } from '../config/api.js';
 import { logger } from '../utils/logger.js';
 import storageService from './storage.js';
+import { makeAuthenticatedRequest } from './authService.js';
 
 /**
  * Notes Service

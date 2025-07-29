@@ -3,6 +3,75 @@ import { API_CONFIG, buildApiUrl, getAuthHeaders } from '../config/api.js';
 import { logger } from '../utils/logger.js';
 
 /**
+ * Make API request with automatic token refresh
+ * @param {string} url - API URL
+ * @param {Object} options - Fetch options
+ * @returns {Promise<Response>} API response
+ */
+export const makeAuthenticatedRequest = async (url, options = {}) => {
+  try {
+    // Get current token
+    const token = await storageService.getItem('accessToken');
+    
+    // Make initial request
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+        ...getAuthHeaders(token)
+      }
+    });
+    
+    // If unauthorized, try to refresh token
+    if (response.status === 401) {
+      logger.info('AuthService', 'Token expired, attempting refresh');
+      
+      const refreshToken = await storageService.getItem('refreshToken');
+      if (!refreshToken) {
+        logger.warn('AuthService', 'No refresh token available');
+        throw new Error('Authentication required');
+      }
+      
+      try {
+        // Refresh the token
+        const refreshResponse = await refreshAccessToken(refreshToken);
+        
+        if (refreshResponse.success) {
+          // Store new tokens
+          await storageService.setItem('accessToken', refreshResponse.accessToken);
+          if (refreshResponse.refreshToken) {
+            await storageService.setItem('refreshToken', refreshResponse.refreshToken);
+          }
+          
+          logger.info('AuthService', 'Token refreshed successfully');
+          
+          // Retry original request with new token
+          return await fetch(url, {
+            ...options,
+            headers: {
+              ...options.headers,
+              ...getAuthHeaders(refreshResponse.accessToken)
+            }
+          });
+        }
+      } catch (refreshError) {
+        logger.error('AuthService', 'Token refresh failed', refreshError);
+        // Clear invalid tokens
+        await storageService.removeItem('accessToken');
+        await storageService.removeItem('refreshToken');
+        await storageService.removeItem('user');
+        throw new Error('Session expired. Please login again.');
+      }
+    }
+    
+    return response;
+  } catch (error) {
+    logger.error('AuthService', 'Authenticated request failed', error);
+    throw error;
+  }
+};
+
+/**
  * Authentication Service
  * 
  * This service handles all authentication-related API calls.

@@ -171,7 +171,7 @@ export default function HomeScreen() {
     } else if (
       (activity.type === ACTIVITY_TYPES.NOTE_VIEWED ||
         activity.type === ACTIVITY_TYPES.NOTE_BOOKMARKED) &&
-      activityData.noteSlug
+      activityData.noteId
     ) {
       logger.navigation('NoteDetail', { noteId: activityData.noteId });
       router.push(`/notes/${activityData.noteId}`);

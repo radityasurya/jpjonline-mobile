@@ -136,13 +136,13 @@ export const getNotesGroupedByCategory = async (token = null, params = {}) => {
  * @param {string} [token] - JWT token (optional for mobile)
  * @returns {Promise<Object>} Note details
  */
-export const getNoteBySlug = async (slug, token = null) => {
+export const getNoteById = async (id, token = null) => {
   try {
     // Get token from storage if not provided
     const authToken = token || await storageService.getItem('accessToken');
 
-    logger.info('NotesService', 'Fetching note by slug', { slug });
-    logger.apiRequest('GET', `${API_CONFIG.ENDPOINTS.NOTES.BY_SLUG}/${slug}`);
+    logger.info('NotesService', 'Fetching note by ID', { id });
+    logger.apiRequest('GET', `${API_CONFIG.ENDPOINTS.NOTES.BY_ID}/${id}`);
 
     const headers = authToken ? getAuthHeaders(authToken) : API_CONFIG.HEADERS;
     const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.NOTES.BY_SLUG}/${slug}`), {
@@ -273,7 +273,7 @@ export const searchNotes = async (query, token = null) => {
     logger.info('NotesService', 'Searching notes', { query });
     logger.apiRequest('GET', `${API_CONFIG.ENDPOINTS.NOTES.SEARCH}?q=${encodeURIComponent(query)}`);
 
-    const response = await makeAuthenticatedRequest(buildApiUrl(`${API_CONFIG.ENDPOINTS.NOTES.SEARCH}?q=${encodeURIComponent(query)}`), {
+    const response = await makeAuthenticatedRequest(buildApiUrl(`${API_CONFIG.ENDPOINTS.NOTES.BY_ID}/${id}`), {
       method: 'GET',
     });
 
@@ -317,7 +317,7 @@ export const searchNotes = async (query, token = null) => {
     // 
     // return mockResults;
   } catch (error) {
-    logger.error('NotesService', 'Search failed', error);
+    logger.error('NotesService', 'Failed to fetch note by ID', error);
     throw error;
   }
 };

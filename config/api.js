@@ -31,6 +31,8 @@ export const API_CONFIG = {
     EXAMS: {
       USER_EXAMS: '/api/me/exams',
       EXAM_HISTORY: '/api/me/exam-history',
+      BY_SLUG: '/api/exams',
+      SUBMIT_RESULTS: '/api/exams'
     }
   },
   HEADERS: {

@@ -176,12 +176,76 @@ export default function TestsScreen() {
   };
 
   const renderExamItem = ({ item: exam }: { item: ApiExam }) => (
-    <ExamCard
-      exam={exam}
+    <TouchableOpacity
+      style={[
+        styles.examCard,
+        !exam.accessible && styles.disabledCard,
+      ]}
       onPress={() => startExam(exam)}
-      getExamTypeColor={getExamTypeColor}
-      getExamTypeText={getExamTypeText}
-    />
+      disabled={!exam.accessible}
+    >
+      <View style={styles.examHeader}>
+        <View style={styles.examInfo}>
+          <Text style={styles.examTitle}>{exam.title}</Text>
+          {exam.description && (
+            <Text style={styles.examDescription} numberOfLines={2}>
+              {exam.description}
+            </Text>
+          )}
+        </View>
+        <View style={styles.examBadges}>
+          <View style={[
+            styles.modeBadge,
+            { backgroundColor: exam.examMode === 'OPEN' ? '#E8F5E8' : '#FFF3E0' }
+          ]}>
+            <Text style={[
+              styles.modeText,
+              { color: exam.examMode === 'OPEN' ? '#4CAF50' : '#FF9800' }
+            ]}>
+              {exam.examMode}
+            </Text>
+          </View>
+          {exam.premium && (
+            <Crown size={16} color="#FF9800" />
+          )}
+          {!exam.accessible && <Lock size={16} color="#CCCCCC" />}
+        </View>
+      </View>
+
+      <View style={styles.examStats}>
+        <View style={styles.statItem}>
+          <FileText size={14} color="#666666" />
+          <Text style={styles.statText}>{exam.questionCount} questions</Text>
+        </View>
+        
+        {exam.totalTimeDuration && (
+          <View style={styles.statItem}>
+            <Clock size={14} color="#666666" />
+            <Text style={styles.statText}>{formatDuration(exam.totalTimeDuration)}</Text>
+          </View>
+        )}
+        
+        <View style={styles.statItem}>
+          <Trophy size={14} color="#666666" />
+          <Text style={styles.statText}>{exam.passRate}% pass</Text>
+        </View>
+      </View>
+
+      <View style={styles.examFooter}>
+        <View style={styles.examType}>
+          <Text style={[
+            styles.examTypeText,
+            { color: getExamTypeColor(exam.premium) }
+          ]}>
+            {getExamTypeText(exam.premium)}
+          </Text>
+        </View>
+        
+        {!exam.accessible && (
+          <Text style={styles.lockedText}>Premium Required</Text>
+        )}
+      </View>
+    </TouchableOpacity>
   );
 
   if (isLoading) {
@@ -370,70 +434,17 @@ export default function TestsScreen() {
   );
 }
 
-// Separate ExamCard component for better performance
-function ExamCard({ exam, onPress, getExamTypeColor, getExamTypeText }: any) {
-  return (
-    <View style={[styles.examCard, !exam.accessible && styles.disabledCard]}>
-      <View style={styles.examHeader}>
-        <View style={styles.examInfo}>
-          <Text style={styles.examTitle}>{exam.title}</Text>
-          {exam.description && (
-            <Text style={styles.examDescription}>{exam.description}</Text>
-          )}
-        </View>
-        <View style={styles.examBadges}>
-          {exam.premium && (
-            <Crown size={16} color="#FF9800" style={styles.badgeIcon} />
-          )}
-          {!exam.accessible && <Lock size={16} color="#CCCCCC" />}
-        </View>
-      </View>
-
-      <View style={styles.examDetails}>
-        <View style={styles.detailItem}>
-          <FileText size={16} color="#666666" />
-          <Text style={styles.detailText}>{exam.questionCount} questions</Text>
-        </View>
-        <View style={styles.detailItem}>
-          <Trophy size={16} color={getExamTypeColor(exam.premium)} />
-          <Text
-            style={[
-              styles.detailText,
-              { color: getExamTypeColor(exam.premium) },
-            ]}
-          >
-            {getExamTypeText(exam.premium)}
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.examTypeIndicator}>
-        <Text style={styles.examTypeText}>
-          {exam.premium ? 'Premium Exam - Advanced Features' : 'Free Practice Exam'}
-        </Text>
-      </View>
-
-      <View style={styles.examFooter}>
-        <View style={styles.categoryBadge}>
-          <Text style={styles.categoryBadgeText}>
-            {exam.premium ? 'Simulasi' : 'Latihan'}
-          </Text>
-        </View>
-        <TouchableOpacity
-          style={[
-            styles.startButton,
-            !exam.accessible && styles.disabledButton,
-          ]}
-          onPress={onPress}
-          disabled={!exam.accessible}
-        >
-          <Play size={16} color="#FFFFFF" />
-          <Text style={styles.startButtonText}>Start</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-}
+  const formatDuration = (seconds: number) => {
+    if (!seconds) return null;
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    
+    if (hours > 0) {
+      return `${hours}h ${remainingMinutes}m`;
+    }
+    return `${minutes}m`;
+  };
 
 const styles = StyleSheet.create({
   container: {
@@ -582,8 +593,8 @@ const styles = StyleSheet.create({
   examCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    padding: 16,
     marginBottom: 16,
+    padding: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -606,80 +617,58 @@ const styles = StyleSheet.create({
   examBadges: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
   },
-  badgeIcon: {
-    marginLeft: 4,
+  modeBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  modeText: {
+    fontSize: 10,
+    fontWeight: '600',
   },
   examTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#333333',
     marginBottom: 4,
   },
   examDescription: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#666666',
-    lineHeight: 20,
+    lineHeight: 18,
   },
-  examDetails: {
+  examStats: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
-    gap: 20,
-    marginBottom: 16,
+    justifyContent: 'space-between',
+    marginBottom: 12,
   },
-  detailItem: {
+  statItem: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  detailText: {
+  statText: {
     fontSize: 12,
     color: '#666666',
     marginLeft: 4,
-  },
-  examTypeIndicator: {
-    backgroundColor: '#F0F8FF',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    marginBottom: 12,
-  },
-  examTypeText: {
-    fontSize: 12,
-    color: '#1976D2',
-    fontWeight: '500',
   },
   examFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  categoryBadge: {
-    backgroundColor: '#E3F2FD',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+  examType: {
+    flex: 1,
   },
-  categoryBadgeText: {
+  examTypeText: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#1976D2',
   },
-  startButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#333333',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  disabledButton: {
-    backgroundColor: '#CCCCCC',
-  },
-  startButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    marginLeft: 4,
+  lockedText: {
+    fontSize: 11,
+    color: '#FF3B30',
+    fontStyle: 'italic',
   },
   resultCard: {
     backgroundColor: '#FFFFFF',

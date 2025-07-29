@@ -82,15 +82,20 @@ export default function NotesScreen() {
   const { user } = useAuth();
   const [notesData, setNotesData] = useState<NotesApiResponse | null>(null);
   const [filteredNotes, setFilteredNotes] = useState<ApiNote[]>([]);
-  const [categories, setCategories] = useState<Array<{ id: string; title: string; slug: string }>>([]);
+  const [categories, setCategories] = useState<
+    Array<{ id: string; title: string; slug: string }>
+  >([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [showBookmarksOnly, setShowBookmarksOnly] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [bookmarkStates, setBookmarkStates] = useState<{ [key: string]: boolean }>({});
+  const [bookmarkStates, setBookmarkStates] = useState<{
+    [key: string]: boolean;
+  }>({});
 
   // Check if features are supported on current platform
-  const featuresSupported = bookmarkService?.getPlatformInfo()?.supported || false;
+  const featuresSupported =
+    bookmarkService?.getPlatformInfo()?.supported || false;
 
   useEffect(() => {
     // Check if user is logged in before fetching notes
@@ -99,7 +104,7 @@ export default function NotesScreen() {
       router.replace('/auth/login');
       return;
     }
-    
+
     fetchNotesData();
   }, []);
 
@@ -114,16 +119,16 @@ export default function NotesScreen() {
 
   const loadBookmarkStates = () => {
     if (!notesData) return;
-    
+
     // Skip bookmark loading on unsupported platforms
     if (!featuresSupported) {
       logger.info('NotesScreen', 'Bookmark features disabled on web platform');
       return;
     }
-    
+
     const states: { [key: string]: boolean } = {};
-    Object.values(notesData.notesByCategory).forEach(categoryGroup => {
-      categoryGroup.notes.forEach(note => {
+    Object.values(notesData.notesByCategory).forEach((categoryGroup) => {
+      categoryGroup.notes.forEach((note) => {
         states[note.id] = bookmarkService.isBookmarked(note.id);
       });
     });
@@ -134,13 +139,16 @@ export default function NotesScreen() {
     logger.debug('NotesScreen', 'Fetching notes grouped by category');
     try {
       const response = await getNotesGroupedByCategory();
-      logger.debug('NotesScreen', 'Notes data loaded', { 
+      logger.debug('NotesScreen', 'Notes data loaded', {
         categoriesCount: response.allCategories.length,
-        totalNotes: response.total 
+        totalNotes: response.total,
       });
-      
+
       setNotesData(response);
-      setCategories([{ id: 'all', title: 'All', slug: 'all' }, ...response.allCategories]);
+      setCategories([
+        { id: 'all', title: 'All', slug: 'all' },
+        ...response.allCategories,
+      ]);
     } catch (error) {
       logger.error('NotesScreen', 'Error fetching notes', error);
     } finally {
@@ -156,7 +164,7 @@ export default function NotesScreen() {
 
     // Flatten all notes from all categories
     let allNotes: ApiNote[] = [];
-    Object.values(notesData.notesByCategory).forEach(categoryGroup => {
+    Object.values(notesData.notesByCategory).forEach((categoryGroup) => {
       allNotes = [...allNotes, ...categoryGroup.notes];
     });
 
@@ -168,10 +176,12 @@ export default function NotesScreen() {
 
     // Apply category filter
     if (selectedCategory !== 'All') {
-      const selectedCategoryData = categories.find(cat => cat.title === selectedCategory);
+      const selectedCategoryData = categories.find(
+        (cat) => cat.title === selectedCategory
+      );
       if (selectedCategoryData) {
-        filtered = filtered.filter((note) => 
-          note.topic.category.slug === selectedCategoryData.slug
+        filtered = filtered.filter(
+          (note) => note.topic.category.slug === selectedCategoryData.slug
         );
       }
     }
@@ -193,63 +203,75 @@ export default function NotesScreen() {
 
   const handleToggleBookmark = async (noteId: string) => {
     if (!featuresSupported) {
-      logger.warn('NotesScreen', 'Bookmark features not available on web platform');
+      logger.warn(
+        'NotesScreen',
+        'Bookmark features not available on web platform'
+      );
       return;
     }
 
     logger.userAction('Bookmark toggled', { noteId });
     try {
       // Find note details for activity tracking
-      const note = filteredNotes.find(n => n.id === noteId);
+      const note = filteredNotes.find((n) => n.id === noteId);
       const isCurrentlyBookmarked = bookmarkService.isBookmarked(noteId);
-      
+
       const newBookmarkStatus = bookmarkService.toggleBookmark(noteId);
-      setBookmarkStates(prev => ({
+      setBookmarkStates((prev) => ({
         ...prev,
-        [noteId]: newBookmarkStatus
+        [noteId]: newBookmarkStatus,
       }));
-      
+
       // Track activity with note details
       if (note) {
-        const activityType = newBookmarkStatus ? ACTIVITY_TYPES.NOTE_BOOKMARKED : ACTIVITY_TYPES.NOTE_UNBOOKMARKED;
+        const activityType = newBookmarkStatus
+          ? ACTIVITY_TYPES.NOTE_BOOKMARKED
+          : ACTIVITY_TYPES.NOTE_UNBOOKMARKED;
         activityService.addActivity(activityType, {
           noteId: note.id,
           noteTitle: note.title,
           noteSlug: note.slug,
           category: note.topic?.category?.title,
-          userId: user?.id
+          userId: user?.id,
         });
       }
-      
-      logger.info('NotesScreen', 'Bookmark toggled successfully', { noteId, newStatus: newBookmarkStatus });
+
+      logger.info('NotesScreen', 'Bookmark toggled successfully', {
+        noteId,
+        newStatus: newBookmarkStatus,
+      });
     } catch (error) {
       logger.error('NotesScreen', 'Error toggling bookmark', error);
     }
   };
 
   const openNote = (note: ApiNote) => {
-    logger.userAction('Note opened', { noteId: note.id, title: note.title, slug: note.slug });
-    
+    logger.userAction('Note opened', {
+      noteId: note.id,
+      title: note.title,
+      slug: note.slug,
+    });
+
     // Track note viewing activity
     activityService.addActivity(ACTIVITY_TYPES.NOTE_VIEWED, {
       noteId: note.id,
       noteTitle: note.title,
       noteSlug: note.slug,
       category: note.topic?.category?.title,
-      userId: user?.id
+      userId: user?.id,
     });
 
     // Navigate to note detail screen using slug
-    logger.navigation('NoteDetail', { noteSlug: note.slug });
-    router.push(`/notes/${note.slug}`);
+    logger.navigation('NoteDetail', { noteId: note.id });
+    router.push(`/notes/${note.id}`);
   };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      day: 'numeric', 
+    return date.toLocaleDateString('en-US', {
+      day: 'numeric',
       month: 'short',
-      year: 'numeric'
+      year: 'numeric',
     });
   };
 
@@ -302,14 +324,16 @@ export default function NotesScreen() {
               key={category.id}
               style={[
                 styles.categoryButton,
-                selectedCategory === category.title && styles.selectedCategoryButton,
+                selectedCategory === category.title &&
+                  styles.selectedCategoryButton,
               ]}
               onPress={() => setSelectedCategory(category.title)}
             >
               <Text
                 style={[
                   styles.categoryText,
-                  selectedCategory === category.title && styles.selectedCategoryText,
+                  selectedCategory === category.title &&
+                    styles.selectedCategoryText,
                 ]}
               >
                 {category.title}
@@ -343,7 +367,9 @@ export default function NotesScreen() {
           >
             <View style={styles.noteHeader}>
               <View style={styles.categoryBadge}>
-                <Text style={styles.categoryBadgeText}>{note.topic.category.title}</Text>
+                <Text style={styles.categoryBadgeText}>
+                  {note.topic.category.title}
+                </Text>
               </View>
               <View style={styles.noteActions}>
                 <TouchableOpacity onPress={() => handleToggleBookmark(note.id)}>
@@ -366,9 +392,7 @@ export default function NotesScreen() {
             </Text>
 
             <View style={styles.noteFooter}>
-              <Text style={styles.dateText}>
-                {formatDate(note.updatedAt)}
-              </Text>
+              <Text style={styles.dateText}>{formatDate(note.updatedAt)}</Text>
               <View style={styles.readTime}>
                 <Clock size={12} color="#999999" />
                 <Text style={styles.readTimeText}>
@@ -384,7 +408,9 @@ export default function NotesScreen() {
             <Text style={styles.emptyMessage}>
               {searchQuery
                 ? 'Try adjusting your search terms'
-                : showBookmarksOnly ? 'No bookmarked notes found' : 'No notes available in this category'}
+                : showBookmarksOnly
+                ? 'No bookmarked notes found'
+                : 'No notes available in this category'}
             </Text>
           </View>
         )}
@@ -402,8 +428,10 @@ const extractPreview = (content: string, maxLength: number = 150): string => {
     .replace(/\*(.*?)\*/g, '$1') // Remove italic
     .replace(/\n+/g, ' ') // Replace newlines with spaces
     .trim();
-  
-  return cleanContent.length > maxLength ? cleanContent.substring(0, maxLength) + '...' : cleanContent;
+
+  return cleanContent.length > maxLength
+    ? cleanContent.substring(0, maxLength) + '...'
+    : cleanContent;
 };
 
 const styles = StyleSheet.create({

@@ -27,10 +27,12 @@ export const API_CONFIG = {
       GROUPED_BY_CATEGORY: '/api/notes',
       BY_SLUG: '/api/notes',
       SEARCH: '/api/notes/search',
+      BY_ID: '/api/notes',
     },
     EXAMS: {
       USER_EXAMS: '/api/me/exams',
       BY_SLUG: '/api/exams',
+      BY_ID: '/api/exams',
       BY_SLUG_FULL: '/api/exams'
     }
   },

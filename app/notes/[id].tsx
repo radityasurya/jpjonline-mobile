@@ -18,7 +18,7 @@ import {
   User,
 } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import { getNoteBySlug } from '@/services';
+import { getNoteById } from '@/services';
 import { logger } from '@/utils/logger';
 import { progressService, activityService, ACTIVITY_TYPES } from '@/services';
 import bookmarkService from '@/services/bookmarkService';
@@ -29,18 +29,22 @@ export default function NoteDetailScreen() {
   const [note, setNote] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [noteIsBookmarked, setNoteIsBookmarked] = useState(false);
-  
+
   // Check if features are supported on current platform
-  const featuresSupported = bookmarkService?.getPlatformInfo()?.supported || false;
+  const featuresSupported =
+    bookmarkService?.getPlatformInfo()?.supported || false;
 
   useEffect(() => {
     // Check if user is logged in before fetching note
     if (!user) {
-      logger.warn('NoteDetailScreen', 'User not logged in, redirecting to login');
+      logger.warn(
+        'NoteDetailScreen',
+        'User not logged in, redirecting to login'
+      );
       router.replace('/auth/login');
       return;
     }
-    
+
     fetchNote();
   }, [id, user]);
 
@@ -48,29 +52,31 @@ export default function NoteDetailScreen() {
     setIsLoading(true);
     logger.debug('NoteDetailScreen', 'Fetching note by slug', { slug: id });
     try {
-      const noteData = await getNoteBySlug(id as string);
-      logger.info('NoteDetailScreen', 'Note loaded successfully', { 
-        noteId: noteData.id, 
-        title: noteData.title 
+      const noteRawData = await getNoteById(id as string);
+      const noteData = noteRawData.note;
+      logger.info('NoteDetailScreen', 'Note loaded successfully', {
+        noteData: noteData,
+        noteId: noteData.id,
+        title: noteData.title,
       });
       setNote(noteData);
-      
+
       // Track note reading
       activityService.addActivity(ACTIVITY_TYPES.NOTE_VIEWED, {
         noteId: noteData.id,
         noteTitle: noteData.title,
         noteSlug: noteData.slug,
         category: noteData.topic?.category?.title,
-        userId: user?.id
+        userId: user?.id,
       });
-      
+
       progressService.updateStats('note_read', {
         noteId: noteData.id,
         noteTitle: noteData.title,
         readTime: Math.ceil(noteData.content.length / 200), // Estimate read time
-        category: noteData.topic?.category?.slug
+        category: noteData.topic?.category?.slug,
       });
-      
+
       // Check bookmark status
       if (featuresSupported) {
         setNoteIsBookmarked(bookmarkService.isBookmarked(noteData.id));
@@ -84,30 +90,35 @@ export default function NoteDetailScreen() {
 
   const handleToggleBookmark = async () => {
     if (!featuresSupported) {
-      logger.warn('NoteDetailScreen', 'Bookmark features not available on web platform');
+      logger.warn(
+        'NoteDetailScreen',
+        'Bookmark features not available on web platform'
+      );
       return;
     }
 
     logger.userAction('Bookmark toggle attempted', { noteId: note?.id });
     try {
       const isCurrentlyBookmarked = bookmarkService.isBookmarked(note.id);
-      
+
       const newBookmarkStatus = bookmarkService.toggleBookmark(note.id);
       setNoteIsBookmarked(newBookmarkStatus);
-      
+
       // Track activity
-      const activityType = newBookmarkStatus ? ACTIVITY_TYPES.NOTE_BOOKMARKED : ACTIVITY_TYPES.NOTE_UNBOOKMARKED;
+      const activityType = newBookmarkStatus
+        ? ACTIVITY_TYPES.NOTE_BOOKMARKED
+        : ACTIVITY_TYPES.NOTE_UNBOOKMARKED;
       activityService.addActivity(activityType, {
         noteId: note.id,
         noteTitle: note.title,
         noteSlug: note.slug,
         category: note.topic?.category?.title,
-        userId: user?.id
+        userId: user?.id,
       });
-      
-      logger.info('NoteDetailScreen', 'Bookmark toggled successfully', { 
-        noteId: note.id, 
-        newStatus: newBookmarkStatus 
+
+      logger.info('NoteDetailScreen', 'Bookmark toggled successfully', {
+        noteId: note.id,
+        newStatus: newBookmarkStatus,
       });
     } catch (error) {
       logger.error('NoteDetailScreen', 'Error toggling bookmark', error);
@@ -115,10 +126,16 @@ export default function NoteDetailScreen() {
   };
 
   const shareNote = async () => {
-    logger.userAction('Note share initiated', { noteId: note?.id, title: note?.title });
+    logger.userAction('Note share initiated', {
+      noteId: note?.id,
+      title: note?.title,
+    });
     try {
       await Share.share({
-        message: `${note.title}\n\n${note.content.substring(0, 200)}...\n\nRead via JPJOnline`,
+        message: `${note.title}\n\n${note.content.substring(
+          0,
+          200
+        )}...\n\nRead via JPJOnline`,
         title: note.title,
       });
       logger.info('NoteDetailScreen', 'Note shared successfully');
@@ -146,12 +163,12 @@ export default function NoteDetailScreen() {
       const processInlineFormatting = (text: string) => {
         const parts: (string | JSX.Element)[] = [];
         let currentIndex = 0;
-        
+
         // Bold text **text**
         const boldRegex = /\*\*(.*?)\*\*/g;
         let match;
         let lastIndex = 0;
-        
+
         while ((match = boldRegex.exec(text)) !== null) {
           // Add text before match
           if (match.index > lastIndex) {
@@ -165,12 +182,12 @@ export default function NoteDetailScreen() {
           );
           lastIndex = match.index + match[0].length;
         }
-        
+
         // Add remaining text
         if (lastIndex < text.length) {
           parts.push(text.substring(lastIndex));
         }
-        
+
         return parts;
       };
 
@@ -279,11 +296,13 @@ export default function NoteDetailScreen() {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.titleSection}>
           <Text style={styles.noteTitle}>{note.title}</Text>
-          
+
           <View style={styles.categoryBadge}>
-            <Text style={styles.categoryText}>{note.topic?.category?.title || 'General'}</Text>
+            <Text style={styles.categoryText}>
+              {note.topic?.category?.title || 'General'}
+            </Text>
           </View>
-          
+
           <View style={styles.metaInfo}>
             <View style={styles.authorInfo}>
               <User size={14} color="#666666" />
@@ -298,7 +317,7 @@ export default function NoteDetailScreen() {
               </Text>
             </View>
           </View>
-          
+
           <View style={styles.dateInfo}>
             <Text style={styles.dateText}>
               Last updated: {formatDate(note.updatedAt)}

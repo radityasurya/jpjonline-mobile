@@ -25,6 +25,7 @@ export {
 export {
   getNotesGroupedByCategory,
   getNoteBySlug,
+  getNoteById,
   searchNotes
 } from './notesService.js';
 

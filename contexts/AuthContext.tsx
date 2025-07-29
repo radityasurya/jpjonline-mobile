@@ -2,12 +2,16 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logger } from '@/utils/logger';
 import { progressService, activityService, ACTIVITY_TYPES } from '@/services';
+import { login as loginAPI, refreshAccessToken } from '@/services/authService';
 
 interface User {
   id: string;
   name: string;
   email: string;
-  subscription: 'free' | 'premium';
+  tier: 'FREE' | 'PREMIUM';
+  role: string;
+  premiumUntil?: string;
+  isActive: boolean;
   avatar?: string;
 }
 
@@ -28,14 +32,19 @@ const DEMO_USERS = [
     name: 'Ahmad Faizal',
     email: 'premium@jpjonline.com',
     password: 'premium123',
-    subscription: 'premium' as const,
+    tier: 'PREMIUM' as const,
+    role: 'USER',
+    isActive: true,
+    premiumUntil: '2026-07-25T13:41:01.520Z',
   },
   {
     id: '2',
     name: 'Siti Aminah',
-    email: 'user@jpjonline.com',
-    password: 'user123',
-    subscription: 'free' as const,
+    email: 'free@jpjonline.com',
+    password: 'free123',
+    tier: 'FREE' as const,
+    role: 'USER',
+    isActive: true,
   },
 ];
 
@@ -71,23 +80,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     logger.info('AuthContext', 'Login attempt started', { email });
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await loginAPI({ email, password });
       
-      const foundUser = DEMO_USERS.find(
-        u => u.email === email && u.password === password
-      );
-
-      if (foundUser) {
-        logger.info('AuthContext', 'Login successful', { userId: foundUser.id, tier: foundUser.subscription });
+      if (response.success && response.user) {
+        logger.info('AuthContext', 'Login successful', { userId: response.user.id, tier: response.user.tier });
         const userData = {
-          id: foundUser.id,
-          name: foundUser.name,
-          email: foundUser.email,
-          subscription: foundUser.subscription,
+          id: response.user.id,
+          name: response.user.name,
+          email: response.user.email,
+          tier: response.user.tier,
+          role: response.user.role,
+          premiumUntil: response.user.premiumUntil,
+          isActive: response.user.isActive,
         };
         await AsyncStorage.setItem('user', JSON.stringify(userData));
-        await AsyncStorage.setItem('token', 'mock-jwt-token');
+        await AsyncStorage.setItem('accessToken', response.token);
+        if (response.refreshToken) {
+          await AsyncStorage.setItem('refreshToken', response.refreshToken);
+        }
         
         // Initialize progress tracking for new session
         progressService?.initializeUser?.(userData.id);
@@ -98,18 +108,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Track login activity
         activityService?.addActivity?.(ACTIVITY_TYPES.SESSION_STARTED, {
           userId: userData.id,
-          userTier: userData.subscription,
+          userTier: userData.tier,
           timestamp: new Date().toISOString()
         });
         
         setUser(userData);
         return true;
-      } else {
-        logger.warn('AuthContext', 'Login failed - invalid credentials', { email });
       }
+      
+      logger.warn('AuthContext', 'Login failed - invalid response', { email });
       return false;
     } catch (error) {
       logger.error('AuthContext', 'Login error', error);
+      
+      // Fallback to demo users for development
+      logger.debug('AuthContext', 'Falling back to demo users');
+      const foundUser = DEMO_USERS.find(
+        u => u.email === email && u.password === password
+      );
+
+      if (foundUser) {
+        logger.info('AuthContext', 'Demo login successful', { userId: foundUser.id, tier: foundUser.tier });
+        const userData = {
+          id: foundUser.id,
+          name: foundUser.name,
+          email: foundUser.email,
+          tier: foundUser.tier,
+          role: foundUser.role,
+          premiumUntil: foundUser.premiumUntil,
+          isActive: foundUser.isActive,
+        };
+        await AsyncStorage.setItem('user', JSON.stringify(userData));
+        await AsyncStorage.setItem('accessToken', 'demo-jwt-token');
+        
+        // Initialize progress tracking for new session
+        progressService?.initializeUser?.(userData.id);
+        
+        // Track login session
+        progressService?.updateStats?.('session_start', { timestamp: new Date().toISOString() });
+        
+        // Track login activity
+        activityService?.addActivity?.(ACTIVITY_TYPES.SESSION_STARTED, {
+          userId: userData.id,
+          userTier: userData.tier,
+          timestamp: new Date().toISOString()
+        });
+        
+        setUser(userData);
+        return true;
+      }
+      
       return false;
     } finally {
       setIsLoading(false);
@@ -128,10 +176,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         id: Date.now().toString(),
         name,
         email,
-        subscription: 'free' as const,
+        tier: 'FREE' as const,
+        role: 'USER',
+        isActive: true,
       };
       await AsyncStorage.setItem('user', JSON.stringify(userData));
-      await AsyncStorage.setItem('token', 'mock-jwt-token');
+      await AsyncStorage.setItem('accessToken', 'demo-jwt-token');
       
       // Initialize progress tracking for new user
       progressService?.initializeUser?.(userData.id);
@@ -166,7 +216,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       await AsyncStorage.removeItem('user');
-      await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('accessToken');
+      await AsyncStorage.removeItem('refreshToken');
       setUser(null);
       logger.info('AuthContext', 'User logout completed');
     } catch (error) {

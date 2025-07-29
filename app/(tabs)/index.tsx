@@ -168,7 +168,7 @@ export default function HomeScreen() {
         <Text style={styles.greeting}>Welcome back,</Text>
         <View style={styles.userNameContainer}>
           <Text style={styles.userName}>{user.name}</Text>
-          {user.subscription === 'premium' && (
+          {user.tier === 'PREMIUM' && (
             <View style={styles.subscriptionBadge}>
               <Crown size={18} color="#FFD700" style={styles.premiumIcon} />
             </View>

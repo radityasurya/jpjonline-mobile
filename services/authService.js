@@ -78,53 +78,128 @@ export const login = async (credentials) => {
     logger.info('AuthService', 'Starting user login', { email: credentials.email });
     logger.apiRequest('POST', API_CONFIG.ENDPOINTS.AUTH.LOGIN, { email: credentials.email });
     
-    // TODO: Uncomment when CORS is configured on backend
-    // const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.AUTH.LOGIN), {
-    //   method: 'POST',
-    //   headers: API_CONFIG.HEADERS,
-    //   body: JSON.stringify(credentials),
-    // });
-    // 
-    // if (!response.ok) {
-    //   const errorData = await response.json();
-    //   throw new Error(errorData.error || 'Login failed');
-    // }
-    // 
-    // return await response.json();
-
-    // Mock response - remove when API is ready
-    logger.debug('AuthService', 'Using mock login response');
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+    const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.AUTH.LOGIN), {
+      method: 'POST',
+      headers: API_CONFIG.HEADERS,
+      body: JSON.stringify(credentials),
+    });
     
-    // Simulate invalid credentials for demo
-    if (credentials.email !== 'premium@jpjonline.com' && credentials.email !== 'free@jpjonline.com') {
-      logger.warn('AuthService', 'Login failed - invalid credentials', { email: credentials.email });
-      throw new Error('Invalid email or password');
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Login failed');
+    }
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      // Store tokens
+      if (data.accessToken) {
+        // Store access token for API calls
+        // Note: In production, consider using secure storage
+      }
+      if (data.refreshToken) {
+        // Store refresh token for token renewal
+        // Note: In production, consider using secure storage
+      }
+      
+      return {
+        success: true,
+        token: data.accessToken,
+        refreshToken: data.refreshToken,
+        user: {
+          id: data.user.id,
+          name: data.user.name,
+          email: data.user.email,
+          tier: data.user.tier,
+          role: data.user.role,
+          premiumUntil: data.user.premiumUntil,
+          isActive: data.user.isActive
+        }
+      };
+    } else {
+      throw new Error(data.error || 'Login failed');
     }
 
-    const isPremium = credentials.email === 'premium@jpjonline.com';
-    
-    const mockResponse = {
-      success: true,
-      token: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.mock.token.${Date.now()}`,
-      user: {
-        id: isPremium ? "clx1234567890" : "clx0987654321",
-        name: isPremium ? "Ahmad Faizal" : "Siti Aminah",
-        email: credentials.email,
-        tier: isPremium ? "PREMIUM" : "FREE",
-        role: "USER",
-        image: null
-      }
-    };
-    
-    logger.info('AuthService', 'Login successful', { 
-      userId: mockResponse.user.id, 
-      tier: mockResponse.user.tier 
-    });
-    logger.apiResponse('POST', API_CONFIG.ENDPOINTS.AUTH.LOGIN, 200, { success: true });
-    return mockResponse;
+    // Mock response - remove when API is ready
+    // logger.debug('AuthService', 'Using mock login response');
+    // await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+    // 
+    // // Simulate invalid credentials for demo
+    // if (credentials.email !== 'premium@jpjonline.com' && credentials.email !== 'free@jpjonline.com') {
+    //   logger.warn('AuthService', 'Login failed - invalid credentials', { email: credentials.email });
+    //   throw new Error('Invalid email or password');
+    // }
+    //
+    // const isPremium = credentials.email === 'premium@jpjonline.com';
+    // 
+    // const mockResponse = {
+    //   success: true,
+    //   token: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.mock.token.${Date.now()}`,
+    //   user: {
+    //     id: isPremium ? "clx1234567890" : "clx0987654321",
+    //     name: isPremium ? "Ahmad Faizal" : "Siti Aminah",
+    //     email: credentials.email,
+    //     tier: isPremium ? "PREMIUM" : "FREE",
+    //     role: "USER",
+    //     image: null
+    //   }
+    // };
+    // 
+    // logger.info('AuthService', 'Login successful', { 
+    //   userId: mockResponse.user.id, 
+    //   tier: mockResponse.user.tier 
+    // });
+    // logger.apiResponse('POST', API_CONFIG.ENDPOINTS.AUTH.LOGIN, 200, { success: true });
+    // return mockResponse;
   } catch (error) {
     logger.error('AuthService', 'Login failed', error);
+    throw error;
+  }
+};
+
+/**
+ * Refresh Access Token
+ * @param {string} refreshToken - Refresh token
+ * @returns {Promise<Object>} New tokens and user data
+ */
+export const refreshAccessToken = async (refreshToken) => {
+  try {
+    logger.info('AuthService', 'Refreshing access token');
+    logger.apiRequest('POST', API_CONFIG.ENDPOINTS.AUTH.REFRESH);
+    
+    const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.AUTH.REFRESH), {
+      method: 'POST',
+      headers: API_CONFIG.HEADERS,
+      body: JSON.stringify({ refreshToken }),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Token refresh failed');
+    }
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      return {
+        success: true,
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+        user: {
+          id: data.user.id,
+          name: data.user.name,
+          email: data.user.email,
+          tier: data.user.tier,
+          role: data.user.role,
+          premiumUntil: data.user.premiumUntil,
+          isActive: data.user.isActive
+        }
+      };
+    } else {
+      throw new Error(data.error || 'Token refresh failed');
+    }
+  } catch (error) {
+    logger.error('AuthService', 'Token refresh failed', error);
     throw error;
   }
 };

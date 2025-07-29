@@ -1,5 +1,11 @@
 import { API_CONFIG, buildApiUrl, getAuthHeaders } from '../config/api.js';
 import { logger } from '../utils/logger.js';
+import storageService from './storage.js';
+
+// Storage keys for exam data
+const EXAM_RESULTS_STORAGE_KEY = '@jpj_exam_results_v1';
+const EXAM_HISTORY_STORAGE_KEY = '@jpj_exam_history_v1';
+const MAX_RESULTS = 100; // Keep last 100 results for performance
 
 /**
  * Exams Service
@@ -195,38 +201,71 @@ export const getExamBySlug = async (slug, token) => {
  */
 export const submitExamResults = async (examSlug, results, token) => {
   try {
-    logger.info('ExamsService', 'Submitting exam results', { 
+    logger.info('ExamsService', 'Processing exam results locally', { 
       examSlug, 
       questionsAnswered: results.answers?.length || 0 
     });
-    logger.apiRequest('POST', `/api/exams/${examSlug}/submit`, { 
-      answersCount: results.answers?.length || 0 
-    });
-    
-    const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.EXAMS.SUBMIT_RESULTS}/${examSlug}/submit`), {
-      method: 'POST',
-      headers: getAuthHeaders(token),
-      body: JSON.stringify(results),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to submit exam results');
+
+    // Get exam data to calculate results
+    const examData = await getExamBySlug(examSlug, token);
+    if (!examData || !examData.questions) {
+      throw new Error('Exam data not found for result calculation');
     }
-    
-    const data = await response.json();
-    
-    logger.info('ExamsService', 'Exam results submitted successfully', { 
+
+    // Calculate score based on answers
+    const totalQuestions = examData.questions.length;
+    let correctAnswers = 0;
+    const questionResults = [];
+
+    examData.questions.forEach((question, index) => {
+      const userAnswer = results.answers[index] ?? -1;
+      const isCorrect = userAnswer === question.answerIndex;
+      if (isCorrect) correctAnswers++;
+
+      questionResults.push({
+        questionId: question.id,
+        question: question.text,
+        userAnswer: userAnswer,
+        correctAnswer: question.answerIndex,
+        isCorrect: isCorrect,
+        explanation: question.explanation || '',
+        questionImage: question.imageUrl,
+        options: question.options
+      });
+    });
+
+    const score = Math.round((correctAnswers / totalQuestions) * 100);
+    const passed = score >= 80; // Default passing score
+
+    const examResult = {
+      id: `result_${Date.now()}`,
+      examId: examData.id,
+      examSlug: examSlug,
+      examTitle: examData.title,
+      score: score,
+      correctAnswers: correctAnswers,
+      totalQuestions: totalQuestions,
+      timeSpent: results.timeSpent || 0,
+      passed: passed,
+      passingScore: 80,
+      results: questionResults,
+      completedAt: new Date().toISOString(),
+      timestamp: new Date().toISOString()
+    };
+
+    // Save to local storage
+    await saveExamResult(examResult);
+
+    logger.info('ExamsService', 'Exam results processed and saved locally', { 
       examSlug, 
-      score: data.result?.score,
-      passed: data.result?.passed
+      score: examResult.score,
+      passed: examResult.passed
     });
-    logger.apiResponse('POST', `${API_CONFIG.ENDPOINTS.EXAMS.SUBMIT_RESULTS}/${examSlug}/submit`, 200, { 
-      success: true, 
-      score: data.result?.score 
-    });
-    
-    return data;
+
+    return {
+      success: true,
+      result: examResult
+    };
 
     // Mock response - kept for debugging
     // logger.debug('ExamsService', 'Using mock exam submission response');

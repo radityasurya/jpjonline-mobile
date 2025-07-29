@@ -33,10 +33,8 @@ export const getNotesGroupedByCategory = async (token = null, params = {}) => {
     logger.info('NotesService', 'Fetching notes grouped by category', params);
     logger.apiRequest('GET', `${API_CONFIG.ENDPOINTS.NOTES.GROUPED_BY_CATEGORY}?${queryParams.toString()}`);
     
-    const headers = getAuthHeaders(authToken);
-    const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.NOTES.GROUPED_BY_CATEGORY}?${queryParams.toString()}`), {
+    const response = await makeAuthenticatedRequest(buildApiUrl(`${API_CONFIG.ENDPOINTS.NOTES.GROUPED_BY_CATEGORY}?${queryParams.toString()}`), {
       method: 'GET',
-      headers,
     });
     
     if (!response.ok) {

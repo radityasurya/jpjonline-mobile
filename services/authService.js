@@ -1,3 +1,4 @@
+import storageService from './storage.js';
 import { API_CONFIG, buildApiUrl, getAuthHeaders } from '../config/api.js';
 import { logger } from '../utils/logger.js';
 
@@ -399,5 +400,3 @@ export const resetPassword = async (data) => {
   }
 };
 
-// Add missing import
-import storageService from './storage.js';

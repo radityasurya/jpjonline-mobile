@@ -269,16 +269,13 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#333333',
-    marginTop: 4,
   },
   userNameContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  subscriptionBadge: {
-    marginLeft: 8,
-  },
   premiumIcon: {
+    marginLeft: 8,
     shadowColor: '#FFD700',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,

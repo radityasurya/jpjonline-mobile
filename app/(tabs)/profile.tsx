@@ -240,13 +240,13 @@ export default function ProfileScreen() {
             <User size={40} color="#666666" />
           </View>
           <View style={styles.userDetails}>
-            <Text style={styles.userName}>{user?.name}</Text>
-            <Text style={styles.userEmail}>{user?.email}</Text>
-            <View style={styles.subscriptionBadge}>
+            <View style={styles.userNameContainer}>
+              <Text style={styles.userName}>{user?.name}</Text>
               {user?.subscription === 'premium' && (
-                <Crown size={16} color="#FFD700" style={styles.premiumIcon} />
+                <Crown size={18} color="#FFD700" style={styles.premiumIcon} />
               )}
             </View>
+            <Text style={styles.userEmail}>{user?.email}</Text>
           </View>
           <TouchableOpacity
             style={styles.editButton}
@@ -285,13 +285,13 @@ export default function ProfileScreen() {
             <Text style={styles.statLabel}>Study Time</Text>
           </View>
 
-          <View style={styles.userNameContainer}>
-            <Text style={styles.userName}>{user?.name}</Text>
-            {user?.subscription === 'premium' && (
-              <Crown size={18} color="#FFD700" style={styles.premiumIcon} />
-            )}
-          </View>
+          <View style={styles.statCard}>
             <BookOpen size={24} color="#FF9800" />
+            <Text style={styles.statNumber}>
+              {featuresSupported ? stats.bookmarkedNotes : 'N/A'}
+            </Text>
+            <Text style={styles.statLabel}>Bookmarks</Text>
+          </View>
         </View>
 
         <View style={styles.achievementCard}>
@@ -554,20 +554,25 @@ const styles = StyleSheet.create({
   userDetails: {
     flex: 1,
   },
-  userNameContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
   userName: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#333333',
     marginBottom: 4,
   },
+  userNameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
   userEmail: {
     fontSize: 14,
     color: '#666666',
     marginBottom: 8,
+  },
+  subscriptionBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   premiumIcon: {
     marginLeft: 8,

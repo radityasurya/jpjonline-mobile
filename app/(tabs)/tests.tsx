@@ -663,17 +663,46 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  examType: {
+  examFooterLeft: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  examTypeText: {
+  examFooterRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  startButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E8F5E8',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#4CAF50',
+  },
+  startButtonText: {
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: '600',
+    color: '#4CAF50',
+    marginLeft: 4,
+  },
+  lockedButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#CCCCCC',
   },
   lockedText: {
-    fontSize: 11,
-    color: '#FF3B30',
-    fontStyle: 'italic',
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#999999',
+    marginLeft: 4,
   },
   resultCard: {
     backgroundColor: '#FFFFFF',

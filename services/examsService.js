@@ -229,6 +229,9 @@ export const getExamBySlug = async (slug, token) => {
         slug: "bahagian-c-car-simulasi",
         title: "Bahagian C Car (Simulasi)",
         description: "Advanced car simulation test covering complex traffic scenarios",
+        examMode: "CLOSED",
+        totalTimeDuration: 2700,
+        passRate: 90,
         category: {
           id: "cmdi3567r000qs0bbww6kauqz",
           name: "Car"
@@ -281,6 +284,9 @@ export const getExamBySlug = async (slug, token) => {
         slug: "bahagian-c-car-latihan",
         title: "Bahagian C Car (Latihan)",
         description: "Practice test for car driving skills assessment",
+        examMode: "OPEN",
+        totalTimeDuration: 2700,
+        passRate: 90,
         category: {
           id: "cmdi3567r000qs0bbww6kauqz",
           name: "Car"

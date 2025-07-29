@@ -23,6 +23,11 @@ export const API_CONFIG = {
       PROFILE: '/api/me',
       CHANGE_PASSWORD: '/api/me/change-password',
     },
+    NOTES: {
+      GROUPED_BY_CATEGORY: '/api/notes',
+      BY_SLUG: '/api/notes',
+      SEARCH: '/api/notes/search',
+    },
     EXAMS: {
       USER_EXAMS: '/api/me/exams',
       EXAM_HISTORY: '/api/me/exam-history',

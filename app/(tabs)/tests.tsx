@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/utils/logger';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   FileText,
   Trophy,
@@ -82,7 +83,8 @@ export default function TestsScreen() {
     setIsLoading(true);
     logger.debug('TestsScreen', 'Fetching available exams');
     try {
-      const response = await getUserExams(user?.token || 'mock-token');
+      const token = await AsyncStorage.getItem('accessToken');
+      const response = await getUserExams(token);
       logger.info('TestsScreen', 'Exams loaded successfully', { 
         categoriesCount: response.categories.length,
         userTier: user?.tier 
@@ -139,7 +141,7 @@ export default function TestsScreen() {
   const fetchTestResults = async () => {
     logger.debug('TestsScreen', 'Fetching exam results');
     try {
-      const response = await getUserExamHistory(user?.token || 'mock-token');
+      const response = await getUserExamHistory();
       logger.debug('TestsScreen', 'Exam results loaded', { count: response.results.length });
       setTestResults(response.results);
     } catch (error) {

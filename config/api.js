@@ -30,9 +30,8 @@ export const API_CONFIG = {
     },
     EXAMS: {
       USER_EXAMS: '/api/me/exams',
-      EXAM_HISTORY: '/api/me/exam-history',
       BY_SLUG: '/api/exams',
-      SUBMIT_RESULTS: '/api/exams'
+      BY_SLUG_FULL: '/api/exams'
     }
   },
   HEADERS: {
@@ -47,7 +46,7 @@ export const API_CONFIG = {
  */
 export const getAuthHeaders = (token) => ({
   ...API_CONFIG.HEADERS,
-  'Authorization': `Bearer ${token}`,
+  ...(token && { 'Authorization': `Bearer ${token}` }),
 });
 
 /**

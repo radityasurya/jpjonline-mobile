@@ -94,7 +94,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           isActive: response.user.isActive,
         };
         await AsyncStorage.setItem('user', JSON.stringify(userData));
-        await AsyncStorage.setItem('accessToken', response.token);
+        if (response.token) {
+          await AsyncStorage.setItem('accessToken', response.token);
+        }
         if (response.refreshToken) {
           await AsyncStorage.setItem('refreshToken', response.refreshToken);
         }

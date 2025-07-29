@@ -11,6 +11,7 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/utils/logger';
 import soundManager from '@/utils/soundManager';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getExamBySlug, submitExamResults, progressService } from '@/services';
 import { activityService, ACTIVITY_TYPES } from '@/services';
 
@@ -337,7 +338,7 @@ export default function ExamScreen() {
           answers: answers,
           timeSpent: timeSpentMinutes
         },
-        user?.token || 'mock-token'
+        token
       );
 
       if (response.success) {
@@ -351,7 +352,7 @@ export default function ExamScreen() {
         progressService.updateStats('exam_completed', {
           score: response.result.score,
           passed: response.result.passed,
-          timeSpent: response.result.timeSpent || timeSpent,
+          timeSpent: response.result.timeSpent || timeSpentMinutes,
           examSlug: exam!.slug,
           examTitle: exam!.title
         });
@@ -364,7 +365,7 @@ export default function ExamScreen() {
           examTitle: exam!.title,
           score: response.result.score,
           passed: response.result.passed,
-          timeSpent: response.result.timeSpent || timeSpent,
+          timeSpent: response.result.timeSpent || timeSpentMinutes,
           category: exam!.category?.name,
           userId: user?.id
         });
@@ -375,7 +376,7 @@ export default function ExamScreen() {
           examSlug: exam!.slug,
           examTitle: exam!.title,
           score: response.result.score,
-          timeSpent: response.result.timeSpent || timeSpent,
+          timeSpent: response.result.timeSpent || timeSpentMinutes,
           category: exam!.category?.name,
           userId: user?.id
         });

@@ -20,6 +20,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { getNoteBySlug } from '@/services';
 import { logger } from '@/utils/logger';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { progressService, activityService, ACTIVITY_TYPES } from '@/services';
 import bookmarkService from '@/services/bookmarkService';
 
@@ -41,7 +42,8 @@ export default function NoteDetailScreen() {
     setIsLoading(true);
     logger.debug('NoteDetailScreen', 'Fetching note by slug', { slug: id });
     try {
-      const noteData = await getNoteBySlug(id as string);
+      const token = await AsyncStorage.getItem('accessToken');
+      const noteData = await getNoteBySlug(id as string, token);
       logger.info('NoteDetailScreen', 'Note loaded successfully', { 
         noteId: noteData.id, 
         title: noteData.title 

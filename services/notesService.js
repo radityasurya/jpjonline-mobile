@@ -28,7 +28,7 @@ export const getNotesGroupedByCategory = async (token = null, params = {}) => {
     logger.info('NotesService', 'Fetching notes grouped by category', params);
     logger.apiRequest('GET', `${API_CONFIG.ENDPOINTS.NOTES.GROUPED_BY_CATEGORY}?${queryParams.toString()}`);
     
-    const headers = token ? getAuthHeaders(token) : API_CONFIG.HEADERS;
+    const headers = getAuthHeaders(token);
     const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.NOTES.GROUPED_BY_CATEGORY}?${queryParams.toString()}`), {
       method: 'GET',
       headers,
@@ -222,7 +222,7 @@ export const searchNotes = async (query, token = null) => {
     logger.info('NotesService', 'Searching notes', { query });
     logger.apiRequest('GET', `${API_CONFIG.ENDPOINTS.NOTES.SEARCH}?q=${encodeURIComponent(query)}`);
     
-    const headers = token ? getAuthHeaders(token) : API_CONFIG.HEADERS;
+    const headers = getAuthHeaders(token);
     const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.NOTES.SEARCH}?q=${encodeURIComponent(query)}`), {
       method: 'GET',
       headers,

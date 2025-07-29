@@ -315,30 +315,20 @@ export const submitExamResults = async (examSlug, results, token) => {
  */
 export const getUserExamHistory = async (token) => {
   try {
-    logger.info('ExamsService', 'Fetching user exam history');
-    logger.apiRequest('GET', '/api/me/exam-history');
+    logger.info('ExamsService', 'Fetching user exam history from local storage');
     
-    const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.EXAMS.EXAM_HISTORY), {
-      method: 'GET',
-      headers: getAuthHeaders(token),
+    const results = await getExamResults();
+    
+    const response = {
+      results: results,
+      total: results.length
+    };
+    
+    logger.info('ExamsService', 'Exam history fetched successfully from local storage', { 
+      resultsCount: response.results.length
     });
     
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to fetch exam history');
-    }
-    
-    const data = await response.json();
-    
-    logger.info('ExamsService', 'Exam history fetched successfully', { 
-      resultsCount: data.results?.length || 0
-    });
-    logger.apiResponse('GET', API_CONFIG.ENDPOINTS.EXAMS.EXAM_HISTORY, 200, { 
-      success: true, 
-      resultsCount: data.results?.length || 0
-    });
-    
-    return data;
+    return response;
 
     // Mock response - kept for debugging
     // logger.debug('ExamsService', 'Using mock exam history response');

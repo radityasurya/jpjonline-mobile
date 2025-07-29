@@ -55,7 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const user = JSON.parse(userData);
         logger.info('AuthContext', 'User found in storage', { userId: user.id });
         // Initialize progress tracking for returning user
-        progressService.initializeUser(user.id);
+        progressService?.initializeUser?.(user.id);
         setUser(user);
       } else {
         logger.debug('AuthContext', 'No user found in storage');
@@ -90,13 +90,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await AsyncStorage.setItem('token', 'mock-jwt-token');
         
         // Initialize progress tracking for new session
-        progressService.initializeUser(userData.id);
+        progressService?.initializeUser?.(userData.id);
         
         // Track login session
-        progressService.updateStats('session_start', { timestamp: new Date().toISOString() });
+        progressService?.updateStats?.('session_start', { timestamp: new Date().toISOString() });
         
         // Track login activity
-        activityService.addActivity(ACTIVITY_TYPES.SESSION_STARTED, {
+        activityService?.addActivity?.(ACTIVITY_TYPES.SESSION_STARTED, {
           userId: userData.id,
           userTier: userData.subscription,
           timestamp: new Date().toISOString()
@@ -134,7 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await AsyncStorage.setItem('token', 'mock-jwt-token');
       
       // Initialize progress tracking for new user
-      progressService.initializeUser(userData.id);
+      progressService?.initializeUser?.(userData.id);
       
       setUser(userData);
       return true;
@@ -152,13 +152,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Track session end before logout
       if (user) {
-        progressService.updateStats('session_end', { 
+        progressService?.updateStats?.('session_end', { 
           duration: 0, // Could track actual session duration
           timestamp: new Date().toISOString() 
         });
         
         // Track logout activity
-        activityService.addActivity(ACTIVITY_TYPES.SESSION_ENDED, {
+        activityService?.addActivity?.(ACTIVITY_TYPES.SESSION_ENDED, {
           userId: user.id,
           sessionDuration: 0, // Could calculate actual duration
           timestamp: new Date().toISOString()

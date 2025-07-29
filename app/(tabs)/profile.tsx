@@ -36,7 +36,7 @@ export default function ProfileScreen() {
   const { user, logout } = useAuth();
   
   // Check if features are supported on current platform
-  const featuresSupported = progressService.getPlatformInfo().supported;
+  const featuresSupported = progressService?.getPlatformInfo()?.supported || false;
   
   const [stats, setStats] = useState({
     totalExams: 0,

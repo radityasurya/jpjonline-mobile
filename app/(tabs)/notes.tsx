@@ -89,6 +89,9 @@ export default function NotesScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [bookmarkStates, setBookmarkStates] = useState<{ [key: string]: boolean }>({});
 
+  // Check if features are supported on current platform
+  const featuresSupported = bookmarkService?.getPlatformInfo()?.supported || false;
+
   useEffect(() => {
     fetchNotesData();
   }, []);
@@ -103,6 +106,12 @@ export default function NotesScreen() {
 
   const loadBookmarkStates = () => {
     if (!notesData) return;
+    
+    // Skip bookmark loading on unsupported platforms
+    if (!featuresSupported) {
+      logger.info('NotesScreen', 'Bookmark features disabled on web platform');
+      return;
+    }
     
     const states: { [key: string]: boolean } = {};
     Object.values(notesData.notesByCategory).forEach(categoryGroup => {
@@ -175,6 +184,11 @@ export default function NotesScreen() {
   };
 
   const handleToggleBookmark = async (noteId: string) => {
+    if (!featuresSupported) {
+      logger.warn('NotesScreen', 'Bookmark features not available on web platform');
+      return;
+    }
+
     logger.userAction('Bookmark toggled', { noteId });
     try {
       // Find note details for activity tracking
@@ -325,10 +339,12 @@ export default function NotesScreen() {
               </View>
               <View style={styles.noteActions}>
                 <TouchableOpacity onPress={() => handleToggleBookmark(note.id)}>
-                  {bookmarkStates[note.id] ? (
+                  {featuresSupported && bookmarkStates[note.id] ? (
                     <BookmarkCheck size={18} color="#facc15" />
-                  ) : (
+                  ) : featuresSupported ? (
                     <Bookmark size={18} color="#CCCCCC" />
+                  ) : (
+                    <Bookmark size={18} color="#E0E0E0" />
                   )}
                 </TouchableOpacity>
               </View>

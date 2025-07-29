@@ -15,6 +15,7 @@ import {
   BookmarkCheck,
   Share2,
   Clock,
+  User,
 } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { getNoteBySlug } from '@/services';
@@ -28,6 +29,9 @@ export default function NoteDetailScreen() {
   const [note, setNote] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [noteIsBookmarked, setNoteIsBookmarked] = useState(false);
+  
+  // Check if features are supported on current platform
+  const featuresSupported = bookmarkService?.getPlatformInfo()?.supported || false;
 
   useEffect(() => {
     fetchNote();
@@ -61,7 +65,9 @@ export default function NoteDetailScreen() {
       });
       
       // Check bookmark status
-      setNoteIsBookmarked(bookmarkService.isBookmarked(noteData.id));
+      if (featuresSupported) {
+        setNoteIsBookmarked(bookmarkService.isBookmarked(noteData.id));
+      }
     } catch (error) {
       logger.error('NoteDetailScreen', 'Error fetching note', error);
     } finally {
@@ -70,6 +76,11 @@ export default function NoteDetailScreen() {
   };
 
   const handleToggleBookmark = async () => {
+    if (!featuresSupported) {
+      logger.warn('NoteDetailScreen', 'Bookmark features not available on web platform');
+      return;
+    }
+
     logger.userAction('Bookmark toggle attempted', { noteId: note?.id });
     try {
       const isCurrentlyBookmarked = bookmarkService.isBookmarked(note.id);
@@ -124,6 +135,38 @@ export default function NoteDetailScreen() {
     const elements: JSX.Element[] = [];
 
     lines.forEach((line, index) => {
+      // Process inline formatting first
+      const processInlineFormatting = (text: string) => {
+        const parts: (string | JSX.Element)[] = [];
+        let currentIndex = 0;
+        
+        // Bold text **text**
+        const boldRegex = /\*\*(.*?)\*\*/g;
+        let match;
+        let lastIndex = 0;
+        
+        while ((match = boldRegex.exec(text)) !== null) {
+          // Add text before match
+          if (match.index > lastIndex) {
+            parts.push(text.substring(lastIndex, match.index));
+          }
+          // Add bold text
+          parts.push(
+            <Text key={`bold-${match.index}`} style={styles.boldInline}>
+              {match[1]}
+            </Text>
+          );
+          lastIndex = match.index + match[0].length;
+        }
+        
+        // Add remaining text
+        if (lastIndex < text.length) {
+          parts.push(text.substring(lastIndex));
+        }
+        
+        return parts;
+      };
+
       if (line.startsWith('# ')) {
         elements.push(
           <Text key={index} style={styles.heading1}>
@@ -144,28 +187,27 @@ export default function NoteDetailScreen() {
         );
       } else if (line.startsWith('- ')) {
         elements.push(
-          <Text key={index} style={styles.listItem}>
-            • {line.substring(2)}
-          </Text>
+          <View key={index} style={styles.listItemContainer}>
+            <Text style={styles.listBullet}>•</Text>
+            <Text style={styles.listItem}>
+              {processInlineFormatting(line.substring(2))}
+            </Text>
+          </View>
         );
       } else if (line.trim() === '') {
         elements.push(<View key={index} style={styles.spacing} />);
       } else if (line.match(/^\d+\./)) {
         elements.push(
-          <Text key={index} style={styles.numberedItem}>
-            {line}
-          </Text>
-        );
-      } else if (line.startsWith('**') && line.endsWith('**')) {
-        elements.push(
-          <Text key={index} style={styles.bold}>
-            {line.substring(2, line.length - 2)}
-          </Text>
+          <View key={index} style={styles.listItemContainer}>
+            <Text style={styles.paragraph}>
+              {processInlineFormatting(line)}
+            </Text>
+          </View>
         );
       } else {
         elements.push(
           <Text key={index} style={styles.paragraph}>
-            {line}
+            {processInlineFormatting(line)}
           </Text>
         );
       }
@@ -214,30 +256,45 @@ export default function NoteDetailScreen() {
           <TouchableOpacity
             style={styles.headerButton}
             onPress={handleToggleBookmark}
+            disabled={!featuresSupported}
           >
-            {noteIsBookmarked ? (
+            {featuresSupported && noteIsBookmarked ? (
               <BookmarkCheck size={22} color="#facc15" />
-            ) : (
+            ) : featuresSupported ? (
               <Bookmark size={22} color="#333333" />
+            ) : (
+              <Bookmark size={22} color="#E0E0E0" />
             )}
           </TouchableOpacity>
         </View>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.noteInfo}>
+        <View style={styles.titleSection}>
+          <Text style={styles.noteTitle}>{note.title}</Text>
+          
           <View style={styles.categoryBadge}>
             <Text style={styles.categoryText}>{note.topic?.category?.title || 'General'}</Text>
           </View>
+          
           <View style={styles.metaInfo}>
+            <View style={styles.authorInfo}>
+              <User size={14} color="#666666" />
+              <Text style={styles.authorText}>
+                {note.author?.name || 'JPJOnline'}
+              </Text>
+            </View>
             <View style={styles.readTime}>
               <Clock size={14} color="#666666" />
               <Text style={styles.readTimeText}>
                 {Math.ceil(note.content.length / 200)} min read
               </Text>
             </View>
+          </View>
+          
+          <View style={styles.dateInfo}>
             <Text style={styles.dateText}>
-              Updated: {formatDate(note.updatedAt)}
+              Last updated: {formatDate(note.updatedAt)}
             </Text>
           </View>
         </View>
@@ -314,10 +371,17 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  noteInfo: {
+  titleSection: {
     padding: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
+  },
+  noteTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333333',
+    lineHeight: 32,
+    marginBottom: 16,
   },
   categoryBadge: {
     alignSelf: 'flex-start',
@@ -334,8 +398,19 @@ const styles = StyleSheet.create({
   },
   metaInfo: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
     alignItems: 'center',
+    gap: 16,
+    marginBottom: 8,
+  },
+  authorInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  authorText: {
+    fontSize: 14,
+    color: '#666666',
+    marginLeft: 6,
   },
   readTime: {
     flexDirection: 'row',
@@ -345,6 +420,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666666',
     marginLeft: 6,
+  },
+  dateInfo: {
+    marginTop: 4,
   },
   dateText: {
     fontSize: 12,
@@ -382,26 +460,43 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginBottom: 12,
   },
+  listItemContainer: {
+    flexDirection: 'row',
+    marginBottom: 8,
+    marginLeft: 16,
+  },
+  listBullet: {
+    fontSize: 16,
+    color: '#444444',
+    marginRight: 8,
+    lineHeight: 24,
+  },
   listItem: {
+    flex: 1,
     fontSize: 16,
     color: '#444444',
     lineHeight: 24,
-    marginBottom: 8,
-    marginLeft: 16,
   },
-  numberedItem: {
-    fontSize: 16,
-    color: '#444444',
-    lineHeight: 24,
-    marginBottom: 8,
-    marginLeft: 16,
-  },
-  bold: {
-    fontSize: 16,
+  boldInline: {
     fontWeight: 'bold',
     color: '#333333',
-    lineHeight: 24,
-    marginBottom: 12,
+  },
+  italicInline: {
+    fontStyle: 'italic',
+    color: '#444444',
+  },
+  underlineInline: {
+    textDecorationLine: 'underline',
+    color: '#444444',
+  },
+  codeInline: {
+    fontFamily: 'monospace',
+    backgroundColor: '#F5F5F5',
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 4,
+    fontSize: 16,
+    color: '#444444',
   },
   spacing: {
     height: 12,

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { CircleCheck as CheckCircle, Menu, Volume2, VolumeX, Lock, Unlock } from 'lucide-react-native';
+import { CircleCheck as CheckCircle, Menu, Volume2, VolumeX, Lock, Clock as Unlock } from 'lucide-react-native';
 
 interface ExamProgressProps {
   questions: any[];
@@ -26,9 +26,10 @@ export function ExamProgress({
   onToggleMode,
 }: ExamProgressProps) {
   return (
-    <View style={styles.questionNumbersBar}>
+    <View style={styles.navigationBar}>
+      {/* Sound Button */}
       <TouchableOpacity 
-        style={styles.controlButton}
+        style={[styles.controlButton, styles.soundButton]}
         onPress={onToggleSound}>
         {isSoundEnabled ? (
           <Volume2 size={18} color="#4CAF50" />
@@ -36,24 +37,31 @@ export function ExamProgress({
           <VolumeX size={18} color="#FF3B30" />
         )}
       </TouchableOpacity>
-      
+
+      {/* Mode Button */}
       <TouchableOpacity 
-        style={styles.controlButton}
+        style={[styles.controlButton, styles.modeButton]}
         onPress={onToggleMode}>
-        {examMode === 'CLOSED' ? (
-          <Lock size={18} color="#FF9800" />
-        ) : (
+        {examMode === 'OPEN' ? (
           <Unlock size={18} color="#2196F3" />
+        ) : (
+          <Lock size={18} color="#FF9800" />
         )}
       </TouchableOpacity>
-      
+
+      {/* Questions Toggle Button */}
       <TouchableOpacity 
-        style={styles.controlButton}
+        style={[styles.controlButton, styles.questionsButton]}
         onPress={onToggleQuestionSidebar}>
         <Menu size={18} color="#333333" />
       </TouchableOpacity>
-      
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+
+      {/* Question Numbers */}
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        style={styles.questionNumbersContainer}
+        contentContainerStyle={styles.questionNumbersContent}>
         {questions.map((_, index) => (
           <TouchableOpacity
             key={index}
@@ -78,33 +86,16 @@ export function ExamProgress({
 }
 
 const styles = StyleSheet.create({
-  questionNumbersBar: {
+  navigationBar: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F8F9FA',
     paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
   },
   controlButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-    marginRight: 8,
-  },
-  questionNumberButton: {
     width: 36,
     height: 36,
     borderRadius: 18,
@@ -112,6 +103,38 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  soundButton: {
+    borderColor: '#4CAF50',
+  },
+  modeButton: {
+    borderColor: '#2196F3',
+  },
+  questionsButton: {
+    borderColor: '#333333',
+    marginRight: 12,
+  },
+  questionNumbersContainer: {
+    flex: 1,
+  },
+  questionNumbersContent: {
+    paddingRight: 16,
+  },
+  questionNumberButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 6,
     borderWidth: 1,
     borderColor: '#E0E0E0',
   },
@@ -124,7 +147,7 @@ const styles = StyleSheet.create({
     borderColor: '#4CAF50',
   },
   questionNumberText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '500',
     color: '#666666',
   },

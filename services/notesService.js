@@ -220,43 +220,53 @@ export const getNoteBySlug = async (slug, token = null) => {
 export const searchNotes = async (query, token = null) => {
   try {
     logger.info('NotesService', 'Searching notes', { query });
-    logger.apiRequest('GET', `/api/notes/search?q=${encodeURIComponent(query)}`);
+    logger.apiRequest('GET', `${API_CONFIG.ENDPOINTS.NOTES.SEARCH}?q=${encodeURIComponent(query)}`);
     
-    // TODO: Uncomment when CORS is configured on backend
-    // const headers = token ? getAuthHeaders(token) : API_CONFIG.HEADERS;
-    // const response = await fetch(buildApiUrl(`/api/notes/search?q=${encodeURIComponent(query)}`), {
-    //   method: 'GET',
-    //   headers,
-    // });
-    // 
-    // if (!response.ok) {
-    //   const errorData = await response.json();
-    //   throw new Error(errorData.error || 'Search failed');
-    // }
-    // 
-    // return await response.json();
-
-    // Mock response - remove when API is ready
-    logger.debug('NotesService', 'Using mock search response');
-    await new Promise(resolve => setTimeout(resolve, 600)); // Simulate network delay
+    const headers = token ? getAuthHeaders(token) : API_CONFIG.HEADERS;
+    const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.NOTES.SEARCH}?q=${encodeURIComponent(query)}`), {
+      method: 'GET',
+      headers,
+    });
     
-    // Simple mock search - in real implementation, backend handles this
-    const mockResults = {
-      results: [],
-      total: 0,
-      query: query
-    };
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Search failed');
+    }
+    
+    const data = await response.json();
     
     logger.info('NotesService', 'Search completed', { 
       query, 
-      resultsCount: mockResults.total 
+      resultsCount: data.total || 0
     });
-    logger.apiResponse('GET', '/api/notes/search', 200, { 
+    logger.apiResponse('GET', API_CONFIG.ENDPOINTS.NOTES.SEARCH, 200, { 
       success: true, 
-      resultsCount: mockResults.total 
+      resultsCount: data.total || 0
     });
     
-    return mockResults;
+    return data;
+
+    // Mock response - kept for debugging
+    // logger.debug('NotesService', 'Using mock search response');
+    // await new Promise(resolve => setTimeout(resolve, 600)); // Simulate network delay
+    // 
+    // // Simple mock search - in real implementation, backend handles this
+    // const mockResults = {
+    //   results: [],
+    //   total: 0,
+    //   query: query
+    // };
+    // 
+    // logger.info('NotesService', 'Search completed', { 
+    //   query, 
+    //   resultsCount: mockResults.total 
+    // });
+    // logger.apiResponse('GET', '/api/notes/search', 200, { 
+    //   success: true, 
+    //   resultsCount: mockResults.total 
+    // });
+    // 
+    // return mockResults;
   } catch (error) {
     logger.error('NotesService', 'Search failed', error);
     throw error;

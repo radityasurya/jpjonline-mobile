@@ -6,9 +6,10 @@ import { logger } from '../utils/logger.js';
  * Make API request with automatic token refresh
  * @param {string} url - API URL
  * @param {Object} options - Fetch options
+ * @param {boolean} isRetry - Internal flag to prevent infinite loops
  * @returns {Promise<Response>} API response
  */
-export const makeAuthenticatedRequest = async (url, options = {}) => {
+export const makeAuthenticatedRequest = async (url, options = {}, isRetry = false) => {
   try {
     // Get current token
     const token = await storageService.getItem('accessToken');
@@ -22,13 +23,16 @@ export const makeAuthenticatedRequest = async (url, options = {}) => {
       }
     });
     
-    // If unauthorized, try to refresh token
-    if (response.status === 401) {
+    // If unauthorized and this is not already a retry, try to refresh token
+    if (response.status === 401 && !isRetry) {
       logger.info('AuthService', 'Token expired, attempting refresh');
       
       const refreshToken = await storageService.getItem('refreshToken');
       if (!refreshToken) {
         logger.warn('AuthService', 'No refresh token available');
+        // Clear any remaining tokens
+        await storageService.removeItem('accessToken');
+        await storageService.removeItem('user');
         throw new Error('Authentication required');
       }
       
@@ -45,7 +49,7 @@ export const makeAuthenticatedRequest = async (url, options = {}) => {
           
           logger.info('AuthService', 'Token refreshed successfully');
           
-          // Retry original request with new token
+          // Retry original request with new token (mark as retry to prevent loops)
           return await fetch(url, {
             ...options,
             headers: {
@@ -62,6 +66,13 @@ export const makeAuthenticatedRequest = async (url, options = {}) => {
         await storageService.removeItem('user');
         throw new Error('Session expired. Please login again.');
       }
+    } else if (response.status === 401 && isRetry) {
+      // If we get 401 on retry, refresh token is also invalid
+      logger.error('AuthService', 'Refresh token also invalid, clearing session');
+      await storageService.removeItem('accessToken');
+      await storageService.removeItem('refreshToken');
+      await storageService.removeItem('user');
+      throw new Error('Session expired. Please login again.');
     }
     
     return response;
@@ -290,12 +301,17 @@ export const refreshAccessToken = async (refreshToken) => {
     
     if (!response.ok) {
       const errorData = await response.json();
+      logger.error('AuthService', 'Refresh token API error', { 
+        status: response.status, 
+        error: errorData.error 
+      });
       throw new Error(errorData.error || 'Token refresh failed');
     }
     
     const data = await response.json();
     
     if (data.success) {
+      logger.info('AuthService', 'Token refresh successful');
       return {
         success: true,
         accessToken: data.accessToken,
@@ -311,6 +327,7 @@ export const refreshAccessToken = async (refreshToken) => {
         }
       };
     } else {
+      logger.error('AuthService', 'Refresh token response unsuccessful', data);
       throw new Error(data.error || 'Token refresh failed');
     }
   } catch (error) {

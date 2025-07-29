@@ -228,16 +228,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Listen for authentication errors and logout user
   useEffect(() => {
-    const handleAuthError = () => {
-      logger.warn('AuthContext', 'Authentication error detected, logging out user');
-      logout();
+    const handleAuthError = (error) => {
+      if (error.message === 'Session expired. Please login again.') {
+        logger.warn('AuthContext', 'Session expired, logging out user');
+        logout();
+      }
     };
 
-    // You can add event listeners here if needed
-    // For now, the makeAuthenticatedRequest function handles token refresh automatically
+    // Global error handler for authentication errors
+    const originalConsoleError = console.error;
+    console.error = (...args) => {
+      const errorMessage = args.join(' ');
+      if (errorMessage.includes('Session expired. Please login again.')) {
+        handleAuthError({ message: 'Session expired. Please login again.' });
+      }
+      originalConsoleError.apply(console, args);
+    };
     
     return () => {
-      // Cleanup if needed
+      console.error = originalConsoleError;
     };
   }, []);
 

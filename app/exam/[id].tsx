@@ -11,7 +11,7 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/utils/logger';
 import soundManager from '@/utils/soundManager';
-import { getExamBySlug, submitExamResults, updateStats } from '@/services';
+import { getExamBySlug, submitExamResults, progressService } from '@/services';
 import { activityService, ACTIVITY_TYPES } from '@/services';
 
 // Import components
@@ -348,7 +348,7 @@ export default function ExamScreen() {
         });
         
         // Track exam completion in progress service
-        updateStats('exam_completed', {
+        progressService.updateStats('exam_completed', {
           score: response.result.score,
           passed: response.result.passed,
           timeSpent: response.result.timeSpent || timeSpent,
@@ -432,9 +432,7 @@ export default function ExamScreen() {
         currentQuestionIndex={currentQuestionIndex}
         answers={answers}
         onQuestionSelect={handleQuestionSelect}
-        onToggleQuestionSidebar={() =>
-          setShowQuestionSidebar(!showQuestionSidebar)
-        }
+        onToggleQuestionSidebar={() => setShowQuestionSidebar(!showQuestionSidebar)}
         isSoundEnabled={isSoundEnabled}
         examMode={examMode}
         onToggleSound={handleToggleSound}

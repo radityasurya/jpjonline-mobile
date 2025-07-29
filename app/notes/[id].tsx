@@ -20,7 +20,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { getNoteBySlug } from '@/services';
 import { logger } from '@/utils/logger';
-import { updateStats, activityService, ACTIVITY_TYPES } from '@/services';
+import { progressService, activityService, ACTIVITY_TYPES } from '@/services';
 import bookmarkService from '@/services/bookmarkService';
 
 export default function NoteDetailScreen() {
@@ -57,7 +57,7 @@ export default function NoteDetailScreen() {
         userId: user?.id
       });
       
-      updateStats('note_read', {
+      progressService.updateStats('note_read', {
         noteId: noteData.id,
         noteTitle: noteData.title,
         readTime: Math.ceil(noteData.content.length / 200), // Estimate read time

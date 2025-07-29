@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { logger } from '@/utils/logger';
 import { Book, FileText, Trophy, Clock, Crown } from 'lucide-react-native';
 import { useState, useEffect } from 'react';
-import { getDashboardSummary, updateStats, activityService, ACTIVITY_TYPES, progressService } from '@/services';
+import { progressService, activityService, ACTIVITY_TYPES } from '@/services';
 
 export default function HomeScreen() {
   const { user, logout, isLoading } = useAuth();
@@ -64,7 +64,7 @@ export default function HomeScreen() {
         return;
       }
       
-      const response = await getDashboardSummary();
+      const response = await progressService.getDashboardSummary();
       if (response.success) {
         logger.debug('HomeScreen', 'Stats loaded successfully', { 
           totalExams: response.summary.totalExams,

@@ -28,7 +28,7 @@ import {
   MessageCircle,
   ExternalLink,
 } from 'lucide-react-native';
-import { progressService, getDashboardSummary } from '@/services';
+import { progressService } from '@/services';
 import { AboutData, ContactRequest } from '@/types/api';
 import { logger } from '@/utils/logger';
 
@@ -104,7 +104,7 @@ export default function ProfileScreen() {
     
     try {
       logger.debug('ProfileScreen', 'Loading user statistics');
-      const response = await getDashboardSummary();
+      const response = await progressService.getDashboardSummary();
       if (response.success) {
         logger.debug('ProfileScreen', 'Stats loaded successfully', response.summary);
         setStats(response.summary);

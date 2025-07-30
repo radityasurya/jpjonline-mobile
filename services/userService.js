@@ -18,37 +18,36 @@ export const getUserProfile = async (token) => {
     logger.debug('UserService', 'Fetching user profile');
     logger.apiRequest('GET', API_CONFIG.ENDPOINTS.USER.PROFILE);
     
-    // TODO: Uncomment when CORS is configured on backend
-    // const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.USER.PROFILE), {
-    //   method: 'GET',
-    //   headers: getAuthHeaders(token),
-    // });
-    // 
-    // if (!response.ok) {
-    //   throw new Error('Failed to fetch user profile');
-    // }
-    // 
-    // return await response.json();
+    const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.USER.PROFILE), {
+      method: 'GET',
+      headers: getAuthHeaders(token),
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch user profile');
+    }
+    
+    return await response.json();
 
-    // Mock response - remove when API is ready
-    logger.debug('UserService', 'Using mock profile response');
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
-    
-    // Extract mock user data from token (in real implementation, backend validates token)
-    const isPremium = token.includes('premium');
-    
-    const mockResponse = {
-      id: isPremium ? "clx1234567890" : "clx0987654321",
-      name: isPremium ? "Ahmad Faizal" : "Siti Aminah",
-      email: isPremium ? "premium@jpj.com" : "user@jpj.com",
-      tier: isPremium ? "PREMIUM" : "FREE",
-      role: "USER",
-      image: null
-    };
-    
-    logger.debug('UserService', 'Profile fetched successfully', { userId: mockResponse.id });
-    logger.apiResponse('GET', API_CONFIG.ENDPOINTS.USER.PROFILE, 200);
-    return mockResponse;
+    // Mock response - commented out for actual API usage
+    // logger.debug('UserService', 'Using mock profile response');
+    // await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+    // 
+    // // Extract mock user data from token (in real implementation, backend validates token)
+    // const isPremium = token.includes('premium');
+    // 
+    // const mockResponse = {
+    //   id: isPremium ? "clx1234567890" : "clx0987654321",
+    //   name: isPremium ? "Ahmad Faizal" : "Siti Aminah",
+    //   email: isPremium ? "premium@jpj.com" : "user@jpj.com",
+    //   tier: isPremium ? "PREMIUM" : "FREE",
+    //   role: "USER",
+    //   image: null
+    // };
+    // 
+    // logger.debug('UserService', 'Profile fetched successfully', { userId: mockResponse.id });
+    // logger.apiResponse('GET', API_CONFIG.ENDPOINTS.USER.PROFILE, 200);
+    // return mockResponse;
   } catch (error) {
     logger.error('UserService', 'Failed to fetch user profile', error);
     throw error;
@@ -68,48 +67,47 @@ export const updateUserProfile = async (token, profileData) => {
     logger.info('UserService', 'Updating user profile', profileData);
     logger.apiRequest('PUT', API_CONFIG.ENDPOINTS.USER.PROFILE, profileData);
     
-    // TODO: Uncomment when CORS is configured on backend
-    // const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.USER.PROFILE), {
-    //   method: 'PUT',
-    //   headers: getAuthHeaders(token),
-    //   body: JSON.stringify(profileData),
-    // });
-    // 
-    // if (!response.ok) {
-    //   const errorData = await response.json();
-    //   throw new Error(errorData.error || 'Failed to update profile');
-    // }
-    // 
-    // return await response.json();
+    const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.USER.PROFILE), {
+      method: 'PUT',
+      headers: getAuthHeaders(token),
+      body: JSON.stringify(profileData),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to update profile');
+    }
+    
+    return await response.json();
 
-    // Mock response - remove when API is ready
-    logger.debug('UserService', 'Using mock profile update response');
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
-    
-    // Extract mock user data from token and merge with updates
-    const isPremium = token.includes('premium');
-    const currentUser = {
-      id: isPremium ? "clx1234567890" : "clx0987654321",
-      name: isPremium ? "Ahmad Faizal" : "Siti Aminah",
-      email: isPremium ? "premium@jpj.com" : "user@jpj.com",
-      tier: isPremium ? "PREMIUM" : "FREE",
-      role: "USER",
-      image: null
-    };
-    
-    const updatedUser = {
-      ...currentUser,
-      ...profileData
-    };
-    
-    const mockResponse = {
-      success: true,
-      user: updatedUser
-    };
-    
-    logger.info('UserService', 'Profile updated successfully', { userId: updatedUser.id });
-    logger.apiResponse('PUT', API_CONFIG.ENDPOINTS.USER.PROFILE, 200);
-    return mockResponse;
+    // Mock response - commented out for actual API usage
+    // logger.debug('UserService', 'Using mock profile update response');
+    // await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+    // 
+    // // Extract mock user data from token and merge with updates
+    // const isPremium = token.includes('premium');
+    // const currentUser = {
+    //   id: isPremium ? "clx1234567890" : "clx0987654321",
+    //   name: isPremium ? "Ahmad Faizal" : "Siti Aminah",
+    //   email: isPremium ? "premium@jpj.com" : "user@jpj.com",
+    //   tier: isPremium ? "PREMIUM" : "FREE",
+    //   role: "USER",
+    //   image: null
+    // };
+    // 
+    // const updatedUser = {
+    //   ...currentUser,
+    //   ...profileData
+    // };
+    // 
+    // const mockResponse = {
+    //   success: true,
+    //   user: updatedUser
+    // };
+    // 
+    // logger.info('UserService', 'Profile updated successfully', { userId: updatedUser.id });
+    // logger.apiResponse('PUT', API_CONFIG.ENDPOINTS.USER.PROFILE, 200);
+    // return mockResponse;
   } catch (error) {
     logger.error('UserService', 'Failed to update user profile', error);
     throw error;
@@ -129,38 +127,37 @@ export const changePassword = async (token, passwordData) => {
     logger.info('UserService', 'Changing user password');
     logger.apiRequest('POST', API_CONFIG.ENDPOINTS.USER.CHANGE_PASSWORD);
     
-    // TODO: Uncomment when CORS is configured on backend
-    // const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.USER.CHANGE_PASSWORD), {
-    //   method: 'POST',
-    //   headers: getAuthHeaders(token),
-    //   body: JSON.stringify(passwordData),
-    // });
-    // 
-    // if (!response.ok) {
-    //   const errorData = await response.json();
-    //   throw new Error(errorData.error || 'Failed to change password');
-    // }
-    // 
-    // return await response.json();
-
-    // Mock response - remove when API is ready
-    logger.debug('UserService', 'Using mock password change response');
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+    const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.USER.CHANGE_PASSWORD), {
+      method: 'POST',
+      headers: getAuthHeaders(token),
+      body: JSON.stringify(passwordData),
+    });
     
-    // Simulate incorrect current password for demo
-    if (passwordData.currentPassword === 'wrongpassword') {
-      logger.warn('UserService', 'Password change failed - incorrect current password');
-      throw new Error('Current password is incorrect');
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to change password');
     }
     
-    const mockResponse = {
-      success: true,
-      message: "Password changed successfully"
-    };
-    
-    logger.info('UserService', 'Password changed successfully');
-    logger.apiResponse('POST', API_CONFIG.ENDPOINTS.USER.CHANGE_PASSWORD, 200);
-    return mockResponse;
+    return await response.json();
+
+    // Mock response - commented out for actual API usage
+    // logger.debug('UserService', 'Using mock password change response');
+    // await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+    // 
+    // // Simulate incorrect current password for demo
+    // if (passwordData.currentPassword === 'wrongpassword') {
+    //   logger.warn('UserService', 'Password change failed - incorrect current password');
+    //   throw new Error('Current password is incorrect');
+    // }
+    // 
+    // const mockResponse = {
+    //   success: true,
+    //   message: "Password changed successfully"
+    // };
+    // 
+    // logger.info('UserService', 'Password changed successfully');
+    // logger.apiResponse('POST', API_CONFIG.ENDPOINTS.USER.CHANGE_PASSWORD, 200);
+    // return mockResponse;
   } catch (error) {
     logger.error('UserService', 'Failed to change password', error);
     throw error;
@@ -177,31 +174,30 @@ export const deleteUserAccount = async (token) => {
     logger.info('UserService', 'Deleting user account');
     logger.apiRequest('DELETE', API_CONFIG.ENDPOINTS.USER.PROFILE);
     
-    // TODO: Uncomment when CORS is configured on backend
-    // const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.USER.PROFILE), {
-    //   method: 'DELETE',
-    //   headers: getAuthHeaders(token),
-    // });
-    // 
-    // if (!response.ok) {
-    //   const errorData = await response.json();
-    //   throw new Error(errorData.error || 'Failed to delete account');
-    // }
-    // 
-    // return await response.json();
+    const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.USER.PROFILE), {
+      method: 'DELETE',
+      headers: getAuthHeaders(token),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to delete account');
+    }
+    
+    return await response.json();
 
-    // Mock response - remove when API is ready
-    logger.debug('UserService', 'Using mock delete account response');
-    await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate network delay
-    
-    const mockResponse = {
-      success: true,
-      message: "Account deleted successfully"
-    };
-    
-    logger.info('UserService', 'Account deleted successfully');
-    logger.apiResponse('DELETE', API_CONFIG.ENDPOINTS.USER.PROFILE, 200);
-    return mockResponse;
+    // Mock response - commented out for actual API usage
+    // logger.debug('UserService', 'Using mock delete account response');
+    // await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate network delay
+    // 
+    // const mockResponse = {
+    //   success: true,
+    //   message: "Account deleted successfully"
+    // };
+    // 
+    // logger.info('UserService', 'Account deleted successfully');
+    // logger.apiResponse('DELETE', API_CONFIG.ENDPOINTS.USER.PROFILE, 200);
+    // return mockResponse;
   } catch (error) {
     logger.error('UserService', 'Failed to delete user account', error);
     throw error;

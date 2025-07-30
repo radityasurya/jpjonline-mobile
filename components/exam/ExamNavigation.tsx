@@ -1,5 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
 import { ChevronLeft, ChevronRight, Menu } from 'lucide-react-native';
 
 interface ExamNavigationProps {
@@ -32,12 +38,15 @@ export function ExamNavigation({
   onSubmit,
 }: ExamNavigationProps) {
   const isLastQuestion = currentQuestionIndex === totalQuestions - 1;
-  
+
   // OPEN Mode: Must check answer before proceeding
   // CLOSED Mode: Can proceed immediately after selecting
-  const canProceed = examMode === 'CLOSED' ? selectedAnswer !== -1 : hasCheckedAnswer;
-  const showCheckButton = examMode === 'OPEN' && !hasCheckedAnswer && selectedAnswer !== -1;
-  const showRetryButton = examMode === 'OPEN' && hasCheckedAnswer && canRetryQuestion;
+  const canProceed =
+    examMode === 'CLOSED' ? selectedAnswer !== -1 : hasCheckedAnswer;
+  const showCheckButton =
+    examMode === 'OPEN' && !hasCheckedAnswer && selectedAnswer !== -1;
+  const showRetryButton =
+    examMode === 'OPEN' && hasCheckedAnswer && canRetryQuestion;
 
   return (
     <View style={styles.navigation}>
@@ -48,12 +57,18 @@ export function ExamNavigation({
             currentQuestionIndex === 0 && styles.disabledButton,
           ]}
           onPress={onPrevious}
-          disabled={currentQuestionIndex === 0}>
-          <ChevronLeft size={20} color={currentQuestionIndex === 0 ? '#CCCCCC' : '#333333'} />
-          <Text style={[
-            styles.navButtonText,
-            currentQuestionIndex === 0 && styles.disabledButtonText,
-          ]}>
+          disabled={currentQuestionIndex === 0}
+        >
+          <ChevronLeft
+            size={20}
+            color={currentQuestionIndex === 0 ? '#CCCCCC' : '#333333'}
+          />
+          <Text
+            style={[
+              styles.navButtonText,
+              currentQuestionIndex === 0 && styles.disabledButtonText,
+            ]}
+          >
             Previous
           </Text>
         </TouchableOpacity>
@@ -63,20 +78,20 @@ export function ExamNavigation({
         {showRetryButton ? (
           <TouchableOpacity
             style={styles.retryButton}
-            onPress={onRetryQuestion}>
+            onPress={onRetryQuestion}
+          >
             <Text style={styles.retryButtonText}>Try Again</Text>
           </TouchableOpacity>
         ) : showCheckButton ? (
-          <TouchableOpacity
-            style={styles.checkButton}
-            onPress={onCheckAnswer}>
+          <TouchableOpacity style={styles.checkButton} onPress={onCheckAnswer}>
             <Text style={styles.checkButtonText}>Check Answer</Text>
           </TouchableOpacity>
         ) : isLastQuestion && canProceed ? (
           <TouchableOpacity
             style={[styles.submitButton, isSubmitting && styles.disabledButton]}
             onPress={onSubmit}
-            disabled={isSubmitting}>
+            disabled={isSubmitting}
+          >
             {isSubmitting ? (
               <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
@@ -84,9 +99,7 @@ export function ExamNavigation({
             )}
           </TouchableOpacity>
         ) : !isLastQuestion && canProceed ? (
-          <TouchableOpacity
-            style={styles.navButton}
-            onPress={onNext}>
+          <TouchableOpacity style={styles.navButton} onPress={onNext}>
             <Text style={styles.navButtonText}>Next</Text>
             <ChevronRight size={20} color="#333333" />
           </TouchableOpacity>

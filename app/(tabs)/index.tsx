@@ -1,4 +1,10 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { router } from 'expo-router';
 import { logger } from '@/utils/logger';
@@ -8,10 +14,10 @@ import { progressService, activityService, ACTIVITY_TYPES } from '@/services';
 
 export default function HomeScreen() {
   const { user, logout, isLoading } = useAuth();
-  
+
   // Check if features are supported on current platform
   const featuresSupported = progressService.getPlatformInfo().supported;
-  
+
   const [stats, setStats] = useState({
     totalExams: 0,
     averageScore: 0,
@@ -20,7 +26,7 @@ export default function HomeScreen() {
     bookmarkedNotes: 0,
     recentActivity: [],
     currentStreak: 0,
-    lastActivity: null
+    lastActivity: null,
   });
 
   useEffect(() => {
@@ -29,14 +35,18 @@ export default function HomeScreen() {
       router.replace('/auth/login');
       return;
     }
-    
+
     // Initialize progress service for the user
     try {
       progressService.initializeUser(user.id);
     } catch (error) {
-      logger.error('HomeScreen', 'Failed to initialize progress service', error);
+      logger.error(
+        'HomeScreen',
+        'Failed to initialize progress service',
+        error,
+      );
     }
-    
+
     logger.info('HomeScreen', 'Loading user stats', { userId: user.id });
     loadStats();
   }, [user]);
@@ -48,7 +58,7 @@ export default function HomeScreen() {
   const loadStats = async () => {
     try {
       logger.debug('HomeScreen', 'Fetching user statistics');
-      
+
       if (!featuresSupported) {
         logger.info('HomeScreen', 'Progress tracking disabled on web platform');
         setStats({
@@ -59,16 +69,16 @@ export default function HomeScreen() {
           bookmarkedNotes: 0,
           recentActivity: [],
           currentStreak: 0,
-          lastActivity: null
+          lastActivity: null,
         });
         return;
       }
-      
+
       const response = await progressService.getDashboardSummary();
       if (response.success) {
-        logger.debug('HomeScreen', 'Stats loaded successfully', { 
+        logger.debug('HomeScreen', 'Stats loaded successfully', {
           totalExams: response.summary.totalExams,
-          averageScore: response.summary.averageScore 
+          averageScore: response.summary.averageScore,
         });
         setStats(response.summary);
       } else {
@@ -82,7 +92,7 @@ export default function HomeScreen() {
           bookmarkedNotes: 0,
           recentActivity: [],
           currentStreak: 0,
-          lastActivity: null
+          lastActivity: null,
         });
       }
     } catch (error) {
@@ -100,7 +110,7 @@ export default function HomeScreen() {
         activityService.addActivity(ACTIVITY_TYPES.QUICK_ACTION, {
           action: 'study_notes',
           actionTitle: 'Study Notes',
-          userId: user?.id
+          userId: user?.id,
         });
         router.push('/(tabs)/notes');
       },
@@ -115,7 +125,7 @@ export default function HomeScreen() {
         activityService.addActivity(ACTIVITY_TYPES.QUICK_ACTION, {
           action: 'practice_tests',
           actionTitle: 'Practice Tests',
-          userId: user?.id
+          userId: user?.id,
         });
         router.push('/(tabs)/tests');
       },
@@ -130,7 +140,7 @@ export default function HomeScreen() {
         activityService.addActivity(ACTIVITY_TYPES.QUICK_ACTION, {
           action: 'my_progress',
           actionTitle: 'My Progress',
-          userId: user?.id
+          userId: user?.id,
         });
         router.push('/(tabs)/profile');
       },
@@ -142,19 +152,25 @@ export default function HomeScreen() {
     if (!featuresSupported) {
       return;
     }
-    
-    logger.userAction('Activity clicked', { type: activity.type, id: activity.id });
-    
+
+    logger.userAction('Activity clicked', {
+      type: activity.type,
+      id: activity.id,
+    });
+
     if (!activity.isClickable) return;
-    
+
     const activityData = activity.data || {};
-    
-    if (activity.type === ACTIVITY_TYPES.EXAM_COMPLETED && activityData.examSlug) {
+
+    if (
+      activity.type === ACTIVITY_TYPES.EXAM_COMPLETED &&
+      activityData.examSlug
+    ) {
       logger.navigation('ExamResult', { examSlug: activityData.examSlug });
       router.push(`/exam/result/${activityData.examSlug}`);
     } else if (
-      (activity.type === ACTIVITY_TYPES.NOTE_VIEWED || 
-       activity.type === ACTIVITY_TYPES.NOTE_BOOKMARKED) && 
+      (activity.type === ACTIVITY_TYPES.NOTE_VIEWED ||
+        activity.type === ACTIVITY_TYPES.NOTE_BOOKMARKED) &&
       activityData.noteId
     ) {
       logger.navigation('NoteDetail', { noteId: activityData.noteId });
@@ -179,7 +195,9 @@ export default function HomeScreen() {
       <View style={styles.statsContainer}>
         <View style={styles.statItem}>
           <Clock size={24} color="#facc15" />
-          <Text style={styles.statNumber}>{Math.round(stats.totalStudyTime / 60)}</Text>
+          <Text style={styles.statNumber}>
+            {Math.round(stats.totalStudyTime / 60)}
+          </Text>
           <Text style={styles.statLabel}>Hours</Text>
         </View>
         <View style={styles.statItem}>
@@ -195,15 +213,18 @@ export default function HomeScreen() {
       </View>
 
       <Text style={styles.sectionTitle}>Quick Actions</Text>
-      
+
       {quickActions.map((action, index) => {
         const Icon = action.icon;
         return (
           <TouchableOpacity
             key={index}
             style={styles.actionCard}
-            onPress={action.action}>
-            <View style={[styles.actionIcon, { backgroundColor: action.color }]}>
+            onPress={action.action}
+          >
+            <View
+              style={[styles.actionIcon, { backgroundColor: action.color }]}
+            >
               <Icon size={24} color="white" />
             </View>
             <View style={styles.actionContent}>
@@ -218,31 +239,34 @@ export default function HomeScreen() {
         <Text style={styles.sectionTitle}>Recent Activity</Text>
         {stats.recentActivity.length > 0 ? (
           stats.recentActivity.map((activity, index) => (
-            <TouchableOpacity 
-              key={index} 
+            <TouchableOpacity
+              key={index}
               style={styles.activityItem}
               disabled={!activity.isClickable}
-              onPress={() => handleActivityClick(activity)}>
+              onPress={() => handleActivityClick(activity)}
+            >
               <View style={styles.activityHeader}>
                 <Text style={styles.activityIcon}>{activity.displayIcon}</Text>
                 <View style={styles.activityContent}>
                   <Text style={styles.activityTitle}>
                     {activity.displayDescription}
                   </Text>
-                  <Text style={styles.activityDate}>
-                    {activity.timeAgo}
-                  </Text>
+                  <Text style={styles.activityDate}>{activity.timeAgo}</Text>
                 </View>
               </View>
               {activity.data?.score && (
-                <Text style={styles.activityScore}>Score: {activity.data.score}%</Text>
+                <Text style={styles.activityScore}>
+                  Score: {activity.data.score}%
+                </Text>
               )}
             </TouchableOpacity>
           ))
         ) : (
           <TouchableOpacity style={styles.activityItem}>
             <Text style={styles.activityTitle}>No recent activity</Text>
-            <Text style={styles.activityDate}>Start learning to see your progress</Text>
+            <Text style={styles.activityDate}>
+              Start learning to see your progress
+            </Text>
           </TouchableOpacity>
         )}
       </View>

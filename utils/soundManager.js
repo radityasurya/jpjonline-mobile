@@ -1,6 +1,6 @@
 /**
  * Sound Manager for Exam Feedback
- * 
+ *
  * Manages audio feedback for correct/incorrect answers during exams.
  * Uses expo-audio for cross-platform audio support with local assets.
  */
@@ -32,7 +32,7 @@ class SoundManager {
           playThroughEarpieceAndroid: false,
         });
       }
-      
+
       await this.loadSounds();
       this.isInitialized = true;
       logger.info('SoundManager', 'Audio system initialized successfully');
@@ -50,27 +50,31 @@ class SoundManager {
       // Load correct answer sound
       const correctSound = await Audio.Sound.createAsync(
         require('../assets/sounds/correct.wav'),
-        { shouldPlay: false, volume: 0.5 }
+        { shouldPlay: false, volume: 0.5 },
       );
       this.sounds.correct = correctSound.sound;
 
       // Load incorrect answer sound
       const incorrectSound = await Audio.Sound.createAsync(
         require('../assets/sounds/incorrect.wav'),
-        { shouldPlay: false, volume: 0.5 }
+        { shouldPlay: false, volume: 0.5 },
       );
       this.sounds.incorrect = incorrectSound.sound;
 
       // Load timer warning sound
       const warningSound = await Audio.Sound.createAsync(
         require('../assets/sounds/warning.wav'),
-        { shouldPlay: false, volume: 0.3 }
+        { shouldPlay: false, volume: 0.3 },
       );
       this.sounds.warning = warningSound.sound;
 
       logger.info('SoundManager', 'All sounds loaded successfully');
     } catch (error) {
-      logger.error('SoundManager', 'Failed to load sounds, using fallback', error);
+      logger.error(
+        'SoundManager',
+        'Failed to load sounds, using fallback',
+        error,
+      );
       // Use system sounds as fallback
       this.loadFallbackSounds();
     }
@@ -84,7 +88,7 @@ class SoundManager {
     this.sounds = {
       correct: null,
       incorrect: null,
-      warning: null
+      warning: null,
     };
     logger.info('SoundManager', 'Using fallback silent sounds');
   }
@@ -161,7 +165,7 @@ class SoundManager {
       try {
         // Lazy load haptics to avoid import errors on web
         const Haptics = require('expo-haptics');
-        
+
         switch (type) {
           case 'success':
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -198,7 +202,7 @@ class SoundManager {
       isEnabled: this.isEnabled,
       isInitialized: this.isInitialized,
       soundsLoaded: Object.keys(this.sounds).length > 0,
-      platform: Platform.OS
+      platform: Platform.OS,
     };
   }
 

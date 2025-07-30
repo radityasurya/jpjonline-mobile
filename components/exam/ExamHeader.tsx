@@ -30,8 +30,8 @@ export function ExamHeader({
 }: ExamHeaderProps) {
   return (
     <View style={styles.header}>
-      <TouchableOpacity 
-        style={styles.headerButton} 
+      <TouchableOpacity
+        style={styles.headerButton}
         onPress={onExit}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >

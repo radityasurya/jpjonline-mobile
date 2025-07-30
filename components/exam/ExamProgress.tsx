@@ -1,6 +1,19 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { CircleCheck as CheckCircle, Menu, Volume2, VolumeX, Lock, Clock as Unlock } from 'lucide-react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+} from 'react-native';
+import {
+  CircleCheck as CheckCircle,
+  Menu,
+  Volume2,
+  VolumeX,
+  Lock,
+  Clock as Unlock,
+} from 'lucide-react-native';
 
 interface ExamProgressProps {
   questions: any[];
@@ -28,9 +41,10 @@ export function ExamProgress({
   return (
     <View style={styles.navigationBar}>
       {/* Sound Button */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.controlButton, styles.soundButton]}
-        onPress={onToggleSound}>
+        onPress={onToggleSound}
+      >
         {isSoundEnabled ? (
           <Volume2 size={18} color="#4CAF50" />
         ) : (
@@ -39,9 +53,10 @@ export function ExamProgress({
       </TouchableOpacity>
 
       {/* Mode Button */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.controlButton, styles.modeButton]}
-        onPress={onToggleMode}>
+        onPress={onToggleMode}
+      >
         {examMode === 'OPEN' ? (
           <Unlock size={18} color="#2196F3" />
         ) : (
@@ -50,18 +65,20 @@ export function ExamProgress({
       </TouchableOpacity>
 
       {/* Questions Toggle Button */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.controlButton, styles.questionsButton]}
-        onPress={onToggleQuestionSidebar}>
+        onPress={onToggleQuestionSidebar}
+      >
         <Menu size={18} color="#333333" />
       </TouchableOpacity>
 
       {/* Question Numbers */}
-      <ScrollView 
-        horizontal 
+      <ScrollView
+        horizontal
         showsHorizontalScrollIndicator={false}
         style={styles.questionNumbersContainer}
-        contentContainerStyle={styles.questionNumbersContent}>
+        contentContainerStyle={styles.questionNumbersContent}
+      >
         {questions.map((_, index) => (
           <TouchableOpacity
             key={index}
@@ -70,12 +87,16 @@ export function ExamProgress({
               index === currentQuestionIndex && styles.currentQuestionNumber,
               answers[index] !== -1 && styles.answeredQuestionNumber,
             ]}
-            onPress={() => onQuestionSelect(index)}>
-            <Text style={[
-              styles.questionNumberText,
-              index === currentQuestionIndex && styles.currentQuestionNumberText,
-              answers[index] !== -1 && styles.answeredQuestionNumberText,
-            ]}>
+            onPress={() => onQuestionSelect(index)}
+          >
+            <Text
+              style={[
+                styles.questionNumberText,
+                index === currentQuestionIndex &&
+                  styles.currentQuestionNumberText,
+                answers[index] !== -1 && styles.answeredQuestionNumberText,
+              ]}
+            >
               {index + 1}
             </Text>
           </TouchableOpacity>

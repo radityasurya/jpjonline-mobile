@@ -1,6 +1,7 @@
 import { API_CONFIG, buildApiUrl, getAuthHeaders } from '../config/api.js';
 import { logger } from '../utils/logger.js';
 import storageService from './storage.js';
+import { makeAuthenticatedRequest } from './authService.js';
 
 // Storage keys for exam data
 const EXAM_RESULTS_STORAGE_KEY = '@jpj_exam_results_v1';
@@ -9,7 +10,7 @@ const MAX_RESULTS = 100; // Keep last 100 results for performance
 
 /**
  * Exams Service
- * 
+ *
  * This service handles all exam-related API calls.
  * Currently using mock responses - uncomment real API calls when CORS is configured.
  */
@@ -22,38 +23,45 @@ const MAX_RESULTS = 100; // Keep last 100 results for performance
 export const getUserExams = async (token) => {
   try {
     // Get token from storage if not provided
-    const authToken = token || await storageService.getItem('accessToken');
-    
+    const authToken = token || (await storageService.getItem('accessToken'));
+
     logger.info('ExamsService', 'Fetching user exams');
     logger.apiRequest('GET', API_CONFIG.ENDPOINTS.EXAMS.USER_EXAMS);
-    
-    const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.EXAMS.USER_EXAMS), {
-      method: 'GET',
-      headers: getAuthHeaders(authToken),
-    });
-    
+
+    const response = await fetch(
+      buildApiUrl(API_CONFIG.ENDPOINTS.EXAMS.USER_EXAMS),
+      {
+        method: 'GET',
+        headers: getAuthHeaders(authToken),
+      },
+    );
+
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.error || 'Failed to fetch exams');
     }
-    
+
     const data = await response.json();
-    
-    logger.info('ExamsService', 'User exams fetched successfully', { 
+
+    logger.info('ExamsService', 'User exams fetched successfully', {
       categoriesCount: data.categories?.length || 0,
-      totalExams: data.categories?.reduce((sum, cat) => sum + (cat.exams?.length || 0), 0) || 0
+      totalExams:
+        data.categories?.reduce(
+          (sum, cat) => sum + (cat.exams?.length || 0),
+          0,
+        ) || 0,
     });
-    logger.apiResponse('GET', API_CONFIG.ENDPOINTS.EXAMS.USER_EXAMS, 200, { 
-      success: true, 
-      categoriesCount: data.categories?.length || 0
+    logger.apiResponse('GET', API_CONFIG.ENDPOINTS.EXAMS.USER_EXAMS, 200, {
+      success: true,
+      categoriesCount: data.categories?.length || 0,
     });
-    
+
     return data;
 
     // Mock response - kept for debugging
     // logger.debug('ExamsService', 'Using mock user exams response');
     // await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
-    // 
+    //
     // const mockResponse = {
     //   categories: [
     //     {
@@ -89,16 +97,16 @@ export const getUserExams = async (token) => {
     //     }
     //   ]
     // };
-    // 
-    // logger.info('ExamsService', 'User exams fetched successfully', { 
+    //
+    // logger.info('ExamsService', 'User exams fetched successfully', {
     //   categoriesCount: mockResponse.categories.length,
     //   totalExams: mockResponse.categories.reduce((sum, cat) => sum + cat.exams.length, 0)
     // });
-    // logger.apiResponse('GET', API_CONFIG.ENDPOINTS.EXAMS.USER_EXAMS, 200, { 
-    //   success: true, 
-    //   categoriesCount: mockResponse.categories.length 
+    // logger.apiResponse('GET', API_CONFIG.ENDPOINTS.EXAMS.USER_EXAMS, 200, {
+    //   success: true,
+    //   categoriesCount: mockResponse.categories.length
     // });
-    // 
+    //
     // return mockResponse;
   } catch (error) {
     logger.error('ExamsService', 'Failed to fetch user exams', error);
@@ -115,35 +123,43 @@ export const getUserExams = async (token) => {
 export const getExamBySlug = async (slug, token) => {
   try {
     // Get token from storage if not provided
-    const authToken = token || await storageService.getItem('accessToken');
-    
+    const authToken = token || (await storageService.getItem('accessToken'));
+
     logger.info('ExamsService', 'Fetching exam by slug', { slug });
     logger.apiRequest('GET', `/api/exams/${slug}/full`);
-    
-    const response = await makeAuthenticatedRequest(buildApiUrl(`${API_CONFIG.ENDPOINTS.EXAMS.BY_SLUG}/${slug}/full`), {
-      method: 'GET',
-    });
-    
+
+    const response = await makeAuthenticatedRequest(
+      buildApiUrl(`${API_CONFIG.ENDPOINTS.EXAMS.BY_SLUG}/${slug}/full`),
+      {
+        method: 'GET',
+      },
+    );
+
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.error || 'Exam not found');
     }
-    
+
     const data = await response.json();
-    
-    logger.info('ExamsService', 'Exam fetched successfully', { 
-      examId: data.id, 
+
+    logger.info('ExamsService', 'Exam fetched successfully', {
+      examId: data.id,
       slug: data.slug,
-      questionsCount: data.questions?.length || 0
+      questionsCount: data.questions?.length || 0,
     });
-    logger.apiResponse('GET', `${API_CONFIG.ENDPOINTS.EXAMS.BY_SLUG}/${slug}/full`, 200, { success: true });
-    
+    logger.apiResponse(
+      'GET',
+      `${API_CONFIG.ENDPOINTS.EXAMS.BY_SLUG}/${slug}/full`,
+      200,
+      { success: true },
+    );
+
     return data;
 
     // Mock response - kept for debugging
     // logger.debug('ExamsService', 'Using mock exam detail response');
     // await new Promise(resolve => setTimeout(resolve, 800)); // Simulate network delay
-    // 
+    //
     // // Mock exam data based on slug
     // const mockExams = {
     //   "bahagian-c-car-simulasi": {
@@ -175,21 +191,21 @@ export const getExamBySlug = async (slug, token) => {
     //     ]
     //   }
     // };
-    // 
+    //
     // const examData = mockExams[slug];
-    // 
+    //
     // if (!examData) {
     //   logger.warn('ExamsService', 'Exam not found', { slug });
     //   throw new Error('Exam not found');
     // }
-    // 
-    // logger.info('ExamsService', 'Exam fetched successfully', { 
-    //   examId: examData.id, 
+    //
+    // logger.info('ExamsService', 'Exam fetched successfully', {
+    //   examId: examData.id,
     //   slug: examData.slug,
     //   questionsCount: examData.questions.length
     // });
     // logger.apiResponse('GET', `/api/exams/${slug}/full`, 200, { success: true });
-    // 
+    //
     // return examData;
   } catch (error) {
     logger.error('ExamsService', 'Failed to fetch exam by slug', error);
@@ -206,9 +222,9 @@ export const getExamBySlug = async (slug, token) => {
  */
 export const submitExamResults = async (examSlug, results, token) => {
   try {
-    logger.info('ExamsService', 'Processing exam results locally', { 
-      examSlug, 
-      questionsAnswered: results.answers?.length || 0 
+    logger.info('ExamsService', 'Processing exam results locally', {
+      examSlug,
+      questionsAnswered: results.answers?.length || 0,
     });
 
     // Get exam data to calculate results
@@ -235,7 +251,7 @@ export const submitExamResults = async (examSlug, results, token) => {
         isCorrect: isCorrect,
         explanation: question.explanation || '',
         questionImage: question.imageUrl,
-        options: question.options
+        options: question.options,
       });
     });
 
@@ -255,33 +271,33 @@ export const submitExamResults = async (examSlug, results, token) => {
       passingScore: 80,
       results: questionResults,
       completedAt: new Date().toISOString(),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     // Save to local storage
     await saveExamResult(examResult);
 
-    logger.info('ExamsService', 'Exam results processed and saved locally', { 
-      examSlug, 
+    logger.info('ExamsService', 'Exam results processed and saved locally', {
+      examSlug,
       score: examResult.score,
-      passed: examResult.passed
+      passed: examResult.passed,
     });
 
     return {
       success: true,
-      result: examResult
+      result: examResult,
     };
 
     // Mock response - kept for debugging
     // logger.debug('ExamsService', 'Using mock exam submission response');
     // await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network delay
-    // 
+    //
     // // Calculate mock score based on answers
     // const totalQuestions = results.answers?.length || 0;
     // const correctAnswers = Math.floor(totalQuestions * (0.6 + Math.random() * 0.4)); // 60-100% range
     // const score = Math.round((correctAnswers / totalQuestions) * 100);
     // const passed = score >= 80;
-    // 
+    //
     // const mockResponse = {
     //   success: true,
     //   result: {
@@ -295,17 +311,17 @@ export const submitExamResults = async (examSlug, results, token) => {
     //     timeSpent: results.timeSpent || 0
     //   }
     // };
-    // 
-    // logger.info('ExamsService', 'Exam results submitted successfully', { 
-    //   examSlug, 
+    //
+    // logger.info('ExamsService', 'Exam results submitted successfully', {
+    //   examSlug,
     //   score: mockResponse.result.score,
     //   passed: mockResponse.result.passed
     // });
-    // logger.apiResponse('POST', `/api/exams/${examSlug}/submit`, 200, { 
-    //   success: true, 
-    //   score: mockResponse.result.score 
+    // logger.apiResponse('POST', `/api/exams/${examSlug}/submit`, 200, {
+    //   success: true,
+    //   score: mockResponse.result.score
     // });
-    // 
+    //
     // return mockResponse;
   } catch (error) {
     logger.error('ExamsService', 'Failed to submit exam results', error);
@@ -320,25 +336,32 @@ export const submitExamResults = async (examSlug, results, token) => {
  */
 export const getUserExamHistory = async (token) => {
   try {
-    logger.info('ExamsService', 'Fetching user exam history from local storage');
-    
+    logger.info(
+      'ExamsService',
+      'Fetching user exam history from local storage',
+    );
+
     const results = await getExamResults();
-    
+
     const response = {
       results: results,
-      total: results.length
+      total: results.length,
     };
-    
-    logger.info('ExamsService', 'Exam history fetched successfully from local storage', { 
-      resultsCount: response.results.length
-    });
-    
+
+    logger.info(
+      'ExamsService',
+      'Exam history fetched successfully from local storage',
+      {
+        resultsCount: response.results.length,
+      },
+    );
+
     return response;
 
     // Mock response - kept for debugging
     // logger.debug('ExamsService', 'Using mock exam history response');
     // await new Promise(resolve => setTimeout(resolve, 600)); // Simulate network delay
-    // 
+    //
     // const mockResponse = {
     //   results: [
     //     {
@@ -362,15 +385,15 @@ export const getUserExamHistory = async (token) => {
     //   ],
     //   total: 2
     // };
-    // 
-    // logger.info('ExamsService', 'Exam history fetched successfully', { 
-    //   resultsCount: mockResponse.results.length 
+    //
+    // logger.info('ExamsService', 'Exam history fetched successfully', {
+    //   resultsCount: mockResponse.results.length
     // });
-    // logger.apiResponse('GET', '/api/me/exam-history', 200, { 
-    //   success: true, 
-    //   resultsCount: mockResponse.results.length 
+    // logger.apiResponse('GET', '/api/me/exam-history', 200, {
+    //   success: true,
+    //   resultsCount: mockResponse.results.length
     // });
-    // 
+    //
     // return mockResponse;
   } catch (error) {
     logger.error('ExamsService', 'Failed to fetch exam history', error);
@@ -385,27 +408,33 @@ export const getUserExamHistory = async (token) => {
  */
 const saveExamResult = async (examResult) => {
   if (!storageService.isAvailable()) {
-    logger.warn('ExamsService', 'Storage not available, cannot save exam result');
+    logger.warn(
+      'ExamsService',
+      'Storage not available, cannot save exam result',
+    );
     return null;
   }
 
   try {
     const existingResults = await getExamResults();
     const newResults = [examResult, ...existingResults].slice(0, MAX_RESULTS);
-    
-    const success = await storageService.setItem(EXAM_RESULTS_STORAGE_KEY, newResults);
-    
+
+    const success = await storageService.setItem(
+      EXAM_RESULTS_STORAGE_KEY,
+      newResults,
+    );
+
     if (success) {
-      logger.debug('ExamsService', 'Exam result saved successfully', { 
+      logger.debug('ExamsService', 'Exam result saved successfully', {
         examSlug: examResult.examSlug,
-        score: examResult.score 
+        score: examResult.score,
       });
       return examResult;
     }
   } catch (error) {
     logger.error('ExamsService', 'Failed to save exam result', error);
   }
-  
+
   return null;
 };
 
@@ -415,7 +444,10 @@ const saveExamResult = async (examResult) => {
  */
 const getExamResults = async () => {
   if (!storageService.isAvailable()) {
-    logger.warn('ExamsService', 'Storage not available, returning empty results');
+    logger.warn(
+      'ExamsService',
+      'Storage not available, returning empty results',
+    );
     return [];
   }
 
@@ -436,7 +468,7 @@ const getExamResults = async () => {
 export const getExamResultsForExam = async (examSlug) => {
   try {
     const allResults = await getExamResults();
-    return allResults.filter(result => result.examSlug === examSlug);
+    return allResults.filter((result) => result.examSlug === examSlug);
   } catch (error) {
     logger.error('ExamsService', 'Failed to get exam results for exam', error);
     return [];
@@ -471,13 +503,13 @@ export const clearExamResults = async () => {
  */
 export const exportExamResults = async () => {
   const results = await getExamResults();
-  
+
   return {
     version: '1.0.0',
     exportDate: new Date().toISOString(),
     results: results,
     count: results.length,
-    platform: storageService.platform || 'unknown'
+    platform: storageService.platform || 'unknown',
   };
 };
 
@@ -498,17 +530,20 @@ export const importExamResults = async (importData) => {
   }
 
   try {
-    const success = await storageService.setItem(EXAM_RESULTS_STORAGE_KEY, importData.results);
-    
+    const success = await storageService.setItem(
+      EXAM_RESULTS_STORAGE_KEY,
+      importData.results,
+    );
+
     if (success) {
-      logger.info('ExamsService', 'Exam results imported successfully', { 
-        count: importData.results.length 
+      logger.info('ExamsService', 'Exam results imported successfully', {
+        count: importData.results.length,
       });
       return true;
     }
   } catch (error) {
     logger.error('ExamsService', 'Failed to import exam results', error);
   }
-  
+
   return false;
 };

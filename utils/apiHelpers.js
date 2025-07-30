@@ -1,6 +1,6 @@
 /**
  * API Helper Utilities
- * 
+ *
  * Common utilities for API interactions, error handling, and response processing.
  */
 
@@ -11,17 +11,17 @@
  */
 export const handleApiError = (error) => {
   console.error('API Error:', error);
-  
+
   // Network errors
   if (error.name === 'TypeError' && error.message.includes('fetch')) {
     return 'Network error. Please check your connection and try again.';
   }
-  
+
   // Custom error messages from API
   if (error.message) {
     return error.message;
   }
-  
+
   // Generic fallback
   return 'Something went wrong. Please try again later.';
 };
@@ -57,7 +57,7 @@ export const formatApiResponse = (response) => {
     success: response.success || false,
     data: response.user || response.data || response,
     message: response.message || null,
-    error: response.error || null
+    error: response.error || null,
   };
 };
 
@@ -68,8 +68,8 @@ export const formatApiResponse = (response) => {
  * @throws {Error} If any required field is missing
  */
 export const validateRequiredFields = (data, requiredFields) => {
-  const missingFields = requiredFields.filter(field => !data[field]);
-  
+  const missingFields = requiredFields.filter((field) => !data[field]);
+
   if (missingFields.length > 0) {
     throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
   }
@@ -80,7 +80,7 @@ export const validateRequiredFields = (data, requiredFields) => {
  * @param {number} ms - Milliseconds to delay
  * @returns {Promise} Promise that resolves after delay
  */
-export const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+export const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * Check if user has premium access

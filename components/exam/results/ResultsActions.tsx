@@ -1,5 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
 import { Share2, RotateCcw, Chrome as Home } from 'lucide-react-native';
 
 interface ResultsActionsProps {
@@ -9,10 +15,19 @@ interface ResultsActionsProps {
   isSharing?: boolean;
 }
 
-export function ResultsActions({ onShare, onRetry, onHome, isSharing = false }: ResultsActionsProps) {
+export function ResultsActions({
+  onShare,
+  onRetry,
+  onHome,
+  isSharing = false,
+}: ResultsActionsProps) {
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.shareButton} onPress={onShare} disabled={isSharing}>
+      <TouchableOpacity
+        style={styles.shareButton}
+        onPress={onShare}
+        disabled={isSharing}
+      >
         {isSharing ? (
           <ActivityIndicator size="small" color="#2196F3" />
         ) : (
@@ -20,12 +35,12 @@ export function ResultsActions({ onShare, onRetry, onHome, isSharing = false }: 
         )}
         <Text style={styles.shareButtonText}>Share</Text>
       </TouchableOpacity>
-      
+
       <TouchableOpacity style={styles.retryButton} onPress={onRetry}>
         <RotateCcw size={20} color="#FFFFFF" />
         <Text style={styles.retryButtonText}>Try Again</Text>
       </TouchableOpacity>
-      
+
       <TouchableOpacity style={styles.homeButton} onPress={onHome}>
         <Home size={20} color="#333333" />
         <Text style={styles.homeButtonText}>Home</Text>

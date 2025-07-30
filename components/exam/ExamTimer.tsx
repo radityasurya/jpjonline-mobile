@@ -25,9 +25,10 @@ export function ExamTimer({
   isActive,
 }: ExamTimerProps) {
   const [timeRemaining, setTimeRemaining] = useState(
-    mode === 'total' ? totalDuration : questionDuration
+    mode === 'total' ? totalDuration : questionDuration,
   );
-  const [questionTimeRemaining, setQuestionTimeRemaining] = useState(questionDuration);
+  const [questionTimeRemaining, setQuestionTimeRemaining] =
+    useState(questionDuration);
   const [hasWarned, setHasWarned] = useState(false);
   const timerRef = useRef<NodeJS.Timeout>();
   const questionTimerRef = useRef<NodeJS.Timeout>();
@@ -50,35 +51,33 @@ export function ExamTimer({
 
     if (mode === 'total') {
       timerRef.current = setInterval(() => {
-        setTimeRemaining(prev => {
+        setTimeRemaining((prev) => {
           if (prev <= 1) {
             onTimeExpired();
             return 0;
           }
-          
+
           // Warning at 5 minutes (300 seconds)
           if (prev === 300 && !hasWarned) {
             setHasWarned(true);
             soundManager.playWarning();
-            Alert.alert(
-              'Time Warning',
-              '5 minutes remaining!',
-              [{ text: 'OK' }]
-            );
+            Alert.alert('Time Warning', '5 minutes remaining!', [
+              { text: 'OK' },
+            ]);
           }
-          
+
           return prev - 1;
         });
       }, 1000);
     } else {
       // Per-question mode
       questionTimerRef.current = setInterval(() => {
-        setQuestionTimeRemaining(prev => {
+        setQuestionTimeRemaining((prev) => {
           if (prev <= 1) {
             onQuestionTimeExpired?.();
             return questionDuration; // Reset for next question
           }
-          
+
           // Warning at 10 seconds
           if (prev === 10 && !hasWarned) {
             setHasWarned(true);
@@ -86,10 +85,10 @@ export function ExamTimer({
             Alert.alert(
               'Time Warning',
               '10 seconds remaining for this question!',
-              [{ text: 'OK' }]
+              [{ text: 'OK' }],
             );
           }
-          
+
           return prev - 1;
         });
       }, 1000);
@@ -99,7 +98,14 @@ export function ExamTimer({
       if (timerRef.current) clearInterval(timerRef.current);
       if (questionTimerRef.current) clearInterval(questionTimerRef.current);
     };
-  }, [isActive, mode, hasWarned, onTimeExpired, onQuestionTimeExpired, questionDuration]);
+  }, [
+    isActive,
+    mode,
+    hasWarned,
+    onTimeExpired,
+    onQuestionTimeExpired,
+    questionDuration,
+  ]);
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -128,18 +134,14 @@ export function ExamTimer({
           <AlertTriangle size={16} color="#FF3B30" />
         )}
       </View>
-      
+
       {mode === 'per-question' && (
         <Text style={styles.modeText}>
           Question {currentQuestionIndex + 1}/{totalQuestions}
         </Text>
       )}
-      
-      {mode === 'total' && (
-        <Text style={styles.modeText}>
-          Total Time
-        </Text>
-      )}
+
+      {mode === 'total' && <Text style={styles.modeText}>Total Time</Text>}
     </View>
   );
 }

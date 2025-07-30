@@ -9,24 +9,28 @@ import { logger } from '../utils/logger.js';
  * @param {boolean} isRetry - Internal flag to prevent infinite loops
  * @returns {Promise<Response>} API response
  */
-export const makeAuthenticatedRequest = async (url, options = {}, isRetry = false) => {
+export const makeAuthenticatedRequest = async (
+  url,
+  options = {},
+  isRetry = false,
+) => {
   try {
     // Get current token
     const token = await storageService.getItem('accessToken');
-    
+
     // Make initial request
     const response = await fetch(url, {
       ...options,
       headers: {
         ...options.headers,
-        ...getAuthHeaders(token)
-      }
+        ...getAuthHeaders(token),
+      },
     });
-    
+
     // If unauthorized and this is not already a retry, try to refresh token
     if (response.status === 401 && !isRetry) {
       logger.info('AuthService', 'Token expired, attempting refresh');
-      
+
       const refreshToken = await storageService.getItem('refreshToken');
       if (!refreshToken) {
         logger.warn('AuthService', 'No refresh token available');
@@ -35,27 +39,33 @@ export const makeAuthenticatedRequest = async (url, options = {}, isRetry = fals
         await storageService.removeItem('user');
         throw new Error('Authentication required');
       }
-      
+
       try {
         // Refresh the token
         const refreshResponse = await refreshAccessToken(refreshToken);
-        
+
         if (refreshResponse.success) {
           // Store new tokens
-          await storageService.setItem('accessToken', refreshResponse.accessToken);
+          await storageService.setItem(
+            'accessToken',
+            refreshResponse.accessToken,
+          );
           if (refreshResponse.refreshToken) {
-            await storageService.setItem('refreshToken', refreshResponse.refreshToken);
+            await storageService.setItem(
+              'refreshToken',
+              refreshResponse.refreshToken,
+            );
           }
-          
+
           logger.info('AuthService', 'Token refreshed successfully');
-          
+
           // Retry original request with new token (mark as retry to prevent loops)
           return await fetch(url, {
             ...options,
             headers: {
               ...options.headers,
-              ...getAuthHeaders(refreshResponse.accessToken)
-            }
+              ...getAuthHeaders(refreshResponse.accessToken),
+            },
           });
         }
       } catch (refreshError) {
@@ -68,13 +78,16 @@ export const makeAuthenticatedRequest = async (url, options = {}, isRetry = fals
       }
     } else if (response.status === 401 && isRetry) {
       // If we get 401 on retry, refresh token is also invalid
-      logger.error('AuthService', 'Refresh token also invalid, clearing session');
+      logger.error(
+        'AuthService',
+        'Refresh token also invalid, clearing session',
+      );
       await storageService.removeItem('accessToken');
       await storageService.removeItem('refreshToken');
       await storageService.removeItem('user');
       throw new Error('Session expired. Please login again.');
     }
-    
+
     return response;
   } catch (error) {
     logger.error('AuthService', 'Authenticated request failed', error);
@@ -84,7 +97,7 @@ export const makeAuthenticatedRequest = async (url, options = {}, isRetry = fals
 
 /**
  * Authentication Service
- * 
+ *
  * This service handles all authentication-related API calls.
  * Currently using mock responses - uncomment real API calls when CORS is configured.
  */
@@ -99,22 +112,30 @@ export const makeAuthenticatedRequest = async (url, options = {}, isRetry = fals
  */
 export const signup = async (userData) => {
   try {
-    logger.info('AuthService', 'Starting user signup', { email: userData.email });
-    logger.apiRequest('POST', API_CONFIG.ENDPOINTS.AUTH.SIGNUP, { email: userData.email, name: userData.name });
-    
-    const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.AUTH.SIGNUP), {
-      method: 'POST',
-      headers: API_CONFIG.HEADERS,
-      body: JSON.stringify(userData),
+    logger.info('AuthService', 'Starting user signup', {
+      email: userData.email,
     });
-    
+    logger.apiRequest('POST', API_CONFIG.ENDPOINTS.AUTH.SIGNUP, {
+      email: userData.email,
+      name: userData.name,
+    });
+
+    const response = await fetch(
+      buildApiUrl(API_CONFIG.ENDPOINTS.AUTH.SIGNUP),
+      {
+        method: 'POST',
+        headers: API_CONFIG.HEADERS,
+        body: JSON.stringify(userData),
+      },
+    );
+
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.error || 'Signup failed');
     }
-    
+
     const data = await response.json();
-    
+
     if (data.success) {
       return {
         success: true,
@@ -126,7 +147,7 @@ export const signup = async (userData) => {
           role: data.user.role,
           premiumUntil: data.user.premiumUntil,
           isActive: data.user.isActive,
-        }
+        },
       };
     } else {
       throw new Error(data.error || 'Signup failed');
@@ -135,7 +156,7 @@ export const signup = async (userData) => {
     // Mock response - kept for debugging
     // logger.debug('AuthService', 'Using mock signup response');
     // await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
-    // 
+    //
     // // Simulate email already exists error for demo
     // if (userData.email === 'existing@jpjonline.com') {
     //   logger.warn('AuthService', 'Signup failed - email already exists', { email: userData.email });
@@ -153,7 +174,7 @@ export const signup = async (userData) => {
     //     image: null
     //   }
     // };
-    // 
+    //
     // logger.info('AuthService', 'Signup successful', { userId: mockResponse.user.id });
     // logger.apiResponse('POST', API_CONFIG.ENDPOINTS.AUTH.SIGNUP, 200, { success: true });
     // return mockResponse;
@@ -162,7 +183,7 @@ export const signup = async (userData) => {
     // Mock response - kept for debugging
     // logger.debug('AuthService', 'Using mock signup response');
     // await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
-    // 
+    //
     // // Simulate email already exists error for demo
     // if (userData.email === 'existing@jpjonline.com') {
     //   logger.warn('AuthService', 'Signup failed - email already exists', { email: userData.email });
@@ -180,11 +201,11 @@ export const signup = async (userData) => {
     //     image: null
     //   }
     // };
-    // 
+    //
     // logger.info('AuthService', 'Signup successful', { userId: mockResponse.user.id });
     // logger.apiResponse('POST', API_CONFIG.ENDPOINTS.AUTH.SIGNUP, 200, { success: true });
     // return mockResponse;
-    
+
     throw error;
   }
 };
@@ -198,22 +219,26 @@ export const signup = async (userData) => {
  */
 export const login = async (credentials) => {
   try {
-    logger.info('AuthService', 'Starting user login', { email: credentials.email });
-    logger.apiRequest('POST', API_CONFIG.ENDPOINTS.AUTH.LOGIN, { email: credentials.email });
-    
+    logger.info('AuthService', 'Starting user login', {
+      email: credentials.email,
+    });
+    logger.apiRequest('POST', API_CONFIG.ENDPOINTS.AUTH.LOGIN, {
+      email: credentials.email,
+    });
+
     const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.AUTH.LOGIN), {
       method: 'POST',
       headers: API_CONFIG.HEADERS,
       body: JSON.stringify(credentials),
     });
-    
+
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.error || 'Login failed');
     }
-    
+
     const data = await response.json();
-    
+
     if (data.success) {
       // Store tokens
       if (data.accessToken) {
@@ -224,7 +249,7 @@ export const login = async (credentials) => {
         // Store refresh token for token renewal
         // Note: In production, consider using secure storage
       }
-      
+
       return {
         success: true,
         token: data.accessToken,
@@ -236,19 +261,19 @@ export const login = async (credentials) => {
           tier: data.user.tier,
           role: data.user.role,
           premiumUntil: data.user.premiumUntil,
-          isActive: data.user.isActive
-        }
+          isActive: data.user.isActive,
+        },
       };
     } else {
       throw new Error(data.error || 'Login failed');
     }
   } catch (error) {
     logger.error('AuthService', 'Login failed', error);
-    
+
     // Mock response - kept for debugging
     // logger.debug('AuthService', 'API failed, using mock login response');
     // await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
-    // 
+    //
     // // Simulate invalid credentials for demo
     // if (credentials.email !== 'premium@jpjonline.com' && credentials.email !== 'free@jpjonline.com') {
     //   logger.warn('AuthService', 'Login failed - invalid credentials', { email: credentials.email });
@@ -256,7 +281,7 @@ export const login = async (credentials) => {
     // }
     //
     // const isPremium = credentials.email === 'premium@jpjonline.com';
-    // 
+    //
     // const mockResponse = {
     //   success: true,
     //   token: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.mock.token.${Date.now()}`,
@@ -271,14 +296,14 @@ export const login = async (credentials) => {
     //     isActive: true
     //   }
     // };
-    // 
-    // logger.info('AuthService', 'Mock login successful', { 
-    //   userId: mockResponse.user.id, 
-    //   tier: mockResponse.user.tier 
+    //
+    // logger.info('AuthService', 'Mock login successful', {
+    //   userId: mockResponse.user.id,
+    //   tier: mockResponse.user.tier
     // });
     // logger.apiResponse('POST', API_CONFIG.ENDPOINTS.AUTH.LOGIN, 200, { success: true });
     // return mockResponse;
-    
+
     throw error;
   }
 };
@@ -292,24 +317,27 @@ export const refreshAccessToken = async (refreshToken) => {
   try {
     logger.info('AuthService', 'Refreshing access token');
     logger.apiRequest('POST', API_CONFIG.ENDPOINTS.AUTH.REFRESH);
-    
-    const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.AUTH.REFRESH), {
-      method: 'POST',
-      headers: API_CONFIG.HEADERS,
-      body: JSON.stringify({ refreshToken }),
-    });
-    
+
+    const response = await fetch(
+      buildApiUrl(API_CONFIG.ENDPOINTS.AUTH.REFRESH),
+      {
+        method: 'POST',
+        headers: API_CONFIG.HEADERS,
+        body: JSON.stringify({ refreshToken }),
+      },
+    );
+
     if (!response.ok) {
       const errorData = await response.json();
-      logger.error('AuthService', 'Refresh token API error', { 
-        status: response.status, 
-        error: errorData.error 
+      logger.error('AuthService', 'Refresh token API error', {
+        status: response.status,
+        error: errorData.error,
       });
       throw new Error(errorData.error || 'Token refresh failed');
     }
-    
+
     const data = await response.json();
-    
+
     if (data.success) {
       logger.info('AuthService', 'Token refresh successful');
       return {
@@ -323,8 +351,8 @@ export const refreshAccessToken = async (refreshToken) => {
           tier: data.user.tier,
           role: data.user.role,
           premiumUntil: data.user.premiumUntil,
-          isActive: data.user.isActive
-        }
+          isActive: data.user.isActive,
+        },
       };
     } else {
       logger.error('AuthService', 'Refresh token response unsuccessful', data);
@@ -344,32 +372,34 @@ export const refreshAccessToken = async (refreshToken) => {
 export const getSession = async (token) => {
   try {
     // Get token from storage if not provided
-    const authToken = token || await storageService.getItem('accessToken');
-    
+    const authToken = token || (await storageService.getItem('accessToken'));
+
     logger.debug('AuthService', 'Validating user session');
     logger.apiRequest('GET', API_CONFIG.ENDPOINTS.AUTH.SESSION);
-    
-    const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.AUTH.SESSION), {
-      method: 'GET',
-      headers: getAuthHeaders(authToken),
-    });
-    
+
+    const response = await fetch(
+      buildApiUrl(API_CONFIG.ENDPOINTS.AUTH.SESSION),
+      {
+        method: 'GET',
+        headers: getAuthHeaders(authToken),
+      },
+    );
+
     if (!response.ok) {
       throw new Error('Session validation failed');
     }
-    
-    return await response.json();
 
+    return await response.json();
   } catch (error) {
     logger.error('AuthService', 'Session validation failed', error);
-    
+
     // Mock response - kept for debugging
     // logger.debug('AuthService', 'API failed, using mock session response');
     // await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
-    // 
+    //
     // // Extract mock user data from token (in real implementation, backend validates token)
     // const isPremium = token.includes('premium');
-    // 
+    //
     // const mockResponse = {
     //   user: {
     //     id: isPremium ? "clx1234567890" : "clx0987654321",
@@ -382,11 +412,11 @@ export const getSession = async (token) => {
     //   },
     //   expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours from now
     // };
-    // 
+    //
     // logger.debug('AuthService', 'Mock session validation successful', { userId: mockResponse.user.id });
     // logger.apiResponse('GET', API_CONFIG.ENDPOINTS.AUTH.SESSION, 200);
     // return mockResponse;
-    
+
     throw error;
   }
 };
@@ -399,38 +429,44 @@ export const getSession = async (token) => {
  */
 export const forgotPassword = async (data) => {
   try {
-    logger.info('AuthService', 'Password reset requested', { email: data.email });
-    logger.apiRequest('POST', API_CONFIG.ENDPOINTS.AUTH.FORGOT_PASSWORD, { email: data.email });
-    
-    const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.AUTH.FORGOT_PASSWORD), {
-      method: 'POST',
-      headers: API_CONFIG.HEADERS,
-      body: JSON.stringify(data),
+    logger.info('AuthService', 'Password reset requested', {
+      email: data.email,
     });
-    
+    logger.apiRequest('POST', API_CONFIG.ENDPOINTS.AUTH.FORGOT_PASSWORD, {
+      email: data.email,
+    });
+
+    const response = await fetch(
+      buildApiUrl(API_CONFIG.ENDPOINTS.AUTH.FORGOT_PASSWORD),
+      {
+        method: 'POST',
+        headers: API_CONFIG.HEADERS,
+        body: JSON.stringify(data),
+      },
+    );
+
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.error || 'Failed to send reset email');
     }
-    
-    return await response.json();
 
+    return await response.json();
   } catch (error) {
     logger.error('AuthService', 'Forgot password failed', error);
-    
+
     // Mock response - kept for debugging
     // logger.debug('AuthService', 'API failed, using mock forgot password response');
     // await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate network delay
-    // 
+    //
     // const mockResponse = {
     //   success: true,
     //   message: "Password reset email sent"
     // };
-    // 
+    //
     // logger.info('AuthService', 'Mock password reset email sent', { email: data.email });
     // logger.apiResponse('POST', API_CONFIG.ENDPOINTS.AUTH.FORGOT_PASSWORD, 200);
     // return mockResponse;
-    
+
     throw error;
   }
 };
@@ -445,44 +481,47 @@ export const forgotPassword = async (data) => {
 export const resetPassword = async (data) => {
   try {
     logger.info('AuthService', 'Password reset attempted');
-    logger.apiRequest('POST', API_CONFIG.ENDPOINTS.AUTH.RESET_PASSWORD, { token: data.token });
-    
-    const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.AUTH.RESET_PASSWORD), {
-      method: 'POST',
-      headers: API_CONFIG.HEADERS,
-      body: JSON.stringify(data),
+    logger.apiRequest('POST', API_CONFIG.ENDPOINTS.AUTH.RESET_PASSWORD, {
+      token: data.token,
     });
-    
+
+    const response = await fetch(
+      buildApiUrl(API_CONFIG.ENDPOINTS.AUTH.RESET_PASSWORD),
+      {
+        method: 'POST',
+        headers: API_CONFIG.HEADERS,
+        body: JSON.stringify(data),
+      },
+    );
+
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.error || 'Password reset failed');
     }
-    
-    return await response.json();
 
+    return await response.json();
   } catch (error) {
     logger.error('AuthService', 'Reset password failed', error);
-    
+
     // Mock response - kept for debugging
     // logger.debug('AuthService', 'API failed, using mock reset password response');
     // await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
-    // 
+    //
     // // Simulate invalid token for demo
     // if (data.token === 'invalid-token') {
     //   logger.warn('AuthService', 'Password reset failed - invalid token');
     //   throw new Error('Invalid or expired reset token');
     // }
-    // 
+    //
     // const mockResponse = {
     //   success: true,
     //   message: "Password has been reset"
     // };
-    // 
+    //
     // logger.info('AuthService', 'Mock password reset successful');
     // logger.apiResponse('POST', API_CONFIG.ENDPOINTS.AUTH.RESET_PASSWORD, 200);
     // return mockResponse;
-    
+
     throw error;
   }
 };
-

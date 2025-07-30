@@ -1,6 +1,6 @@
 /**
  * Services Index
- * 
+ *
  * Central export point for all API services.
  * Import services from here to maintain consistency across the application.
  */
@@ -11,7 +11,7 @@ export {
   login,
   getSession,
   forgotPassword,
-  resetPassword
+  resetPassword,
 } from './authService.js';
 
 // User profile services
@@ -19,14 +19,14 @@ export {
   getUserProfile,
   updateUserProfile,
   changePassword,
-  deleteUserAccount
+  deleteUserAccount,
 } from './userService.js';
 
 // Notes services
 export {
   getNotesGroupedByCategory,
   getNoteById,
-  searchNotes
+  searchNotes,
 } from './notesService.js';
 
 // Exams services
@@ -34,7 +34,7 @@ export {
   getUserExams,
   getExamBySlug,
   submitExamResults,
-  getUserExamHistory
+  getUserExamHistory,
 } from './examsService.js';
 
 // Progress and Statistics services
@@ -49,7 +49,7 @@ export {
   importData,
   getAchievements,
   calculateLearningCompletion,
-  getDashboardSummary
+  getDashboardSummary,
 } from './progressService.js';
 
 // Export progress service instance
@@ -66,7 +66,7 @@ export {
   clearAllBookmarks,
   getBookmarkStats,
   exportBookmarks,
-  importBookmarks
+  importBookmarks,
 } from './bookmarkService.js';
 
 // Export bookmark service instance
@@ -88,7 +88,7 @@ export {
   getTimeAgo,
   exportActivities,
   importActivities,
-  ACTIVITY_TYPES
+  ACTIVITY_TYPES,
 } from './activityService.js';
 
 // Export activity service instance
@@ -99,10 +99,10 @@ export { API_CONFIG, getAuthHeaders, buildApiUrl } from '../config/api.js';
 
 /**
  * Usage Examples:
- * 
+ *
  * // Import specific services
  * import { login, getUserProfile } from './services';
- * 
+ *
  * // Use in components
  * const handleLogin = async (credentials) => {
  *   try {

@@ -18,9 +18,13 @@ import {
   User,
 } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import { getNoteById } from '@/services';
+import {
+  getNoteById,
+  progressService,
+  activityService,
+  ACTIVITY_TYPES,
+} from '@/services';
 import { logger } from '@/utils/logger';
-import { progressService, activityService, ACTIVITY_TYPES } from '@/services';
 import bookmarkService from '@/services/bookmarkService';
 
 export default function NoteDetailScreen() {
@@ -39,7 +43,7 @@ export default function NoteDetailScreen() {
     if (!user) {
       logger.warn(
         'NoteDetailScreen',
-        'User not logged in, redirecting to login'
+        'User not logged in, redirecting to login',
       );
       router.replace('/auth/login');
       return;
@@ -92,7 +96,7 @@ export default function NoteDetailScreen() {
     if (!featuresSupported) {
       logger.warn(
         'NoteDetailScreen',
-        'Bookmark features not available on web platform'
+        'Bookmark features not available on web platform',
       );
       return;
     }
@@ -134,7 +138,7 @@ export default function NoteDetailScreen() {
       await Share.share({
         message: `${note.title}\n\n${note.content.substring(
           0,
-          200
+          200,
         )}...\n\nRead via JPJOnline`,
         title: note.title,
       });
@@ -178,7 +182,7 @@ export default function NoteDetailScreen() {
           parts.push(
             <Text key={`bold-${match.index}`} style={styles.boldInline}>
               {match[1]}
-            </Text>
+            </Text>,
           );
           lastIndex = match.index + match[0].length;
         }
@@ -195,19 +199,19 @@ export default function NoteDetailScreen() {
         elements.push(
           <Text key={index} style={styles.heading1}>
             {line.substring(2)}
-          </Text>
+          </Text>,
         );
       } else if (line.startsWith('## ')) {
         elements.push(
           <Text key={index} style={styles.heading2}>
             {line.substring(3)}
-          </Text>
+          </Text>,
         );
       } else if (line.startsWith('### ')) {
         elements.push(
           <Text key={index} style={styles.heading3}>
             {line.substring(4)}
-          </Text>
+          </Text>,
         );
       } else if (line.startsWith('- ')) {
         elements.push(
@@ -216,7 +220,7 @@ export default function NoteDetailScreen() {
             <Text style={styles.listItem}>
               {processInlineFormatting(line.substring(2))}
             </Text>
-          </View>
+          </View>,
         );
       } else if (line.trim() === '') {
         elements.push(<View key={index} style={styles.spacing} />);
@@ -226,13 +230,13 @@ export default function NoteDetailScreen() {
             <Text style={styles.paragraph}>
               {processInlineFormatting(line)}
             </Text>
-          </View>
+          </View>,
         );
       } else {
         elements.push(
           <Text key={index} style={styles.paragraph}>
             {processInlineFormatting(line)}
-          </Text>
+          </Text>,
         );
       }
     });

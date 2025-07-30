@@ -1,6 +1,6 @@
 /**
  * Logger Utility
- * 
+ *
  * Centralized logging system with different levels and structured output.
  * Can be easily configured for different environments.
  */
@@ -9,7 +9,7 @@ const LOG_LEVELS = {
   ERROR: 0,
   WARN: 1,
   INFO: 2,
-  DEBUG: 3
+  DEBUG: 3,
 };
 
 // Set log level based on environment
@@ -25,7 +25,7 @@ const CURRENT_LOG_LEVEL = __DEV__ ? LOG_LEVELS.DEBUG : LOG_LEVELS.ERROR;
 const formatLog = (level, context, message, data) => {
   const timestamp = new Date().toISOString();
   const prefix = `[${timestamp}] [${level}] [${context}]`;
-  
+
   if (data) {
     console.log(`${prefix} ${message}`, data);
   } else {
@@ -103,7 +103,9 @@ export const logger = {
    */
   apiResponse: (method, url, status, data = null) => {
     const level = status >= 400 ? 'ERROR' : 'DEBUG';
-    if (CURRENT_LOG_LEVEL >= (status >= 400 ? LOG_LEVELS.ERROR : LOG_LEVELS.DEBUG)) {
+    if (
+      CURRENT_LOG_LEVEL >= (status >= 400 ? LOG_LEVELS.ERROR : LOG_LEVELS.DEBUG)
+    ) {
       formatLog('API-RES', 'HTTP', `${method} ${url} - ${status}`, data);
     }
   },
@@ -128,5 +130,5 @@ export const logger = {
     if (CURRENT_LOG_LEVEL >= LOG_LEVELS.INFO) {
       formatLog('USER', 'Action', action, data);
     }
-  }
+  },
 };

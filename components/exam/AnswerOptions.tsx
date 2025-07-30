@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
+} from 'react-native';
 
 interface AnswerOptionsProps {
   question: any;
@@ -20,21 +27,25 @@ export function AnswerOptions({
   examMode,
   disabled = false,
 }: AnswerOptionsProps) {
-  const [imageLoadingStates, setImageLoadingStates] = useState<{ [key: number]: boolean }>({});
-  const [imageErrorStates, setImageErrorStates] = useState<{ [key: number]: boolean }>({});
+  const [imageLoadingStates, setImageLoadingStates] = useState<{
+    [key: number]: boolean;
+  }>({});
+  const [imageErrorStates, setImageErrorStates] = useState<{
+    [key: number]: boolean;
+  }>({});
 
   const handleImageLoad = (index: number) => {
-    setImageLoadingStates(prev => ({ ...prev, [index]: false }));
+    setImageLoadingStates((prev) => ({ ...prev, [index]: false }));
   };
 
   const handleImageError = (index: number) => {
-    setImageLoadingStates(prev => ({ ...prev, [index]: false }));
-    setImageErrorStates(prev => ({ ...prev, [index]: true }));
+    setImageLoadingStates((prev) => ({ ...prev, [index]: false }));
+    setImageErrorStates((prev) => ({ ...prev, [index]: true }));
   };
 
   const getAnswerOptionStyle = (optionIndex: number) => {
     const isSelected = selectedAnswer === optionIndex;
-    
+
     if (examMode === 'OPEN' && hasValidation) {
       if (isSelected) {
         return {
@@ -53,28 +64,33 @@ export function AnswerOptions({
         borderColor: '#2196F3',
       };
     }
-    
+
     return {
       backgroundColor: '#F8F9FA',
       borderColor: 'transparent',
     };
   };
 
-  const options = typeof question.options === 'string' || Array.isArray(question.options) 
-    ? question.options 
-    : question.options?.choices || [];
+  const options =
+    typeof question.options === 'string' || Array.isArray(question.options)
+      ? question.options
+      : question.options?.choices || [];
 
-  const isImageOnlyOptions = typeof question.options === 'object' && 
-    question.options.type === 'image' && 
-    Array.isArray(options) && 
-    options.every((option: any) => typeof option === 'object' && option.image && !option.text);
+  const isImageOnlyOptions =
+    typeof question.options === 'object' &&
+    question.options.type === 'image' &&
+    Array.isArray(options) &&
+    options.every(
+      (option: any) =>
+        typeof option === 'object' && option.image && !option.text,
+    );
 
   return (
     <View style={styles.optionsContainer}>
       {options.map((option: any, index: number) => {
         const isImageLoading = imageLoadingStates[index] !== false;
         const hasImageError = imageErrorStates[index] === true;
-        
+
         return (
           <TouchableOpacity
             key={index}
@@ -85,34 +101,40 @@ export function AnswerOptions({
               disabled && styles.disabledOption,
             ]}
             onPress={() => !disabled && onAnswerSelect(index)}
-            disabled={disabled}>
-            
+            disabled={disabled}
+          >
             {!isImageOnlyOptions && (
-              <View style={[
-                styles.optionIndicator,
-                selectedAnswer === index && styles.selectedIndicator,
-              ]}>
-                <Text style={[
-                  styles.optionLetter,
-                  selectedAnswer === index && styles.selectedOptionLetter,
-                ]}>
+              <View
+                style={[
+                  styles.optionIndicator,
+                  selectedAnswer === index && styles.selectedIndicator,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.optionLetter,
+                    selectedAnswer === index && styles.selectedOptionLetter,
+                  ]}
+                >
                   {String.fromCharCode(65 + index)}
                 </Text>
               </View>
             )}
 
             {typeof option === 'object' && option.image && (
-              <View style={[
-                styles.optionImageContainer,
-                isImageOnlyOptions && styles.imageOnlyContainer,
-              ]}>
+              <View
+                style={[
+                  styles.optionImageContainer,
+                  isImageOnlyOptions && styles.imageOnlyContainer,
+                ]}
+              >
                 {isImageLoading && (
                   <View style={styles.imageLoadingOverlay}>
                     <ActivityIndicator size="small" color="#666666" />
                   </View>
                 )}
                 {!hasImageError && (
-                  <Image 
+                  <Image
                     source={{ uri: option.image }}
                     style={[
                       styles.optionImage,
@@ -125,10 +147,12 @@ export function AnswerOptions({
                   />
                 )}
                 {hasImageError && (
-                  <View style={[
-                    styles.imageErrorContainer,
-                    isImageOnlyOptions && styles.imageOnlyOption,
-                  ]}>
+                  <View
+                    style={[
+                      styles.imageErrorContainer,
+                      isImageOnlyOptions && styles.imageOnlyOption,
+                    ]}
+                  >
                     <Text style={styles.imageErrorText}>Failed to load</Text>
                   </View>
                 )}
@@ -142,12 +166,17 @@ export function AnswerOptions({
               </View>
             )}
 
-            {(typeof option === 'string' || (typeof option === 'object' && option.text && option.text.trim())) && (
-              <Text style={[
-                styles.optionText,
-                selectedAnswer === index && styles.selectedOptionText,
-                isImageOnlyOptions && styles.hiddenText,
-              ]}>
+            {(typeof option === 'string' ||
+              (typeof option === 'object' &&
+                option.text &&
+                option.text.trim())) && (
+              <Text
+                style={[
+                  styles.optionText,
+                  selectedAnswer === index && styles.selectedOptionText,
+                  isImageOnlyOptions && styles.hiddenText,
+                ]}
+              >
                 {typeof option === 'string' ? option : option.text}
               </Text>
             )}

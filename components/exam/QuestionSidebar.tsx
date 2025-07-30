@@ -1,5 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+} from 'react-native';
 import { X, CircleCheck as CheckCircle } from 'lucide-react-native';
 
 interface QuestionSidebarProps {
@@ -41,17 +47,19 @@ export function QuestionSidebar({
             onPress={() => {
               onQuestionSelect(index);
               onClose();
-            }}>
-            <Text style={[
-              styles.sidebarQuestionNumber,
-              index === currentQuestionIndex && styles.sidebarCurrentQuestionText,
-              answers[index] !== -1 && styles.sidebarAnsweredQuestionText,
-            ]}>
+            }}
+          >
+            <Text
+              style={[
+                styles.sidebarQuestionNumber,
+                index === currentQuestionIndex &&
+                  styles.sidebarCurrentQuestionText,
+                answers[index] !== -1 && styles.sidebarAnsweredQuestionText,
+              ]}
+            >
               {index + 1}
             </Text>
-            {answers[index] !== -1 && (
-              <CheckCircle size={16} color="#4CAF50" />
-            )}
+            {answers[index] !== -1 && <CheckCircle size={16} color="#4CAF50" />}
           </TouchableOpacity>
         ))}
       </ScrollView>

@@ -23,23 +23,25 @@ export function PerformanceBreakdown({
   return (
     <View style={styles.container}>
       <Text style={styles.sectionTitle}>Performance Breakdown</Text>
-      
+
       <View style={styles.progressBar}>
-        <View 
+        <View
           style={[
-            styles.progressFill, 
-            { 
+            styles.progressFill,
+            {
               width: `${score}%`,
-              backgroundColor: getScoreColor(score)
-            }
-          ]} 
+              backgroundColor: getScoreColor(score),
+            },
+          ]}
         />
       </View>
-      
+
       <View style={styles.breakdownStats}>
         <View style={styles.breakdownItem}>
           <Text style={styles.breakdownLabel}>Your Score</Text>
-          <Text style={[styles.breakdownValue, { color: getScoreColor(score) }]}>
+          <Text
+            style={[styles.breakdownValue, { color: getScoreColor(score) }]}
+          >
             {score}%
           </Text>
         </View>

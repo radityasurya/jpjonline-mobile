@@ -163,11 +163,15 @@ class StorageService {
         platform: this.platform,
         storageType: Platform.OS === 'web' ? 'localStorage' : 'AsyncStorage',
         keyCount: keys.length,
-        keys: keys
+        keys: keys,
       };
     } catch (error) {
       logger.error('Storage', 'Failed to get storage info', error);
-      return { supported: false, platform: this.platform, error: error.message };
+      return {
+        supported: false,
+        platform: this.platform,
+        error: error.message,
+      };
     }
   }
 }

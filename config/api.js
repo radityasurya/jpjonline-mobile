@@ -1,6 +1,6 @@
 /**
  * API Configuration
- * 
+ *
  * This file contains the base configuration for API endpoints.
  * Modify the BASE_URL for different environments:
  * - Development: localhost:3000
@@ -31,12 +31,12 @@ export const API_CONFIG = {
     EXAMS: {
       USER_EXAMS: '/api/me/exams',
       BY_SLUG: '/api/exams',
-      BY_SLUG_FULL: '/api/exams'
-    }
+      BY_SLUG_FULL: '/api/exams',
+    },
   },
   HEADERS: {
     'Content-Type': 'application/json',
-  }
+  },
 };
 
 /**
@@ -46,7 +46,7 @@ export const API_CONFIG = {
  */
 export const getAuthHeaders = (token) => ({
   ...API_CONFIG.HEADERS,
-  ...(token && { 'Authorization': `Bearer ${token}` }),
+  ...(token && { Authorization: `Bearer ${token}` }),
 });
 
 /**

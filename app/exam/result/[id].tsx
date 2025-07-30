@@ -33,7 +33,7 @@ export default function ExamResultScreen() {
       if (resultData) {
         // Data passed from navigation
         const parsedResult = JSON.parse(
-          decodeURIComponent(resultData as string)
+          decodeURIComponent(resultData as string),
         );
         setResult(parsedResult);
 

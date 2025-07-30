@@ -19,7 +19,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
-    {}
+    {},
   );
   const { login, isLoading } = useAuth();
 
@@ -158,7 +158,7 @@ export default function LoginScreen() {
         </View>
 
         <View style={styles.registerContainer}>
-          <Text style={styles.registerText}>Don't have an account? </Text>
+          <Text style={styles.registerText}>Don&apos;t have an account? </Text>
           <TouchableOpacity onPress={() => router.push('/auth/register')}>
             <Text style={styles.registerLink}>Sign up now</Text>
           </TouchableOpacity>

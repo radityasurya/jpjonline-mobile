@@ -66,7 +66,7 @@ export default function TestsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState<'available' | 'results'>(
-    'available'
+    'available',
   );
 
   useEffect(() => {
@@ -76,7 +76,7 @@ export default function TestsScreen() {
       router.replace('/auth/login');
       return;
     }
-    
+
     fetchAllExams();
     fetchTestResults();
   }, [user]);
@@ -90,17 +90,20 @@ export default function TestsScreen() {
     logger.debug('TestsScreen', 'Fetching available exams');
     try {
       const response = await getUserExams();
-      logger.info('TestsScreen', 'Exams loaded successfully', { 
+      logger.info('TestsScreen', 'Exams loaded successfully', {
         categoriesCount: response.categories.length,
-        userTier: user?.tier 
+        userTier: user?.tier,
       });
       setExamsData(response);
-      
+
       // Filter out categories that are not accessible to the user
-      const accessibleCategories = response.categories.filter(category => 
-        category.accessible && category.name !== 'Premium Only'
+      const accessibleCategories = response.categories.filter(
+        (category) => category.accessible && category.name !== 'Premium Only',
       );
-      setCategories([{ id: 'all', name: 'All', accessible: true, exams: [] }, ...accessibleCategories]);
+      setCategories([
+        { id: 'all', name: 'All', accessible: true, exams: [] },
+        ...accessibleCategories,
+      ]);
     } catch (error) {
       logger.error('TestsScreen', 'Error fetching exams', error);
     } finally {
@@ -116,7 +119,7 @@ export default function TestsScreen() {
 
     // Flatten all exams from all categories
     let allExams: ApiExam[] = [];
-    examsData.categories.forEach(category => {
+    examsData.categories.forEach((category) => {
       allExams = [...allExams, ...category.exams];
     });
 
@@ -124,7 +127,9 @@ export default function TestsScreen() {
 
     // Apply category filter
     if (selectedCategory !== 'All') {
-      const selectedCategoryData = categories.find(cat => cat.name === selectedCategory);
+      const selectedCategoryData = categories.find(
+        (cat) => cat.name === selectedCategory,
+      );
       if (selectedCategoryData) {
         filtered = selectedCategoryData.exams;
       }
@@ -136,7 +141,7 @@ export default function TestsScreen() {
       filtered = filtered.filter(
         (exam) =>
           exam.title.toLowerCase().includes(query) ||
-          (exam.description && exam.description.toLowerCase().includes(query))
+          (exam.description && exam.description.toLowerCase().includes(query)),
       );
     }
 
@@ -147,7 +152,9 @@ export default function TestsScreen() {
     logger.debug('TestsScreen', 'Fetching exam results');
     try {
       const response = await getUserExamHistory();
-      logger.debug('TestsScreen', 'Exam results loaded', { count: response.results.length });
+      logger.debug('TestsScreen', 'Exam results loaded', {
+        count: response.results.length,
+      });
       setTestResults(response.results);
     } catch (error) {
       logger.error('TestsScreen', 'Error fetching exam results', error);
@@ -156,15 +163,17 @@ export default function TestsScreen() {
 
   const startExam = (exam: ApiExam) => {
     if (!exam.accessible) {
-      logger.warn('TestsScreen', 'Attempted to start inaccessible exam', { examSlug: exam.slug });
+      logger.warn('TestsScreen', 'Attempted to start inaccessible exam', {
+        examSlug: exam.slug,
+      });
       return;
     }
 
-    logger.userAction('Exam started', { 
-      examId: exam.id, 
+    logger.userAction('Exam started', {
+      examId: exam.id,
       examSlug: exam.slug,
       examTitle: exam.title,
-      isPremium: exam.premium 
+      isPremium: exam.premium,
     });
     logger.navigation('Exam', { examSlug: exam.slug });
     router.push(`/exam/${exam.slug}`);
@@ -189,10 +198,7 @@ export default function TestsScreen() {
 
   const renderExamItem = ({ item: exam }: { item: ApiExam }) => (
     <TouchableOpacity
-      style={[
-        styles.examCard,
-        !exam.accessible && styles.disabledCard,
-      ]}
+      style={[styles.examCard, !exam.accessible && styles.disabledCard]}
       onPress={() => startExam(exam)}
       disabled={!exam.accessible}
     >
@@ -206,20 +212,25 @@ export default function TestsScreen() {
           )}
         </View>
         <View style={styles.examBadges}>
-          <View style={[
-            styles.modeBadge,
-            { backgroundColor: exam.examMode === 'OPEN' ? '#E8F5E8' : '#FFF3E0' }
-          ]}>
-            <Text style={[
-              styles.modeText,
-              { color: exam.examMode === 'OPEN' ? '#4CAF50' : '#FF9800' }
-            ]}>
+          <View
+            style={[
+              styles.modeBadge,
+              {
+                backgroundColor:
+                  exam.examMode === 'OPEN' ? '#E8F5E8' : '#FFF3E0',
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.modeText,
+                { color: exam.examMode === 'OPEN' ? '#4CAF50' : '#FF9800' },
+              ]}
+            >
               {exam.examMode}
             </Text>
           </View>
-          {exam.premium && (
-            <Crown size={16} color="#FF9800" />
-          )}
+          {exam.premium && <Crown size={16} color="#FF9800" />}
           {!exam.accessible && <Lock size={16} color="#CCCCCC" />}
         </View>
       </View>
@@ -229,14 +240,16 @@ export default function TestsScreen() {
           <FileText size={14} color="#666666" />
           <Text style={styles.statText}>{exam.questionCount} questions</Text>
         </View>
-        
+
         {exam.totalTimeDuration && (
           <View style={styles.statItem}>
             <Clock size={14} color="#666666" />
-            <Text style={styles.statText}>{formatDuration(exam.totalTimeDuration)}</Text>
+            <Text style={styles.statText}>
+              {formatDuration(exam.totalTimeDuration)}
+            </Text>
           </View>
         )}
-        
+
         <View style={styles.statItem}>
           <Trophy size={14} color="#666666" />
           <Text style={styles.statText}>{exam.passRate}% pass</Text>
@@ -245,14 +258,16 @@ export default function TestsScreen() {
 
       <View style={styles.examFooter}>
         <View style={styles.examType}>
-          <Text style={[
-            styles.examTypeText,
-            { color: getExamTypeColor(exam.premium) }
-          ]}>
+          <Text
+            style={[
+              styles.examTypeText,
+              { color: getExamTypeColor(exam.premium) },
+            ]}
+          >
             {getExamTypeText(exam.premium)}
           </Text>
         </View>
-        
+
         {!exam.accessible && (
           <Text style={styles.lockedText}>Premium Required</Text>
         )}
@@ -393,7 +408,7 @@ export default function TestsScreen() {
                 style={styles.resultCard}
                 onPress={() =>
                   router.push(
-                    `/exam/result/${result.examSlug}?resultData=${encodeURIComponent(JSON.stringify(result))}`
+                    `/exam/result/${result.examSlug}?resultData=${encodeURIComponent(JSON.stringify(result))}`,
                   )
                 }
               >
@@ -407,8 +422,8 @@ export default function TestsScreen() {
                           result.score >= 80
                             ? '#4CAF50'
                             : result.score >= 60
-                            ? '#FF9800'
-                            : '#F44336',
+                              ? '#FF9800'
+                              : '#F44336',
                       },
                     ]}
                   >
@@ -434,8 +449,8 @@ export default function TestsScreen() {
                 <Trophy size={64} color="#CCCCCC" />
                 <Text style={styles.emptyTitle}>No Results</Text>
                 <Text style={styles.emptyMessage}>
-                  You haven't completed any exams yet. Start your first exam
-                  now!
+                  You haven&apos;t completed any exams yet. Start your first
+                  exam now!
                 </Text>
               </View>
             )}
@@ -446,17 +461,17 @@ export default function TestsScreen() {
   );
 }
 
-  const formatDuration = (seconds: number) => {
-    if (!seconds) return null;
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    
-    if (hours > 0) {
-      return `${hours}h ${remainingMinutes}m`;
-    }
-    return `${minutes}m`;
-  };
+const formatDuration = (seconds: number) => {
+  if (!seconds) return null;
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+
+  if (hours > 0) {
+    return `${hours}h ${remainingMinutes}m`;
+  }
+  return `${minutes}m`;
+};
 
 const styles = StyleSheet.create({
   container: {

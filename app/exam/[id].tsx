@@ -11,8 +11,13 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/utils/logger';
 import soundManager from '@/utils/soundManager';
-import { getExamBySlug, submitExamResults, progressService } from '@/services';
-import { activityService, ACTIVITY_TYPES } from '@/services';
+import {
+  getExamBySlug,
+  submitExamResults,
+  progressService,
+  activityService,
+  ACTIVITY_TYPES,
+} from '@/services';
 
 // Import components
 import { ExamHeader } from '@/components/exam/ExamHeader';
@@ -79,7 +84,7 @@ export default function ExamScreen() {
             router.replace('/(tabs)/tests');
           },
         },
-      ]
+      ],
     );
   };
 
@@ -90,7 +95,7 @@ export default function ExamScreen() {
       router.replace('/auth/login');
       return;
     }
-    
+
     fetchExamData();
   }, [examSlug, user]);
 
@@ -102,38 +107,31 @@ export default function ExamScreen() {
       logger.info('ExamScreen', 'Exam data loaded successfully', {
         examSlug,
         questionsCount: examData.questions.length,
-        examTitle: examData.title
+        examTitle: examData.title,
       });
       setExam(examData);
       setQuestions(examData.questions);
-      
+
       // Set exam mode based on exam settings or default to OPEN
       const mode = examData.examMode === 'CLOSED' ? 'CLOSED' : 'OPEN';
       setExamMode(mode);
-      
+
       // Set start time for duration calculation
       setStartTime(new Date());
-      
+
       setAnswers(new Array(examData.questions.length).fill(-1));
-      setAnswerValidation(
-        new Array(examData.questions.length).fill(false)
-      );
-      setHasCheckedAnswer(
-        new Array(examData.questions.length).fill(false)
-      );
-      setQuestionRetryStates(
-        new Array(examData.questions.length).fill(false)
-      );
-      
+      setAnswerValidation(new Array(examData.questions.length).fill(false));
+      setHasCheckedAnswer(new Array(examData.questions.length).fill(false));
+      setQuestionRetryStates(new Array(examData.questions.length).fill(false));
+
       // Track exam start activity
       activityService.addActivity(ACTIVITY_TYPES.EXAM_STARTED, {
         examId: examData.id,
         examSlug: examData.slug,
         examTitle: examData.title,
         category: examData.category?.name,
-        userId: user?.id
+        userId: user?.id,
       });
-      
     } catch (error) {
       logger.error('ExamScreen', 'Failed to load exam data', error);
       Alert.alert('Error', 'Failed to load exam. Please try again.');
@@ -147,22 +145,22 @@ export default function ExamScreen() {
     // In both modes, allow reselection until moving to next question
     // CLOSED mode: can reselect until clicking Next
     // OPEN mode: can reselect until checking answer
-    
+
     // In OPEN mode, if answer was checked, reset validation state for retry
     if (examMode === 'OPEN' && hasCheckedAnswer[currentQuestionIndex]) {
       // Reset validation state for retry
       const newHasChecked = [...hasCheckedAnswer];
       newHasChecked[currentQuestionIndex] = false;
       setHasCheckedAnswer(newHasChecked);
-      
+
       const newRetryStates = [...questionRetryStates];
       newRetryStates[currentQuestionIndex] = true;
       setQuestionRetryStates(newRetryStates);
     }
-    
-    logger.debug('ExamScreen', 'Answer selected', { 
-      questionIndex: currentQuestionIndex, 
-      answerIndex 
+
+    logger.debug('ExamScreen', 'Answer selected', {
+      questionIndex: currentQuestionIndex,
+      answerIndex,
     });
     const newAnswers = [...answers];
     newAnswers[currentQuestionIndex] = answerIndex;
@@ -176,12 +174,12 @@ export default function ExamScreen() {
       return;
     }
 
-    logger.userAction('Answer checked', { 
+    logger.userAction('Answer checked', {
       questionIndex: currentQuestionIndex,
       selectedAnswer: answers[currentQuestionIndex],
-      correctAnswer: questions[currentQuestionIndex].answerIndex
+      correctAnswer: questions[currentQuestionIndex].answerIndex,
     });
-    
+
     const currentQuestion = questions[currentQuestionIndex];
     const isCorrect =
       answers[currentQuestionIndex] === currentQuestion.answerIndex;
@@ -193,7 +191,7 @@ export default function ExamScreen() {
     const newHasChecked = [...hasCheckedAnswer];
     newHasChecked[currentQuestionIndex] = true;
     setHasCheckedAnswer(newHasChecked);
-    
+
     // Play sound feedback
     if (examMode === 'OPEN' && isSoundEnabled && isCorrect) {
       soundManager.playCorrect();
@@ -203,17 +201,19 @@ export default function ExamScreen() {
   };
 
   const handleRetryQuestion = () => {
-    logger.userAction('Question retry', { questionIndex: currentQuestionIndex });
-    
+    logger.userAction('Question retry', {
+      questionIndex: currentQuestionIndex,
+    });
+
     // Reset answer and validation for current question
     const newAnswers = [...answers];
     newAnswers[currentQuestionIndex] = -1;
     setAnswers(newAnswers);
-    
+
     const newHasChecked = [...hasCheckedAnswer];
     newHasChecked[currentQuestionIndex] = false;
     setHasCheckedAnswer(newHasChecked);
-    
+
     const newValidation = [...answerValidation];
     newValidation[currentQuestionIndex] = false;
     setAnswerValidation(newValidation);
@@ -240,10 +240,15 @@ export default function ExamScreen() {
     Alert.alert(
       'Time Expired',
       'Your exam time has expired. The exam will be submitted automatically.',
-      [{ text: 'OK', onPress: () => {
-        setIsTimerActive(false);
-        handleSubmitExam();
-      }}]
+      [
+        {
+          text: 'OK',
+          onPress: () => {
+            setIsTimerActive(false);
+            handleSubmitExam();
+          },
+        },
+      ],
     );
   };
 
@@ -252,14 +257,17 @@ export default function ExamScreen() {
     if (isSoundEnabled) {
       soundManager.playWarning();
     }
-    
+
     if (examMode === 'OPEN') {
       // In OPEN mode, force check answer if selected, then move to next
-      if (answers[currentQuestionIndex] !== -1 && !hasCheckedAnswer[currentQuestionIndex]) {
+      if (
+        answers[currentQuestionIndex] !== -1 &&
+        !hasCheckedAnswer[currentQuestionIndex]
+      ) {
         handleCheckAnswer();
       }
     }
-    
+
     // Auto-advance to next question
     if (currentQuestionIndex < questions.length - 1) {
       handleNextQuestion();
@@ -277,7 +285,7 @@ export default function ExamScreen() {
     const newMode = examMode === 'OPEN' ? 'CLOSED' : 'OPEN';
     setExamMode(newMode);
     logger.userAction('Exam mode toggled', { mode: newMode });
-    
+
     // Reset all validation states when switching modes
     setHasCheckedAnswer(new Array(questions.length).fill(false));
     setAnswerValidation(new Array(questions.length).fill(false));
@@ -289,12 +297,14 @@ export default function ExamScreen() {
 
     // Calculate actual time spent
     const endTime = new Date();
-    const timeSpentMinutes = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60));
+    const timeSpentMinutes = Math.round(
+      (endTime.getTime() - startTime.getTime()) / (1000 * 60),
+    );
 
     logger.info('ExamScreen', 'Exam submission initiated', {
       examSlug: exam!.slug,
-      answeredQuestions: answers.filter(answer => answer !== -1).length,
-      totalQuestions: questions.length
+      answeredQuestions: answers.filter((answer) => answer !== -1).length,
+      totalQuestions: questions.length,
     });
 
     // Check if all questions are answered
@@ -307,20 +317,22 @@ export default function ExamScreen() {
       Alert.alert(
         'No Answers Selected',
         'Please answer at least one question before submitting the exam.',
-        [{ text: 'OK' }]
+        [{ text: 'OK' }],
       );
       return;
     }
 
     if (unansweredCount > 0) {
-      logger.warn('ExamScreen', 'Submission with unanswered questions', { unansweredCount });
+      logger.warn('ExamScreen', 'Submission with unanswered questions', {
+        unansweredCount,
+      });
       Alert.alert(
         'Unanswered Questions',
         `You still have ${unansweredCount} unanswered questions. Are you sure you want to submit the exam?`,
         [
           { text: 'Cancel', style: 'cancel' },
           { text: 'Submit', onPress: submitExam },
-        ]
+        ],
       );
       return;
     }
@@ -330,41 +342,47 @@ export default function ExamScreen() {
 
   const submitExam = async () => {
     setIsSubmitting(true);
-    
+
     // Calculate actual time spent
     const endTime = new Date();
-    const timeSpentMinutes = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60));
-    
-    logger.info('ExamScreen', 'Submitting exam answers', { examSlug: exam!.slug });
+    const timeSpentMinutes = Math.round(
+      (endTime.getTime() - startTime.getTime()) / (1000 * 60),
+    );
+
+    logger.info('ExamScreen', 'Submitting exam answers', {
+      examSlug: exam!.slug,
+    });
 
     try {
       const response = await submitExamResults(
         exam!.slug,
         {
           answers: answers,
-          timeSpent: timeSpentMinutes
+          timeSpent: timeSpentMinutes,
         },
-        null // Token will be retrieved from storage by the service
+        null, // Token will be retrieved from storage by the service
       );
 
       if (response.success) {
         logger.info('ExamScreen', 'Exam submitted successfully', {
           examSlug: exam!.slug,
           score: response.result.score,
-          passed: response.result.passed
+          passed: response.result.passed,
         });
-        
+
         // Track exam completion in progress service
         progressService.updateStats('exam_completed', {
           score: response.result.score,
           passed: response.result.passed,
           timeSpent: response.result.timeSpent || timeSpentMinutes,
           examSlug: exam!.slug,
-          examTitle: exam!.title
+          examTitle: exam!.title,
         });
-        
+
         // Track exam completion activity
-        const activityType = response.result.passed ? ACTIVITY_TYPES.EXAM_PASSED : ACTIVITY_TYPES.EXAM_FAILED;
+        const activityType = response.result.passed
+          ? ACTIVITY_TYPES.EXAM_PASSED
+          : ACTIVITY_TYPES.EXAM_FAILED;
         activityService.addActivity(ACTIVITY_TYPES.EXAM_COMPLETED, {
           examId: exam!.id,
           examSlug: exam!.slug,
@@ -373,9 +391,9 @@ export default function ExamScreen() {
           passed: response.result.passed,
           timeSpent: response.result.timeSpent || timeSpentMinutes,
           category: exam!.category?.name,
-          userId: user?.id
+          userId: user?.id,
         });
-        
+
         // Also track pass/fail specific activity
         activityService.addActivity(activityType, {
           examId: exam!.id,
@@ -384,13 +402,13 @@ export default function ExamScreen() {
           score: response.result.score,
           timeSpent: response.result.timeSpent || timeSpentMinutes,
           category: exam!.category?.name,
-          userId: user?.id
+          userId: user?.id,
         });
-        
+
         router.replace(
           `/exam/result/${exam!.slug}?resultData=${encodeURIComponent(
-            JSON.stringify(response.result)
-          )}`
+            JSON.stringify(response.result),
+          )}`,
         );
       }
     } catch (error) {
@@ -427,7 +445,7 @@ export default function ExamScreen() {
         currentQuestionIndex={currentQuestionIndex}
         totalQuestions={questions.length}
         timerMode="total"
-        totalDuration={exam.totalTimeDuration || (30 * 60)} // Use exam duration or 30 min default
+        totalDuration={exam.totalTimeDuration || 30 * 60} // Use exam duration or 30 min default
         onTimeExpired={handleTimeExpired}
         onQuestionTimeExpired={handleQuestionTimeExpired}
         isTimerActive={isTimerActive}
@@ -439,7 +457,9 @@ export default function ExamScreen() {
         currentQuestionIndex={currentQuestionIndex}
         answers={answers}
         onQuestionSelect={handleQuestionSelect}
-        onToggleQuestionSidebar={() => setShowQuestionSidebar(!showQuestionSidebar)}
+        onToggleQuestionSidebar={() =>
+          setShowQuestionSidebar(!showQuestionSidebar)
+        }
         isSoundEnabled={isSoundEnabled}
         examMode={examMode}
         onToggleSound={handleToggleSound}
@@ -469,8 +489,8 @@ export default function ExamScreen() {
           isCorrect={answerValidation[currentQuestionIndex]}
           examMode={examMode}
           canRetryQuestion={
-            examMode === 'OPEN' && 
-            hasCheckedAnswer[currentQuestionIndex] && 
+            examMode === 'OPEN' &&
+            hasCheckedAnswer[currentQuestionIndex] &&
             !answerValidation[currentQuestionIndex]
           }
           onRetryQuestion={handleRetryQuestion}
@@ -478,7 +498,8 @@ export default function ExamScreen() {
         />
 
         {/* Explanation for Open Exams */}
-        {examMode === 'OPEN' && hasCheckedAnswer[currentQuestionIndex] && 
+        {examMode === 'OPEN' &&
+          hasCheckedAnswer[currentQuestionIndex] &&
           currentQuestion.explanation && (
             <View style={styles.explanationContainer}>
               <Text style={styles.explanationTitle}>Explanation:</Text>
@@ -497,8 +518,8 @@ export default function ExamScreen() {
         examMode={examMode}
         isSubmitting={isSubmitting}
         canRetryQuestion={
-          examMode === 'OPEN' && 
-          hasCheckedAnswer[currentQuestionIndex] && 
+          examMode === 'OPEN' &&
+          hasCheckedAnswer[currentQuestionIndex] &&
           !answerValidation[currentQuestionIndex]
         }
         onPrevious={handlePreviousQuestion}

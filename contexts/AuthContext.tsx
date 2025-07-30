@@ -62,7 +62,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userData = await storageService.getItem('user');
       if (userData) {
         const user = userData;
-        logger.info('AuthContext', 'User found in storage', { userId: user.id });
+        logger.info('AuthContext', 'User found in storage', {
+          userId: user.id,
+        });
         // Initialize progress tracking for returning user
         progressService?.initializeUser?.(user.id);
         setUser(user);
@@ -81,9 +83,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     logger.info('AuthContext', 'Login attempt started', { email });
     try {
       const response = await loginAPI({ email, password });
-      
+
       if (response.success && response.user) {
-        logger.info('AuthContext', 'Login successful', { userId: response.user.id, tier: response.user.tier });
+        logger.info('AuthContext', 'Login successful', {
+          userId: response.user.id,
+          tier: response.user.tier,
+        });
         const userData = {
           id: response.user.id,
           name: response.user.name,
@@ -100,24 +105,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (response.refreshToken) {
           await storageService.setItem('refreshToken', response.refreshToken);
         }
-        
+
         // Initialize progress tracking for new session
         progressService?.initializeUser?.(userData.id);
-        
+
         // Track login session
-        progressService?.updateStats?.('session_start', { timestamp: new Date().toISOString() });
-        
+        progressService?.updateStats?.('session_start', {
+          timestamp: new Date().toISOString(),
+        });
+
         // Track login activity
         activityService?.addActivity?.(ACTIVITY_TYPES.SESSION_STARTED, {
           userId: userData.id,
           userTier: userData.tier,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
-        
+
         setUser(userData);
         return true;
       }
-      
+
       logger.warn('AuthContext', 'Login failed - invalid response', { email });
       return false;
     } catch (error) {
@@ -141,37 +148,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       //   };
       //   await AsyncStorage.setItem('user', JSON.stringify(userData));
       //   await AsyncStorage.setItem('accessToken', 'demo-jwt-token');
-      //   
+      //
       //   // Initialize progress tracking for new session
       //   progressService?.initializeUser?.(userData.id);
-      //   
+      //
       //   // Track login session
       //   progressService?.updateStats?.('session_start', { timestamp: new Date().toISOString() });
-      //   
+      //
       //   // Track login activity
       //   activityService?.addActivity?.(ACTIVITY_TYPES.SESSION_STARTED, {
       //     userId: userData.id,
       //     userTier: userData.tier,
       //     timestamp: new Date().toISOString()
       //   });
-      //   
+      //
       //   setUser(userData);
       //   return true;
       // }
-      
+
       return false;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const register = async (name: string, email: string, password: string): Promise<boolean> => {
+  const register = async (
+    name: string,
+    email: string,
+    password: string,
+  ): Promise<boolean> => {
     setIsLoading(true);
     logger.info('AuthContext', 'Registration attempt started', { email, name });
     try {
       // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       logger.info('AuthContext', 'Registration successful', { email });
       const userData = {
         id: Date.now().toString(),
@@ -183,10 +194,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
       await storageService.setItem('user', userData);
       await storageService.setItem('accessToken', 'demo-jwt-token');
-      
+
       // Initialize progress tracking for new user
       progressService?.initializeUser?.(userData.id);
-      
+
       setUser(userData);
       return true;
     } catch (error) {
@@ -200,22 +211,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       logger.info('AuthContext', 'User logout initiated');
-      
+
       // Track session end before logout
       if (user) {
-        progressService?.updateStats?.('session_end', { 
+        progressService?.updateStats?.('session_end', {
           duration: 0, // Could track actual session duration
-          timestamp: new Date().toISOString() 
+          timestamp: new Date().toISOString(),
         });
-        
+
         // Track logout activity
         activityService?.addActivity?.(ACTIVITY_TYPES.SESSION_ENDED, {
           userId: user.id,
           sessionDuration: 0, // Could calculate actual duration
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
-      
+
       await storageService.removeItem('user');
       await storageService.removeItem('accessToken');
       await storageService.removeItem('refreshToken');
@@ -244,7 +255,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       originalConsoleError.apply(console, args);
     };
-    
+
     return () => {
       console.error = originalConsoleError;
     };

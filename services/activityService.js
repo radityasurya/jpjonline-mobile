@@ -1,6 +1,6 @@
 /**
  * Activity Tracking Service
- * 
+ *
  * Manages user activity tracking using MMKV storage on mobile.
  * Disabled on web platform.
  */
@@ -26,7 +26,7 @@ export const ACTIVITY_TYPES = {
   EXAM_FAILED: 'exam_failed',
   SESSION_STARTED: 'session_started',
   SESSION_ENDED: 'session_ended',
-  QUICK_ACTION: 'quick_action'
+  QUICK_ACTION: 'quick_action',
 };
 
 /**
@@ -44,7 +44,10 @@ class ActivityService {
    */
   async getActivities() {
     if (!this.isSupported) {
-      logger.warn('ActivityService', `Activity tracking not supported on ${this.platform} platform`);
+      logger.warn(
+        'ActivityService',
+        `Activity tracking not supported on ${this.platform} platform`,
+      );
       return [];
     }
 
@@ -65,19 +68,22 @@ class ActivityService {
     }
 
     if (!this.isSupported) {
-      logger.warn('ActivityService', `Activity tracking not supported on ${this.platform} platform`);
+      logger.warn(
+        'ActivityService',
+        `Activity tracking not supported on ${this.platform} platform`,
+      );
       return null;
     }
 
     try {
       const activities = await this.getActivities();
-      
+
       const newActivity = {
         id: Date.now().toString(),
         type: type,
         timestamp: new Date().toISOString(),
         data: data,
-        userId: data.userId || 'anonymous'
+        userId: data.userId || 'anonymous',
       };
 
       // Add to beginning of array (most recent first)
@@ -86,16 +92,25 @@ class ActivityService {
       // Keep only the last MAX_ACTIVITIES items
       const trimmedActivities = activities.slice(0, MAX_ACTIVITIES);
 
-      const success = await storageService.setItem(ACTIVITY_STORAGE_KEY, trimmedActivities);
-      
+      const success = await storageService.setItem(
+        ACTIVITY_STORAGE_KEY,
+        trimmedActivities,
+      );
+
       if (success) {
-        logger.debug('ActivityService', 'Activity added successfully', { type, activityId: newActivity.id });
+        logger.debug('ActivityService', 'Activity added successfully', {
+          type,
+          activityId: newActivity.id,
+        });
         return newActivity;
       }
     } catch (error) {
-      logger.error('ActivityService', 'Failed to add activity', { type, error });
+      logger.error('ActivityService', 'Failed to add activity', {
+        type,
+        error,
+      });
     }
-    
+
     return null;
   }
 
@@ -117,7 +132,9 @@ class ActivityService {
    */
   async getActivitiesByType(type, limit = 10) {
     const activities = await this.getActivities();
-    return activities.filter(activity => activity.type === type).slice(0, limit);
+    return activities
+      .filter((activity) => activity.type === type)
+      .slice(0, limit);
   }
 
   /**
@@ -128,7 +145,7 @@ class ActivityService {
    */
   getActivitiesInRange(startDate, endDate) {
     const activities = this.getActivities();
-    return activities.filter(activity => {
+    return activities.filter((activity) => {
       const activityDate = new Date(activity.timestamp);
       return activityDate >= startDate && activityDate <= endDate;
     });
@@ -140,9 +157,20 @@ class ActivityService {
    */
   getTodaysActivities() {
     const today = new Date();
-    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
-    
+    const startOfDay = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+    );
+    const endOfDay = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      23,
+      59,
+      59,
+    );
+
     return this.getActivitiesInRange(startOfDay, endOfDay);
   }
 
@@ -163,11 +191,23 @@ class ActivityService {
     let currentDate = new Date(today);
 
     // Check each day going backwards
-    for (let i = 0; i < 365; i++) { // Max 365 days to prevent infinite loop
-      const dayStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
-      const dayEnd = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), 23, 59, 59);
-      
-      const dayActivities = activities.filter(activity => {
+    for (let i = 0; i < 365; i++) {
+      // Max 365 days to prevent infinite loop
+      const dayStart = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        currentDate.getDate(),
+      );
+      const dayEnd = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        currentDate.getDate(),
+        23,
+        59,
+        59,
+      );
+
+      const dayActivities = activities.filter((activity) => {
         const activityDate = new Date(activity.timestamp);
         return activityDate >= dayStart && activityDate <= dayEnd;
       });
@@ -196,13 +236,13 @@ class ActivityService {
         lastActivity: null,
         typeBreakdown: {},
         supported: false,
-        platform: this.platform
+        platform: this.platform,
       };
     }
 
     const activities = await this.getActivities();
     const todaysActivities = this.getTodaysActivities();
-    
+
     const stats = {
       totalActivities: activities.length,
       todaysActivities: todaysActivities.length,
@@ -210,12 +250,13 @@ class ActivityService {
       lastActivity: activities.length > 0 ? activities[0].timestamp : null,
       typeBreakdown: {},
       supported: true,
-      platform: this.platform
+      platform: this.platform,
     };
 
     // Calculate type breakdown
-    activities.forEach(activity => {
-      stats.typeBreakdown[activity.type] = (stats.typeBreakdown[activity.type] || 0) + 1;
+    activities.forEach((activity) => {
+      stats.typeBreakdown[activity.type] =
+        (stats.typeBreakdown[activity.type] || 0) + 1;
     });
 
     return stats;
@@ -227,7 +268,10 @@ class ActivityService {
    */
   async clearAllActivities() {
     if (!this.isSupported) {
-      logger.warn('ActivityService', `Activity tracking not supported on ${this.platform} platform`);
+      logger.warn(
+        'ActivityService',
+        `Activity tracking not supported on ${this.platform} platform`,
+      );
       return false;
     }
 
@@ -250,7 +294,7 @@ class ActivityService {
    */
   formatActivityForDisplay(activity) {
     const timeAgo = this.getTimeAgo(activity.timestamp);
-    
+
     let title = 'Unknown Activity';
     let description = '';
     let icon = '📝';
@@ -261,25 +305,25 @@ class ActivityService {
         description = `Read: ${title}`;
         icon = '📖';
         break;
-      
+
       case ACTIVITY_TYPES.NOTE_BOOKMARKED:
         title = activity.data.noteTitle || 'Bookmarked a note';
         description = `Bookmarked: ${title}`;
         icon = '🔖';
         break;
-      
+
       case ACTIVITY_TYPES.NOTE_UNBOOKMARKED:
         title = activity.data.noteTitle || 'Removed bookmark';
         description = `Removed bookmark: ${title}`;
         icon = '📑';
         break;
-      
+
       case ACTIVITY_TYPES.EXAM_STARTED:
         title = activity.data.examTitle || 'Started an exam';
         description = `Started: ${title}`;
         icon = '🎯';
         break;
-      
+
       case ACTIVITY_TYPES.EXAM_COMPLETED:
         title = activity.data.examTitle || 'Completed an exam';
         description = `Completed: ${title}`;
@@ -288,19 +332,19 @@ class ActivityService {
         }
         icon = activity.data.passed ? '✅' : '❌';
         break;
-      
+
       case ACTIVITY_TYPES.SESSION_STARTED:
         title = 'Started learning session';
         description = 'Logged in to JPJOnline';
         icon = '🚀';
         break;
-      
+
       case ACTIVITY_TYPES.QUICK_ACTION:
         title = activity.data.action || 'Quick action';
         description = `Used: ${title}`;
         icon = '⚡';
         break;
-      
+
       default:
         title = activity.type.replace(/_/g, ' ').toLowerCase();
         description = title.charAt(0).toUpperCase() + title.slice(1);
@@ -312,7 +356,7 @@ class ActivityService {
       displayDescription: description,
       displayIcon: icon,
       timeAgo: timeAgo,
-      isClickable: this.isActivityClickable(activity)
+      isClickable: this.isActivityClickable(activity),
     };
   }
 
@@ -326,11 +370,14 @@ class ActivityService {
       return false;
     }
 
-    return [
-      ACTIVITY_TYPES.NOTE_VIEWED,
-      ACTIVITY_TYPES.NOTE_BOOKMARKED,
-      ACTIVITY_TYPES.EXAM_COMPLETED
-    ].includes(activity.type) && (activity.data.noteId || activity.data.examId);
+    return (
+      [
+        ACTIVITY_TYPES.NOTE_VIEWED,
+        ACTIVITY_TYPES.NOTE_BOOKMARKED,
+        ACTIVITY_TYPES.EXAM_COMPLETED,
+      ].includes(activity.type) &&
+      (activity.data.noteId || activity.data.examId)
+    );
   }
 
   /**
@@ -366,7 +413,7 @@ class ActivityService {
    */
   exportActivities() {
     const activities = this.getActivities();
-    
+
     return {
       version: '1.0.0',
       exportDate: new Date().toISOString(),
@@ -374,7 +421,7 @@ class ActivityService {
       count: activities.length,
       stats: this.getActivityStats(),
       platform: this.platform,
-      supported: this.isSupported
+      supported: this.isSupported,
     };
   }
 
@@ -385,7 +432,10 @@ class ActivityService {
    */
   importActivities(importData) {
     if (!this.isSupported) {
-      logger.warn('ActivityService', `Activity tracking not supported on ${this.platform} platform`);
+      logger.warn(
+        'ActivityService',
+        `Activity tracking not supported on ${this.platform} platform`,
+      );
       return false;
     }
 
@@ -395,18 +445,21 @@ class ActivityService {
     }
 
     try {
-      const success = storageService.setItem(ACTIVITY_STORAGE_KEY, importData.activities);
-      
+      const success = storageService.setItem(
+        ACTIVITY_STORAGE_KEY,
+        importData.activities,
+      );
+
       if (success) {
-        logger.info('ActivityService', 'Activities imported successfully', { 
-          count: importData.activities.length 
+        logger.info('ActivityService', 'Activities imported successfully', {
+          count: importData.activities.length,
         });
         return true;
       }
     } catch (error) {
       logger.error('ActivityService', 'Failed to import activities', error);
     }
-    
+
     return false;
   }
 
@@ -422,8 +475,8 @@ class ActivityService {
       features: {
         activityTracking: this.isSupported,
         persistence: this.isSupported,
-        encryption: this.isSupported
-      }
+        encryption: this.isSupported,
+      },
     };
   }
 }
@@ -447,7 +500,7 @@ export const {
   getTimeAgo,
   exportActivities,
   importActivities,
-  getPlatformInfo
+  getPlatformInfo,
 } = activityService;
 
 // Export the service instance

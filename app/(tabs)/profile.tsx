@@ -18,7 +18,8 @@ import {
   BookOpen,
   Clock,
   Crown,
-  CreditCard as Edit3,
+  UserPen,
+  Percent,
   Save,
   X,
   LogOut,
@@ -27,6 +28,7 @@ import {
   Info,
   MessageCircle,
   ExternalLink,
+  Trash2,
 } from 'lucide-react-native';
 import { progressService } from '@/services';
 import { AboutData, ContactRequest } from '@/types/api';
@@ -34,10 +36,11 @@ import { logger } from '@/utils/logger';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
-  
+
   // Check if features are supported on current platform
-  const featuresSupported = progressService?.getPlatformInfo()?.supported || false;
-  
+  const featuresSupported =
+    progressService?.getPlatformInfo()?.supported || false;
+
   const [stats, setStats] = useState({
     totalExams: 0,
     averageScore: 0,
@@ -46,7 +49,7 @@ export default function ProfileScreen() {
     bookmarkedNotes: 0,
     streak: 0,
     recentActivity: [],
-    lastActivity: null
+    lastActivity: null,
   });
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isAboutModalVisible, setIsAboutModalVisible] = useState(false);
@@ -73,22 +76,34 @@ export default function ProfileScreen() {
 
   const initializeUserProgress = async () => {
     if (!featuresSupported) {
-      logger.info('ProfileScreen', 'Progress tracking disabled on web platform');
+      logger.info(
+        'ProfileScreen',
+        'Progress tracking disabled on web platform',
+      );
       return;
     }
-    
+
     try {
-      logger.debug('ProfileScreen', 'Initializing user progress', { userId: user!.id });
+      logger.debug('ProfileScreen', 'Initializing user progress', {
+        userId: user!.id,
+      });
       progressService.initializeUser(user!.id);
       await loadStats();
     } catch (error) {
-      logger.error('ProfileScreen', 'Failed to initialize user progress', error);
+      logger.error(
+        'ProfileScreen',
+        'Failed to initialize user progress',
+        error,
+      );
     }
   };
 
   const loadStats = async () => {
     if (!featuresSupported) {
-      logger.info('ProfileScreen', 'Progress tracking disabled on web platform');
+      logger.info(
+        'ProfileScreen',
+        'Progress tracking disabled on web platform',
+      );
       setStats({
         totalExams: 0,
         averageScore: 0,
@@ -97,16 +112,20 @@ export default function ProfileScreen() {
         bookmarkedNotes: 0,
         currentStreak: 0,
         recentActivity: [],
-        lastActivity: null
+        lastActivity: null,
       });
       return;
     }
-    
+
     try {
       logger.debug('ProfileScreen', 'Loading user statistics');
       const response = await progressService.getDashboardSummary();
       if (response.success) {
-        logger.debug('ProfileScreen', 'Stats loaded successfully', response.summary);
+        logger.debug(
+          'ProfileScreen',
+          'Stats loaded successfully',
+          response.summary,
+        );
         setStats(response.summary);
       } else {
         logger.warn('ProfileScreen', 'Failed to load stats', response.error);
@@ -119,7 +138,7 @@ export default function ProfileScreen() {
           bookmarkedNotes: 0,
           currentStreak: 0,
           recentActivity: [],
-          lastActivity: null
+          lastActivity: null,
         });
       }
     } catch (error) {
@@ -156,10 +175,11 @@ export default function ProfileScreen() {
     try {
       // Mock about data - replace with real API when available
       const mockAboutData = {
-        title: "About JPJOnline",
-        content: "JPJOnline is Malaysia's premier digital learning platform for driving license preparation. Our comprehensive system provides:\n\n• Interactive learning materials covering all aspects of Malaysian traffic laws\n• Practice tests that simulate the actual JPJ examination\n• Real-time progress tracking and performance analytics\n• Expert-curated content updated regularly\n\nOur mission is to make driving education accessible, engaging, and effective for all Malaysians. With over 10,000 successful students, we're committed to helping you pass your driving test with confidence.\n\nFounded in 2024, JPJOnline combines modern technology with proven educational methods to deliver the best learning experience possible.",
-        version: "1.0.0",
-        lastUpdated: "2024-01-15"
+        title: 'About JPJOnline',
+        content:
+          "JPJOnline is Malaysia's premier digital learning platform for driving license preparation. Our comprehensive system provides:\n\n• Interactive learning materials covering all aspects of Malaysian traffic laws\n• Practice tests that simulate the actual JPJ examination\n• Real-time progress tracking and performance analytics\n• Expert-curated content updated regularly\n\nOur mission is to make driving education accessible, engaging, and effective for all Malaysians. With over 10,000 successful students, we're committed to helping you pass your driving test with confidence.\n\nFounded in 2024, JPJOnline combines modern technology with proven educational methods to deliver the best learning experience possible.",
+        version: '1.0.0',
+        lastUpdated: '2024-01-15',
       };
       setAboutData(mockAboutData);
       logger.debug('ProfileScreen', 'About data loaded');
@@ -187,14 +207,17 @@ export default function ProfileScreen() {
     }
 
     setIsSubmittingContact(true);
-    logger.userAction('Contact form submitted', { 
+    logger.userAction('Contact form submitted', {
       subject: contactForm.subject,
-      hasMessage: !!contactForm.message 
+      hasMessage: !!contactForm.message,
     });
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      Alert.alert('Success', 'Thank you for your message! We will get back to you within 24 hours.');
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      Alert.alert(
+        'Success',
+        'Thank you for your message! We will get back to you within 24 hours.',
+      );
       setIsContactModalVisible(false);
       setContactForm({ subject: '', message: '', email: user?.email || '' });
       logger.info('ProfileScreen', 'Contact form submitted successfully');
@@ -210,15 +233,51 @@ export default function ProfileScreen() {
     logger.userAction('Logout initiated');
     Alert.alert('Logout', 'Are you sure you want to logout?', [
       { text: 'Cancel', style: 'cancel' },
-      { 
-        text: 'Logout', 
-        style: 'destructive', 
+      {
+        text: 'Logout',
+        style: 'destructive',
         onPress: () => {
           logger.info('ProfileScreen', 'User logged out');
           logout();
-        }
+        },
       },
     ]);
+
+    const handleDeleteAccount = () => {
+      logger.userAction('Delete account initiated');
+      Alert.alert(
+        'Confirm Delete',
+        'Are you sure you want to delete your account? This action is irreversible.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                // Simulate API call or call your delete API here
+                logger.info('ProfileScreen', 'Account deletion confirmed');
+                Alert.alert(
+                  'Account Deleted',
+                  'Your account has been deleted.',
+                );
+                logout(); // or redirect to onboarding
+              } catch (error) {
+                logger.error(
+                  'ProfileScreen',
+                  'Failed to delete account',
+                  error,
+                );
+                Alert.alert(
+                  'Error',
+                  'Unable to delete account. Try again later.',
+                );
+              }
+            },
+          },
+        ],
+      );
+    };
   };
 
   const formatStudyTime = (minutes: number) => {
@@ -228,7 +287,10 @@ export default function ProfileScreen() {
   };
 
   const handleActivityClick = (activity: any) => {
-    logger.userAction('Activity clicked', { type: activity.type, id: activity.id });
+    logger.userAction('Activity clicked', {
+      type: activity.type,
+      id: activity.id,
+    });
     // Navigation logic can be added here when activity data is available
   };
   return (
@@ -252,7 +314,7 @@ export default function ProfileScreen() {
             style={styles.editButton}
             onPress={handleEditProfile}
           >
-            <Edit3 size={20} color="#666666" />
+            <UserPen size={20} color="#666666" />
           </TouchableOpacity>
         </View>
       </View>
@@ -271,6 +333,7 @@ export default function ProfileScreen() {
           </View>
 
           <View style={styles.statCard}>
+            <Percent size={24} color="#459410ff" />
             <Text style={styles.statNumber}>
               {featuresSupported ? `${stats.averageScore}%` : 'N/A'}
             </Text>
@@ -280,7 +343,9 @@ export default function ProfileScreen() {
           <View style={styles.statCard}>
             <Clock size={24} color="#2196F3" />
             <Text style={styles.statNumber}>
-              {featuresSupported ? formatStudyTime(stats.totalStudyTime) : 'N/A'}
+              {featuresSupported
+                ? formatStudyTime(stats.totalStudyTime)
+                : 'N/A'}
             </Text>
             <Text style={styles.statLabel}>Study Time</Text>
           </View>
@@ -297,7 +362,7 @@ export default function ProfileScreen() {
         <View style={styles.achievementCard}>
           <Text style={styles.achievementTitle}>Study Streak</Text>
           <Text style={styles.streakNumber}>
-            {featuresSupported ? (stats.currentStreak || 0) : 'N/A'}
+            {featuresSupported ? stats.currentStreak || 0 : 'N/A'}
           </Text>
           <Text style={styles.streakLabel}>days in a row</Text>
           {!featuresSupported && (
@@ -339,6 +404,16 @@ export default function ProfileScreen() {
         <TouchableOpacity style={styles.settingItem} onPress={handleLogout}>
           <LogOut size={20} color="#FF3B30" />
           <Text style={[styles.settingText, { color: '#FF3B30' }]}>Logout</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.settingItem}
+          onPress={handleDeleteAccount}
+        >
+          <Trash2 size={20} color="#FF3B30" />
+          <Text style={[styles.settingText, { color: '#FF3B30' }]}>
+            Delete Account
+          </Text>
         </TouchableOpacity>
       </View>
 

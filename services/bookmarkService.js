@@ -1,6 +1,6 @@
 /**
  * Bookmark Service
- * 
+ *
  * Manages note bookmarks using MMKV storage on mobile.
  * Disabled on web platform.
  */
@@ -27,7 +27,10 @@ class BookmarkService {
    */
   getBookmarks() {
     if (!this.isSupported) {
-      logger.warn('BookmarkService', `Bookmarks not supported on ${this.platform} platform`);
+      logger.warn(
+        'BookmarkService',
+        `Bookmarks not supported on ${this.platform} platform`,
+      );
       return [];
     }
 
@@ -68,7 +71,9 @@ class BookmarkService {
       if (progressService && progressService.updateBookmarkCount) {
         const bookmarkCount = this.getBookmarks().length;
         progressService.updateBookmarkCount(bookmarkCount);
-        logger.debug('BookmarkService', 'Updated bookmark stats', { count: bookmarkCount });
+        logger.debug('BookmarkService', 'Updated bookmark stats', {
+          count: bookmarkCount,
+        });
       }
     } catch (error) {
       logger.error('BookmarkService', 'Failed to update bookmark stats', error);
@@ -87,21 +92,27 @@ class BookmarkService {
     }
 
     if (!this.isSupported) {
-      logger.warn('BookmarkService', `Bookmarks not supported on ${this.platform} platform`);
+      logger.warn(
+        'BookmarkService',
+        `Bookmarks not supported on ${this.platform} platform`,
+      );
       return false;
     }
 
     try {
       const bookmarks = this.getBookmarks();
-      
+
       if (!bookmarks.includes(noteId)) {
         bookmarks.push(noteId);
-        const success = storageService.setItem(BOOKMARKS_STORAGE_KEY, bookmarks);
-        
+        const success = storageService.setItem(
+          BOOKMARKS_STORAGE_KEY,
+          bookmarks,
+        );
+
         if (success) {
           // Update bookmark statistics
           this.updateBookmarkStats();
-          
+
           // Track activity
           try {
             const activityService = require('./activityService.js').default;
@@ -109,14 +120,20 @@ class BookmarkService {
               activityService.addActivity('note_bookmarked', {
                 noteId: noteId,
                 noteTitle: 'Note', // Could be enhanced to include actual title
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
               });
             }
           } catch (error) {
-            logger.error('BookmarkService', 'Failed to track bookmark activity', error);
+            logger.error(
+              'BookmarkService',
+              'Failed to track bookmark activity',
+              error,
+            );
           }
-          
-          logger.info('BookmarkService', 'Bookmark added successfully', { noteId });
+
+          logger.info('BookmarkService', 'Bookmark added successfully', {
+            noteId,
+          });
           return true;
         }
       } else {
@@ -124,9 +141,12 @@ class BookmarkService {
         return true; // Already bookmarked, consider it success
       }
     } catch (error) {
-      logger.error('BookmarkService', 'Failed to add bookmark', { noteId, error });
+      logger.error('BookmarkService', 'Failed to add bookmark', {
+        noteId,
+        error,
+      });
     }
-    
+
     return false;
   }
 
@@ -142,21 +162,27 @@ class BookmarkService {
     }
 
     if (!this.isSupported) {
-      logger.warn('BookmarkService', `Bookmarks not supported on ${this.platform} platform`);
+      logger.warn(
+        'BookmarkService',
+        `Bookmarks not supported on ${this.platform} platform`,
+      );
       return false;
     }
 
     try {
       const bookmarks = this.getBookmarks();
-      const filteredBookmarks = bookmarks.filter(id => id !== noteId);
-      
+      const filteredBookmarks = bookmarks.filter((id) => id !== noteId);
+
       if (filteredBookmarks.length !== bookmarks.length) {
-        const success = storageService.setItem(BOOKMARKS_STORAGE_KEY, filteredBookmarks);
-        
+        const success = storageService.setItem(
+          BOOKMARKS_STORAGE_KEY,
+          filteredBookmarks,
+        );
+
         if (success) {
           // Update bookmark statistics
           this.updateBookmarkStats();
-          
+
           // Track activity
           try {
             const activityService = require('./activityService.js').default;
@@ -164,14 +190,20 @@ class BookmarkService {
               activityService.addActivity('note_unbookmarked', {
                 noteId: noteId,
                 noteTitle: 'Note', // Could be enhanced to include actual title
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
               });
             }
           } catch (error) {
-            logger.error('BookmarkService', 'Failed to track unbookmark activity', error);
+            logger.error(
+              'BookmarkService',
+              'Failed to track unbookmark activity',
+              error,
+            );
           }
-          
-          logger.info('BookmarkService', 'Bookmark removed successfully', { noteId });
+
+          logger.info('BookmarkService', 'Bookmark removed successfully', {
+            noteId,
+          });
           return true;
         }
       } else {
@@ -179,9 +211,12 @@ class BookmarkService {
         return true; // Not bookmarked, consider removal success
       }
     } catch (error) {
-      logger.error('BookmarkService', 'Failed to remove bookmark', { noteId, error });
+      logger.error('BookmarkService', 'Failed to remove bookmark', {
+        noteId,
+        error,
+      });
     }
-    
+
     return false;
   }
 
@@ -197,12 +232,15 @@ class BookmarkService {
     }
 
     if (!this.isSupported) {
-      logger.warn('BookmarkService', `Bookmarks not supported on ${this.platform} platform`);
+      logger.warn(
+        'BookmarkService',
+        `Bookmarks not supported on ${this.platform} platform`,
+      );
       return false;
     }
 
     const isCurrentlyBookmarked = await this.isBookmarked(noteId);
-    
+
     if (isCurrentlyBookmarked) {
       const success = this.removeBookmark(noteId);
       return success ? false : isCurrentlyBookmarked; // Return false if successfully removed
@@ -219,7 +257,10 @@ class BookmarkService {
    */
   getBookmarkedNotes(notes) {
     if (!Array.isArray(notes)) {
-      logger.warn('BookmarkService', 'Invalid notes array provided to getBookmarkedNotes');
+      logger.warn(
+        'BookmarkService',
+        'Invalid notes array provided to getBookmarkedNotes',
+      );
       return [];
     }
 
@@ -228,7 +269,7 @@ class BookmarkService {
     }
 
     const bookmarkIds = this.getBookmarks();
-    return notes.filter(note => bookmarkIds.includes(note.id));
+    return notes.filter((note) => bookmarkIds.includes(note.id));
   }
 
   /**
@@ -237,7 +278,10 @@ class BookmarkService {
    */
   async clearAllBookmarks() {
     if (!this.isSupported) {
-      logger.warn('BookmarkService', `Bookmarks not supported on ${this.platform} platform`);
+      logger.warn(
+        'BookmarkService',
+        `Bookmarks not supported on ${this.platform} platform`,
+      );
       return false;
     }
 
@@ -265,18 +309,18 @@ class BookmarkService {
         lastBookmarked: null,
         isEmpty: true,
         supported: false,
-        platform: this.platform
+        platform: this.platform,
       };
     }
 
     const bookmarks = this.getBookmarks();
-    
+
     return {
       totalBookmarks: bookmarks.length,
       lastBookmarked: null, // Could be enhanced to track timestamps
       isEmpty: bookmarks.length === 0,
       supported: true,
-      platform: this.platform
+      platform: this.platform,
     };
   }
 
@@ -286,14 +330,14 @@ class BookmarkService {
    */
   exportBookmarks() {
     const bookmarks = this.getBookmarks();
-    
+
     return {
       version: '1.0.0',
       exportDate: new Date().toISOString(),
       bookmarks: bookmarks,
       count: bookmarks.length,
       platform: this.platform,
-      supported: this.isSupported
+      supported: this.isSupported,
     };
   }
 
@@ -304,7 +348,10 @@ class BookmarkService {
    */
   importBookmarks(importData) {
     if (!this.isSupported) {
-      logger.warn('BookmarkService', `Bookmarks not supported on ${this.platform} platform`);
+      logger.warn(
+        'BookmarkService',
+        `Bookmarks not supported on ${this.platform} platform`,
+      );
       return false;
     }
 
@@ -314,19 +361,22 @@ class BookmarkService {
     }
 
     try {
-      const success = storageService.setItem(BOOKMARKS_STORAGE_KEY, importData.bookmarks);
-      
+      const success = storageService.setItem(
+        BOOKMARKS_STORAGE_KEY,
+        importData.bookmarks,
+      );
+
       if (success) {
         this.updateBookmarkStats();
-        logger.info('BookmarkService', 'Bookmarks imported successfully', { 
-          count: importData.bookmarks.length 
+        logger.info('BookmarkService', 'Bookmarks imported successfully', {
+          count: importData.bookmarks.length,
         });
         return true;
       }
     } catch (error) {
       logger.error('BookmarkService', 'Failed to import bookmarks', error);
     }
-    
+
     return false;
   }
 
@@ -342,8 +392,8 @@ class BookmarkService {
       features: {
         bookmarks: this.isSupported,
         persistence: this.isSupported,
-        encryption: this.isSupported
-      }
+        encryption: this.isSupported,
+      },
     };
   }
 }
@@ -363,7 +413,7 @@ export const {
   getBookmarkStats,
   exportBookmarks,
   importBookmarks,
-  getPlatformInfo
+  getPlatformInfo,
 } = bookmarkService;
 
 // Export the service instance

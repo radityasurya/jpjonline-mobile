@@ -26,10 +26,12 @@ export function ExamControls({
         ) : (
           <VolumeX size={18} color="#FF3B30" />
         )}
-        <Text style={[
-          styles.controlText,
-          { color: isSoundEnabled ? '#4CAF50' : '#FF3B30' }
-        ]}>
+        <Text
+          style={[
+            styles.controlText,
+            { color: isSoundEnabled ? '#4CAF50' : '#FF3B30' },
+          ]}
+        >
           Sound {isSoundEnabled ? 'On' : 'Off'}
         </Text>
       </TouchableOpacity>
@@ -43,10 +45,12 @@ export function ExamControls({
         ) : (
           <Unlock size={18} color="#2196F3" />
         )}
-        <Text style={[
-          styles.controlText,
-          { color: examMode === 'CLOSED' ? '#FF9800' : '#2196F3' }
-        ]}>
+        <Text
+          style={[
+            styles.controlText,
+            { color: examMode === 'CLOSED' ? '#FF9800' : '#2196F3' },
+          ]}
+        >
           {examMode} Mode
         </Text>
       </TouchableOpacity>

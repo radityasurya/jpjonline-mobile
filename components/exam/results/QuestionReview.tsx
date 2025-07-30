@@ -184,7 +184,7 @@ export function QuestionReview({
 
       <View style={styles.answersContainer}>
         {options.map((option: any, index: number) =>
-          renderAnswerOption(option, index)
+          renderAnswerOption(option, index),
         )}
       </View>
 

@@ -1,10 +1,5 @@
 import { Tabs } from 'expo-router';
-import {
-  BookOpen,
-  ClipboardList,
-  UserCircle,
-  Home,
-} from 'lucide-react-native';
+import { BookOpen, ClipboardList, UserCircle, Home } from 'lucide-react-native';
 
 export default function TabLayout() {
   return (
@@ -25,14 +20,13 @@ export default function TabLayout() {
           fontSize: 12,
           fontWeight: '500',
         },
-      }}>
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ size, color }) => (
-            <Home size={size} color={color} />
-          ),
+          tabBarIcon: ({ size, color }) => <Home size={size} color={color} />,
         }}
       />
       <Tabs.Screen

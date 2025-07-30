@@ -773,4 +773,31 @@ const styles = StyleSheet.create({
     marginTop: 10,
     lineHeight: 18,
   },
+  dangerZone: {
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#FFE6E6',
+    backgroundColor: '#FFF8F8',
+  },
+  dangerZoneTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FF3B30',
+    marginBottom: 12,
+  },
+  deleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FF3B30',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    gap: 8,
+  },
+  deleteButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
 });

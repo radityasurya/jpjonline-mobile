@@ -18,7 +18,8 @@ export {
 export {
   getUserProfile,
   updateUserProfile,
-  changePassword
+  changePassword,
+  deleteUserAccount
 } from './userService.js';
 
 // Notes services

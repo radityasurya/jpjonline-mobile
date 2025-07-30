@@ -166,3 +166,44 @@ export const changePassword = async (token, passwordData) => {
     throw error;
   }
 };
+
+/**
+ * Delete User Account
+ * @param {string} token - JWT token
+ * @returns {Promise<Object>} API response
+ */
+export const deleteUserAccount = async (token) => {
+  try {
+    logger.info('UserService', 'Deleting user account');
+    logger.apiRequest('DELETE', API_CONFIG.ENDPOINTS.USER.PROFILE);
+    
+    // TODO: Uncomment when CORS is configured on backend
+    // const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.USER.PROFILE), {
+    //   method: 'DELETE',
+    //   headers: getAuthHeaders(token),
+    // });
+    // 
+    // if (!response.ok) {
+    //   const errorData = await response.json();
+    //   throw new Error(errorData.error || 'Failed to delete account');
+    // }
+    // 
+    // return await response.json();
+
+    // Mock response - remove when API is ready
+    logger.debug('UserService', 'Using mock delete account response');
+    await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate network delay
+    
+    const mockResponse = {
+      success: true,
+      message: "Account deleted successfully"
+    };
+    
+    logger.info('UserService', 'Account deleted successfully');
+    logger.apiResponse('DELETE', API_CONFIG.ENDPOINTS.USER.PROFILE, 200);
+    return mockResponse;
+  } catch (error) {
+    logger.error('UserService', 'Failed to delete user account', error);
+    throw error;
+  }
+};

@@ -5,7 +5,7 @@
  * Uses expo-audio for cross-platform audio support with local assets.
  */
 
-import { Audio } from 'expo-audio';
+import { Audio } from 'expo-av';
 import { Platform } from 'react-native';
 import { logger } from './logger.js';
 

@@ -43,7 +43,7 @@ class BookmarkService {
    * @param {string} noteId - Note ID to check
    * @returns {boolean} Whether the note is bookmarked
    */
-  async isBookmarked(noteId) {
+  isBookmarked(noteId) {
     if (!noteId) {
       logger.warn('BookmarkService', 'No noteId provided to isBookmarked');
       return false;
@@ -225,7 +225,7 @@ class BookmarkService {
    * @param {string} noteId - Note ID to toggle
    * @returns {boolean} New bookmark status (true if now bookmarked, false if removed)
    */
-  async toggleBookmark(noteId) {
+  toggleBookmark(noteId) {
     if (!noteId) {
       logger.warn('BookmarkService', 'No noteId provided to toggleBookmark');
       return false;
@@ -239,7 +239,7 @@ class BookmarkService {
       return false;
     }
 
-    const isCurrentlyBookmarked = await this.isBookmarked(noteId);
+    const isCurrentlyBookmarked = this.isBookmarked(noteId);
 
     if (isCurrentlyBookmarked) {
       const success = this.removeBookmark(noteId);

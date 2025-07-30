@@ -116,15 +116,12 @@ export default function NotesScreen() {
   }, [searchQuery, selectedCategory, notesData, showBookmarksOnly, user]);
 
   useEffect(() => {
-    if (!notesData || !user) return;
+    if (!notesData || !user || !featuresSupported) return;
     loadBookmarkStates();
   }, [notesData, user]);
 
   const loadBookmarkStates = () => {
-    if (!notesData) return;
-
-    // Skip bookmark loading on unsupported platforms
-    if (!featuresSupported) {
+    if (!notesData || !featuresSupported) {
       logger.info('NotesScreen', 'Bookmark features disabled on web platform');
       return;
     }

@@ -242,42 +242,42 @@ export default function ProfileScreen() {
         },
       },
     ]);
+  };
 
-    const handleDeleteAccount = () => {
-      logger.userAction('Delete account initiated');
-      Alert.alert(
-        'Confirm Delete',
-        'Are you sure you want to delete your account? This action is irreversible.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Delete',
-            style: 'destructive',
-            onPress: async () => {
-              try {
-                // Simulate API call or call your delete API here
-                logger.info('ProfileScreen', 'Account deletion confirmed');
-                Alert.alert(
-                  'Account Deleted',
-                  'Your account has been deleted.',
-                );
-                logout(); // or redirect to onboarding
-              } catch (error) {
-                logger.error(
-                  'ProfileScreen',
-                  'Failed to delete account',
-                  error,
-                );
-                Alert.alert(
-                  'Error',
-                  'Unable to delete account. Try again later.',
-                );
-              }
-            },
+  const handleDeleteAccount = () => {
+    logger.userAction('Delete account initiated');
+    Alert.alert(
+      'Confirm Delete',
+      'Are you sure you want to delete your account? This action is irreversible.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // Simulate API call or call your delete API here
+              logger.info('ProfileScreen', 'Account deletion confirmed');
+              Alert.alert(
+                'Account Deleted',
+                'Your account has been deleted.',
+              );
+              logout(); // or redirect to onboarding
+            } catch (error) {
+              logger.error(
+                'ProfileScreen',
+                'Failed to delete account',
+                error,
+              );
+              Alert.alert(
+                'Error',
+                'Unable to delete account. Try again later.',
+              );
+            }
           },
-        ],
-      );
-    };
+        },
+      ],
+    );
   };
 
   const formatStudyTime = (minutes: number) => {

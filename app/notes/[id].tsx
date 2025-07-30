@@ -83,7 +83,8 @@ export default function NoteDetailScreen() {
 
       // Check bookmark status
       if (featuresSupported) {
-        setNoteIsBookmarked(bookmarkService.isBookmarked(noteData.id));
+        const isBookmarked = bookmarkService.isBookmarked(noteData.id);
+        setNoteIsBookmarked(isBookmarked);
       }
     } catch (error) {
       logger.error('NoteDetailScreen', 'Error fetching note', error);

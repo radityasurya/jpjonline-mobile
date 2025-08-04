@@ -38,9 +38,7 @@ export {
 } from './examsService.js';
 
 // Pages services
-export {
-  getPageBySlug,
-} from './pagesService.js';
+export { getPageBySlug } from './pagesService.js';
 
 // Progress and Statistics services
 export {

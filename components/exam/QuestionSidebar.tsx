@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   sidebar: {
     position: 'absolute',
     top: 180,
-    right: 20,
+    left: 20,
     width: 200,
     maxHeight: 400,
     backgroundColor: '#FFFFFF',

@@ -37,6 +37,11 @@ export {
   getUserExamHistory,
 } from './examsService.js';
 
+// Pages services
+export {
+  getPageBySlug,
+} from './pagesService.js';
+
 // Progress and Statistics services
 export {
   initializeUser,

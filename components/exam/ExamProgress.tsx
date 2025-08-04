@@ -40,68 +40,77 @@ export function ExamProgress({
 }: ExamProgressProps) {
   return (
     <View style={styles.navigationBar}>
-      {/* Sound Button */}
-      <TouchableOpacity
-        style={[styles.controlButton, styles.soundButton]}
-        onPress={onToggleSound}
-      >
-        {isSoundEnabled ? (
-          <Volume2 size={18} color="#4CAF50" />
-        ) : (
-          <VolumeX size={18} color="#FF3B30" />
-        )}
-      </TouchableOpacity>
+      {/* Left Section: Questions Toggle Button and Question Numbers */}
+      <View style={styles.leftSection}>
+        {/* Questions Toggle Button */}
+        <TouchableOpacity
+          style={[styles.controlButton, styles.questionsButton]}
+          onPress={onToggleQuestionSidebar}
+        >
+          <Menu size={18} color="#333333" />
+        </TouchableOpacity>
 
-      {/* Mode Button */}
-      <TouchableOpacity
-        style={[styles.controlButton, styles.modeButton]}
-        onPress={onToggleMode}
-      >
-        {examMode === 'OPEN' ? (
-          <Unlock size={18} color="#2196F3" />
-        ) : (
-          <Lock size={18} color="#FF9800" />
-        )}
-      </TouchableOpacity>
-
-      {/* Questions Toggle Button */}
-      <TouchableOpacity
-        style={[styles.controlButton, styles.questionsButton]}
-        onPress={onToggleQuestionSidebar}
-      >
-        <Menu size={18} color="#333333" />
-      </TouchableOpacity>
-
-      {/* Question Numbers */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.questionNumbersContainer}
-        contentContainerStyle={styles.questionNumbersContent}
-      >
-        {questions.map((_, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[
-              styles.questionNumberButton,
-              index === currentQuestionIndex && styles.currentQuestionNumber,
-              answers[index] !== -1 && styles.answeredQuestionNumber,
-            ]}
-            onPress={() => onQuestionSelect(index)}
-          >
-            <Text
+        {/* Question Numbers */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.questionNumbersContainer}
+          contentContainerStyle={styles.questionNumbersContent}
+        >
+          {questions.map((_, index) => (
+            <TouchableOpacity
+              key={index}
               style={[
-                styles.questionNumberText,
-                index === currentQuestionIndex &&
-                  styles.currentQuestionNumberText,
-                answers[index] !== -1 && styles.answeredQuestionNumberText,
+                styles.questionNumberButton,
+                index === currentQuestionIndex && styles.currentQuestionNumber,
+                answers[index] !== -1 && styles.answeredQuestionNumber,
               ]}
+              onPress={() => onQuestionSelect(index)}
             >
-              {index + 1}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+              <Text
+                style={[
+                  styles.questionNumberText,
+                  index === currentQuestionIndex &&
+                    styles.currentQuestionNumberText,
+                  answers[index] !== -1 && styles.answeredQuestionNumberText,
+                ]}
+              >
+                {index + 1}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* Separator */}
+      <View style={styles.separator} />
+
+      {/* Right Section: Sound and Mode Controls */}
+      <View style={styles.rightSection}>
+        {/* Sound Button */}
+        <TouchableOpacity
+          style={[styles.controlButton, styles.soundButton]}
+          onPress={onToggleSound}
+        >
+          {isSoundEnabled ? (
+            <Volume2 size={18} color="#4CAF50" />
+          ) : (
+            <VolumeX size={18} color="#FF3B30" />
+          )}
+        </TouchableOpacity>
+
+        {/* Mode Button */}
+        <TouchableOpacity
+          style={[styles.controlButton, styles.modeButton]}
+          onPress={onToggleMode}
+        >
+          {examMode === 'OPEN' ? (
+            <Unlock size={18} color="#2196F3" />
+          ) : (
+            <Lock size={18} color="#FF9800" />
+          )}
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -115,6 +124,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
+  },
+  leftSection: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  rightSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  separator: {
+    width: 1,
+    height: 24,
+    backgroundColor: '#E0E0E0',
+    marginHorizontal: 12,
   },
   controlButton: {
     width: 36,
@@ -137,6 +161,7 @@ const styles = StyleSheet.create({
   },
   modeButton: {
     borderColor: '#2196F3',
+    marginRight: 0,
   },
   questionsButton: {
     borderColor: '#333333',

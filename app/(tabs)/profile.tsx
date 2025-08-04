@@ -1,47 +1,62 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
-  TextInput,
+  StyleSheet,
   Alert,
   Modal,
+  TextInput,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
-import { useAuth } from '@/contexts/AuthContext';
 import {
   User,
-  Settings,
-  Trophy,
-  BookOpen,
-  Clock,
-  Crown,
   UserPen,
+  Trophy,
   Percent,
-  Save,
-  X,
-  LogOut,
-  Mail,
-  Phone,
+  Clock,
+  BookOpen,
   Info,
   MessageCircle,
-  ExternalLink,
+  LogOut,
   Trash2,
+  Crown,
+  ExternalLink,
+  X,
+  Save,
+  Mail,
+  Phone,
 } from 'lucide-react-native';
-import { progressService } from '@/services';
-import { AboutData, ContactRequest } from '@/types/api';
-import { logger } from '@/utils/logger';
+import { useAuth } from '../../contexts/AuthContext';
+import { progressService } from '../../services/progressService';
+import { logger } from '../../utils/logger';
+import { getPageBySlug } from '../../services/pagesService';
+
+interface UserStats {
+  totalExams: number;
+  averageScore: number;
+  passedExams: number;
+  totalStudyTime: number;
+  bookmarkedNotes: number;
+  streak: number;
+  recentActivity: any[];
+  lastActivity: any;
+}
+
+interface AboutData {
+  title: string;
+  content: string;
+  version: string;
+  lastUpdated: string;
+}
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
+  const featuresSupported = true; // Enable features for mobile
 
-  // Check if features are supported on current platform
-  const featuresSupported =
-    progressService?.getPlatformInfo()?.supported || false;
-
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<UserStats>({
     totalExams: 0,
     averageScore: 0,
     passedExams: 0,
@@ -51,22 +66,16 @@ export default function ProfileScreen() {
     recentActivity: [],
     lastActivity: null,
   });
+
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isAboutModalVisible, setIsAboutModalVisible] = useState(false);
-  const [isContactModalVisible, setIsContactModalVisible] = useState(false);
   const [editedProfile, setEditedProfile] = useState({
     name: user?.name || '',
     email: user?.email || '',
     phone: '',
   });
   const [aboutData, setAboutData] = useState<AboutData | null>(null);
-  const [contactForm, setContactForm] = useState<ContactRequest>({
-    subject: '',
-    message: '',
-    email: user?.email || '',
-  });
   const [isLoading, setIsLoading] = useState(false);
-  const [isSubmittingContact, setIsSubmittingContact] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -110,7 +119,7 @@ export default function ProfileScreen() {
         passedExams: 0,
         totalStudyTime: 0,
         bookmarkedNotes: 0,
-        currentStreak: 0,
+        streak: 0,
         recentActivity: [],
         lastActivity: null,
       });
@@ -136,7 +145,7 @@ export default function ProfileScreen() {
           passedExams: 0,
           totalStudyTime: 0,
           bookmarkedNotes: 0,
-          currentStreak: 0,
+          streak: 0,
           recentActivity: [],
           lastActivity: null,
         });
@@ -173,59 +182,67 @@ export default function ProfileScreen() {
     setIsAboutModalVisible(true);
     setIsLoading(true);
     try {
-      // Mock about data - replace with real API when available
-      const mockAboutData = {
-        title: 'About JPJOnline',
-        content:
-          "JPJOnline is Malaysia's premier digital learning platform for driving license preparation. Our comprehensive system provides:\n\n• Interactive learning materials covering all aspects of Malaysian traffic laws\n• Practice tests that simulate the actual JPJ examination\n• Real-time progress tracking and performance analytics\n• Expert-curated content updated regularly\n\nOur mission is to make driving education accessible, engaging, and effective for all Malaysians. With over 10,000 successful students, we're committed to helping you pass your driving test with confidence.\n\nFounded in 2024, JPJOnline combines modern technology with proven educational methods to deliver the best learning experience possible.",
+      const response = await getPageBySlug('about');
+      setAboutData({
+        title: response.title,
+        content: response.content,
         version: '1.0.0',
-        lastUpdated: '2024-01-15',
-      };
-      setAboutData(mockAboutData);
-      logger.debug('ProfileScreen', 'About data loaded');
+        lastUpdated: new Date(response.updatedAt).toLocaleDateString(),
+      });
+      logger.debug('ProfileScreen', 'About data loaded from API');
     } catch (error) {
       logger.error('ProfileScreen', 'Error loading about data', error);
+      // Fallback to default data
+      setAboutData({
+        title: 'About Us',
+        content: 'Unable to load about information at this time.',
+        version: '1.0.0',
+        lastUpdated: new Date().toLocaleDateString(),
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleContactUs = () => {
+  const handleContactUs = async () => {
     logger.userAction('Contact us opened');
-    setContactForm({
-      subject: '',
-      message: '',
-      email: user?.email || '',
-    });
-    setIsContactModalVisible(true);
-  };
+    const email = 'support@jpjonline.com';
+    const subject = 'Support Request from Mobile App';
+    const body = `Hello JPJOnline Support Team,
 
-  const handleSubmitContact = async () => {
-    if (!contactForm.subject.trim() || !contactForm.message.trim()) {
-      Alert.alert('Error', 'Please fill in all required fields.');
-      return;
-    }
+I am contacting you regarding:
 
-    setIsSubmittingContact(true);
-    logger.userAction('Contact form submitted', {
-      subject: contactForm.subject,
-      hasMessage: !!contactForm.message,
-    });
+[Please describe your inquiry here]
+
+User Details:
+- Name: ${user?.name || 'N/A'}
+- Email: ${user?.email || 'N/A'}
+
+Thank you for your assistance.
+
+Best regards,
+${user?.name || 'User'}`;
+
+    const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      Alert.alert(
-        'Success',
-        'Thank you for your message! We will get back to you within 24 hours.',
-      );
-      setIsContactModalVisible(false);
-      setContactForm({ subject: '', message: '', email: user?.email || '' });
-      logger.info('ProfileScreen', 'Contact form submitted successfully');
+      const supported = await Linking.canOpenURL(mailtoUrl);
+      if (supported) {
+        await Linking.openURL(mailtoUrl);
+        logger.info('ProfileScreen', 'Email client opened successfully');
+      } else {
+        Alert.alert(
+          'Email Not Available',
+          'Please send an email to support@jpjonline.com or contact us through other means.',
+        );
+        logger.warn('ProfileScreen', 'Email client not available');
+      }
     } catch (error) {
-      logger.error('ProfileScreen', 'Error submitting contact form', error);
-      Alert.alert('Error', 'Failed to send message. Please try again.');
-    } finally {
-      setIsSubmittingContact(false);
+      logger.error('ProfileScreen', 'Error opening email client', error);
+      Alert.alert(
+        'Error',
+        'Unable to open email client. Please contact support@jpjonline.com directly.',
+      );
     }
   };
 
@@ -258,17 +275,10 @@ export default function ProfileScreen() {
             try {
               // Simulate API call or call your delete API here
               logger.info('ProfileScreen', 'Account deletion confirmed');
-              Alert.alert(
-                'Account Deleted',
-                'Your account has been deleted.',
-              );
+              Alert.alert('Account Deleted', 'Your account has been deleted.');
               logout(); // or redirect to onboarding
             } catch (error) {
-              logger.error(
-                'ProfileScreen',
-                'Failed to delete account',
-                error,
-              );
+              logger.error('ProfileScreen', 'Failed to delete account', error);
               Alert.alert(
                 'Error',
                 'Unable to delete account. Try again later.',
@@ -284,6 +294,93 @@ export default function ProfileScreen() {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+  };
+
+  const renderContent = (content: string) => {
+    // Simple markdown-like rendering
+    const lines = content.split('\n');
+    const elements: JSX.Element[] = [];
+
+    lines.forEach((line, index) => {
+      // Process inline formatting first
+      const processInlineFormatting = (text: string) => {
+        const parts: (string | JSX.Element)[] = [];
+        let currentIndex = 0;
+
+        // Bold text **text**
+        const boldRegex = /\*\*(.*?)\*\*/g;
+        let match;
+        let lastIndex = 0;
+
+        while ((match = boldRegex.exec(text)) !== null) {
+          // Add text before match
+          if (match.index > lastIndex) {
+            parts.push(text.substring(lastIndex, match.index));
+          }
+          // Add bold text
+          parts.push(
+            <Text key={`bold-${match.index}`} style={styles.boldInline}>
+              {match[1]}
+            </Text>,
+          );
+          lastIndex = match.index + match[0].length;
+        }
+
+        // Add remaining text
+        if (lastIndex < text.length) {
+          parts.push(text.substring(lastIndex));
+        }
+
+        return parts;
+      };
+
+      if (line.startsWith('# ')) {
+        elements.push(
+          <Text key={index} style={styles.heading1}>
+            {line.substring(2)}
+          </Text>,
+        );
+      } else if (line.startsWith('## ')) {
+        elements.push(
+          <Text key={index} style={styles.heading2}>
+            {line.substring(3)}
+          </Text>,
+        );
+      } else if (line.startsWith('### ')) {
+        elements.push(
+          <Text key={index} style={styles.heading3}>
+            {line.substring(4)}
+          </Text>,
+        );
+      } else if (line.startsWith('- ')) {
+        elements.push(
+          <View key={index} style={styles.listItemContainer}>
+            <Text style={styles.listBullet}>•</Text>
+            <Text style={styles.listItem}>
+              {processInlineFormatting(line.substring(2))}
+            </Text>
+          </View>,
+        );
+      } else if (line.trim() === '') {
+        elements.push(<View key={index} style={styles.spacing} />);
+      } else if (line.match(/^\d+\./)) {
+        elements.push(
+          <View key={index} style={styles.listItemContainer}>
+            <Text style={styles.paragraph}>
+              {processInlineFormatting(line)}
+            </Text>
+          </View>,
+        );
+      } else {
+        elements.push(
+          <Text key={index} style={styles.paragraph}>
+            {processInlineFormatting(line)}
+          </Text>,
+        );
+      }
+    });
+
+    return elements;
   };
 
   const handleActivityClick = (activity: any) => {
@@ -362,7 +459,7 @@ export default function ProfileScreen() {
         <View style={styles.achievementCard}>
           <Text style={styles.achievementTitle}>Study Streak</Text>
           <Text style={styles.streakNumber}>
-            {featuresSupported ? stats.currentStreak || 0 : 'N/A'}
+            {featuresSupported ? stats.streak || 0 : 'N/A'}
           </Text>
           <Text style={styles.streakLabel}>days in a row</Text>
           {!featuresSupported && (
@@ -376,18 +473,6 @@ export default function ProfileScreen() {
       {/* Settings */}
       <View style={styles.settingsSection}>
         <Text style={styles.sectionTitle}>Settings</Text>
-
-        <TouchableOpacity style={styles.settingItem}>
-          <Settings size={20} color="#666666" />
-          <Text style={styles.settingText}>App Preferences</Text>
-          <ExternalLink size={16} color="#CCCCCC" />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.settingItem}>
-          <BookOpen size={20} color="#666666" />
-          <Text style={styles.settingText}>Study History</Text>
-          <ExternalLink size={16} color="#CCCCCC" />
-        </TouchableOpacity>
 
         <TouchableOpacity style={styles.settingItem} onPress={handleAboutUs}>
           <Info size={20} color="#666666" />
@@ -510,7 +595,9 @@ export default function ProfileScreen() {
             ) : aboutData ? (
               <>
                 <Text style={styles.aboutTitle}>{aboutData.title}</Text>
-                <Text style={styles.aboutContent}>{aboutData.content}</Text>
+                <View style={styles.aboutContentContainer}>
+                  {renderContent(aboutData.content)}
+                </View>
                 <View style={styles.aboutFooter}>
                   <Text style={styles.aboutVersion}>
                     Version: {aboutData.version}
@@ -521,80 +608,6 @@ export default function ProfileScreen() {
                 </View>
               </>
             ) : null}
-          </ScrollView>
-        </View>
-      </Modal>
-
-      {/* Contact Us Modal */}
-      <Modal
-        visible={isContactModalVisible}
-        animationType="slide"
-        presentationStyle="pageSheet"
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setIsContactModalVisible(false)}>
-              <X size={24} color="#666666" />
-            </TouchableOpacity>
-            <Text style={styles.modalTitle}>Contact Us</Text>
-            <TouchableOpacity
-              onPress={handleSubmitContact}
-              disabled={isSubmittingContact}
-            >
-              {isSubmittingContact ? (
-                <ActivityIndicator size="small" color="#4CAF50" />
-              ) : (
-                <Text style={styles.sendButton}>Send</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView style={styles.modalContent}>
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Email</Text>
-              <TextInput
-                style={styles.input}
-                value={contactForm.email}
-                onChangeText={(text) =>
-                  setContactForm((prev) => ({ ...prev, email: text }))
-                }
-                placeholder="Your email address"
-                keyboardType="email-address"
-                editable={false}
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Subject *</Text>
-              <TextInput
-                style={styles.input}
-                value={contactForm.subject}
-                onChangeText={(text) =>
-                  setContactForm((prev) => ({ ...prev, subject: text }))
-                }
-                placeholder="What is this about?"
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Message *</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                value={contactForm.message}
-                onChangeText={(text) =>
-                  setContactForm((prev) => ({ ...prev, message: text }))
-                }
-                placeholder="Tell us more about your inquiry..."
-                multiline
-                numberOfLines={6}
-                textAlignVertical="top"
-              />
-            </View>
-
-            <Text style={styles.contactNote}>
-              We typically respond within 24 hours. For urgent matters, please
-              call our support line.
-            </Text>
           </ScrollView>
         </View>
       </Modal>
@@ -797,10 +810,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginLeft: 12,
   },
-  textArea: {
-    height: 120,
-    textAlignVertical: 'top',
-  },
   loadingContainer: {
     alignItems: 'center',
     paddingVertical: 40,
@@ -836,43 +845,60 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666666',
   },
-  sendButton: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#4CAF50',
+  aboutContentContainer: {
+    marginBottom: 30,
   },
-  contactNote: {
-    fontSize: 12,
-    color: '#666666',
-    fontStyle: 'italic',
-    marginTop: 10,
-    lineHeight: 18,
-  },
-  dangerZone: {
-    padding: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#FFE6E6',
-    backgroundColor: '#FFF8F8',
-  },
-  dangerZoneTitle: {
-    fontSize: 16,
+  heading1: {
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#FF3B30',
+    color: '#333333',
+    marginBottom: 16,
+    lineHeight: 32,
+  },
+  heading2: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333333',
+    marginTop: 24,
+    marginBottom: 12,
+    lineHeight: 28,
+  },
+  heading3: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333333',
+    marginTop: 20,
+    marginBottom: 8,
+    lineHeight: 24,
+  },
+  paragraph: {
+    fontSize: 16,
+    color: '#444444',
+    lineHeight: 24,
     marginBottom: 12,
   },
-  deleteButton: {
+  listItemContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FF3B30',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    gap: 8,
+    marginBottom: 8,
+    marginLeft: 16,
   },
-  deleteButtonText: {
+  listBullet: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    color: '#444444',
+    marginRight: 8,
+    lineHeight: 24,
+  },
+  listItem: {
+    flex: 1,
+    fontSize: 16,
+    color: '#444444',
+    lineHeight: 24,
+  },
+  boldInline: {
+    fontWeight: 'bold',
+    color: '#333333',
+  },
+  spacing: {
+    height: 12,
   },
 });

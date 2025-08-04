@@ -92,7 +92,7 @@ export default function ExamResultScreen() {
   if (!result) {
     return (
       <View style={styles.errorContainer}>
-        <ResultsActions onShare={() => {}} onRetry={goHome} onHome={goHome} />
+        <ResultsActions onRetry={goHome} onHome={goHome} />
       </View>
     );
   }
@@ -108,6 +108,8 @@ export default function ExamResultScreen() {
           correctAnswers={result.correctAnswers}
           totalQuestions={result.totalQuestions}
           timeSpent={result.timeSpent}
+          onShare={shareResult}
+          isSharing={isSharing}
         />
 
         <PerformanceBreakdown
@@ -137,12 +139,7 @@ export default function ExamResultScreen() {
         </View>
       </ScrollView>
 
-      <ResultsActions
-        onShare={shareResult}
-        onRetry={retryExam}
-        onHome={goHome}
-        isSharing={isSharing}
-      />
+      <ResultsActions onRetry={retryExam} onHome={goHome} />
     </View>
   );
 }

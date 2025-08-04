@@ -125,23 +125,15 @@ export function ExamTimer({
 
   return (
     <View style={styles.container}>
-      <View style={styles.timerContainer}>
-        <Clock size={20} color={timeColor} />
+      <View style={[styles.timerPill, { borderColor: timeColor }]}>
+        <Clock size={16} color={timeColor} />
         <Text style={[styles.timerText, { color: timeColor }]}>
           {formatTime(displayTime)}
         </Text>
         {displayTime <= threshold * 0.1 && (
-          <AlertTriangle size={16} color="#FF3B30" />
+          <AlertTriangle size={14} color="#FF3B30" />
         )}
       </View>
-
-      {mode === 'per-question' && (
-        <Text style={styles.modeText}>
-          Question {currentQuestionIndex + 1}/{totalQuestions}
-        </Text>
-      )}
-
-      {mode === 'total' && <Text style={styles.modeText}>Total Time</Text>}
     </View>
   );
 }
@@ -150,18 +142,24 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
   },
-  timerContainer: {
+  timerPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    borderWidth: 1.5,
+    gap: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   timerText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  modeText: {
-    fontSize: 10,
-    color: '#666666',
-    marginTop: 2,
+    fontSize: 14,
+    fontWeight: '600',
+    letterSpacing: 0.5,
   },
 });

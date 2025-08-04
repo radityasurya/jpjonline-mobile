@@ -1,10 +1,17 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
 import {
   Trophy,
   Clock,
   CircleCheck as CheckCircle,
   Circle as XCircle,
+  Share2,
 } from 'lucide-react-native';
 
 interface ResultsHeaderProps {
@@ -15,6 +22,8 @@ interface ResultsHeaderProps {
   correctAnswers: number;
   totalQuestions: number;
   timeSpent: number;
+  onShare: () => void;
+  isSharing?: boolean;
 }
 
 export function ResultsHeader({
@@ -25,6 +34,8 @@ export function ResultsHeader({
   correctAnswers,
   totalQuestions,
   timeSpent,
+  onShare,
+  isSharing = false,
 }: ResultsHeaderProps) {
   const getScoreColor = (score: number) => {
     if (score >= 80) return '#4CAF50';
@@ -43,6 +54,19 @@ export function ResultsHeader({
 
   return (
     <View style={styles.container}>
+      {/* Share Button in Header */}
+      <TouchableOpacity
+        style={styles.shareButton}
+        onPress={onShare}
+        disabled={isSharing}
+      >
+        {isSharing ? (
+          <ActivityIndicator size="small" color="#333333" />
+        ) : (
+          <Share2 size={20} color="#333333" />
+        )}
+      </TouchableOpacity>
+
       <View style={[styles.scoreCircle, { borderColor: getScoreColor(score) }]}>
         <Text style={[styles.scoreText, { color: getScoreColor(score) }]}>
           {score}%
@@ -90,6 +114,23 @@ const styles = StyleSheet.create({
     paddingTop: 80,
     paddingBottom: 40,
     paddingHorizontal: 20,
+    position: 'relative',
+  },
+  shareButton: {
+    position: 'absolute',
+    top: 60,
+    right: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   scoreCircle: {
     width: 120,

@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   Alert,
   ScrollView,
+  Platform,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
@@ -48,6 +49,9 @@ interface ApiExam {
     id: string;
     name: string;
   };
+  totalTimeDuration: number;
+  timerType: string;
+  mode: 'OPEN' | 'CLOSED';
   questions: ApiQuestion[];
 }
 
@@ -71,6 +75,15 @@ export default function ExamScreen() {
 
   const handleExitExam = () => {
     logger.userAction('Exam exit requested');
+
+    // On web/desktop, exit directly without modal
+    if (Platform.OS === 'web') {
+      logger.userAction('Exam exited', { examSlug });
+      router.replace('/(tabs)/tests');
+      return;
+    }
+
+    // On mobile, show confirmation modal
     Alert.alert(
       'Exit Exam',
       'Are you sure you want to exit? Your progress will be lost.',
@@ -112,8 +125,8 @@ export default function ExamScreen() {
       setExam(examData);
       setQuestions(examData.questions);
 
-      // Set exam mode based on exam settings or default to OPEN
-      const mode = examData.examMode === 'CLOSED' ? 'CLOSED' : 'OPEN';
+      // Set exam mode based on exam settings from API or default to OPEN
+      const mode = examData.mode === 'CLOSED' ? 'CLOSED' : 'OPEN';
       setExamMode(mode);
 
       // Set start time for duration calculation
@@ -445,7 +458,7 @@ export default function ExamScreen() {
         currentQuestionIndex={currentQuestionIndex}
         totalQuestions={questions.length}
         timerMode="total"
-        totalDuration={exam.totalTimeDuration || 30 * 60} // Use exam duration or 30 min default
+        totalDuration={exam.totalTimeDuration || 30 * 60} // Use exam duration from API or 30 min default
         onTimeExpired={handleTimeExpired}
         onQuestionTimeExpired={handleQuestionTimeExpired}
         isTimerActive={isTimerActive}

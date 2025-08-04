@@ -491,6 +491,32 @@ export const contactAPI = {
       data: usersData.aboutData,
     };
   },
+
+  async fetchPageBySlug(slug: string): Promise<ApiResponse<any>> {
+    await delay(1000);
+
+    if (shouldFail()) {
+      return { success: false, error: 'Failed to load page information' };
+    }
+
+    // Mock response for about page
+    if (slug === 'about') {
+      return {
+        success: true,
+        data: {
+          id: 'cmdsielu6007anzmeb70ehvvf',
+          title: 'About Us',
+          slug: 'about',
+          content:
+            "\nMalaysia's leading online platform for driving license preparation, helping thousands of students pass their JPJ exam with confidence.\n\n## What We Offer\n\n- **Comprehensive Study Materials**  \n  Access detailed driving theory notes covering all JPJ exam topics and Malaysian road rules.\n\n- **Expert Instructors**  \n  Learn from certified driving instructors with years of experience in Malaysian driving education.\n\n- **High Success Rate**  \n  Over 95% of our students pass their JPJ exam on the first attempt.\n\n- **Updated Content**  \n  Our materials are regularly updated to reflect the latest JPJ regulations and requirements.\n\n## Our Achievements\n\n- **50,000+** Students Trained\n- **95%** Pass Rate\n- **500+** Study Materials\n- **24/7** Support Available\n\n## Why Choose Us?\n\n- Comprehensive study materials\n- Real JPJ exam questions\n- Progress tracking\n- 24/7 online access\n- Expert support\n\n## Our Team\n\n**Ahmad Rahman**  \nChief Driving Instructor  \n15+ years experience  \nCertified JPJ instructor with expertise in Malaysian traffic laws and regulations.\n\n**Siti Nurhaliza**  \nContent Developer  \n10+ years experience  \nEducational content specialist focused on creating comprehensive study materials.\n\n**Raj Kumar**  \nTechnology Director  \n12+ years experience  \nLeading the development of our innovative online learning platform.\n",
+          createdAt: '2025-08-01T07:35:47.982Z',
+          updatedAt: '2025-08-01T07:35:47.982Z',
+        },
+      };
+    }
+
+    return { success: false, error: 'Page not found' };
+  },
 };
 
 // Storage API (for local data management)

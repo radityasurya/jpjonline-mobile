@@ -12,6 +12,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { router } from 'expo-router';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react-native';
+import api from '@/services/api';
 
 export default function RegisterScreen() {
   const [name, setName] = useState('');
@@ -62,12 +63,36 @@ export default function RegisterScreen() {
   const handleRegister = async () => {
     if (!validateForm()) return;
 
-    const success = await register(name, email, password);
-    if (success) {
-      Alert.alert('Success', 'Your account has been registered!', [
-        { text: 'OK', onPress: () => router.replace('/(tabs)') },
-      ]);
-    } else {
+    try {
+      const response = await fetch('/api/mobile/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          confirmPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Store the tokens and user data
+        // You might want to update your auth context here
+        Alert.alert('Success', 'Your account has been registered!', [
+          { text: 'OK', onPress: () => router.replace('/(tabs)') },
+        ]);
+      } else {
+        Alert.alert(
+          'Error',
+          data.message || 'Registration failed. Please try again.',
+        );
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
       Alert.alert('Error', 'Registration failed. Please try again.');
     }
   };

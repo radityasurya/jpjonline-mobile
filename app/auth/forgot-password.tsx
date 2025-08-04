@@ -18,22 +18,44 @@ export default function ForgotPasswordScreen() {
 
   const handleResetPassword = async () => {
     if (!email) {
-      Alert.alert('Ralat', 'Sila masukkan alamat e-mel anda');
+      Alert.alert('Error', 'Please enter your email address');
       return;
     }
 
     if (!/\S+@\S+\.\S+/.test(email)) {
-      Alert.alert('Ralat', 'Format e-mel tidak sah');
+      Alert.alert('Error', 'Invalid email format');
       return;
     }
 
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/mobile/auth/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setEmailSent(true);
+      } else {
+        Alert.alert(
+          'Error',
+          data.message || 'Failed to send reset email. Please try again.',
+        );
+      }
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      Alert.alert('Error', 'Failed to send reset email. Please try again.');
+    } finally {
       setIsLoading(false);
-      setEmailSent(true);
-    }, 2000);
+    }
   };
 
   if (emailSent) {

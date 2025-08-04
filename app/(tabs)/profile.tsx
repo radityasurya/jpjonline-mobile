@@ -33,6 +33,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { progressService } from '../../services/progressService';
 import { logger } from '../../utils/logger';
 import { getPageBySlug } from '../../services/pagesService';
+import api from '../../services/api';
 
 interface UserStats {
   totalExams: number;
@@ -168,13 +169,32 @@ export default function ProfileScreen() {
   const handleSaveProfile = async () => {
     setIsLoading(true);
     logger.userAction('Profile save attempted', editedProfile);
-    // Simulate API call
-    setTimeout(() => {
+
+    try {
+      const response = await api.user.updateProfile(user!.id, {
+        name: editedProfile.name,
+        email: editedProfile.email,
+      });
+
+      if (response.success) {
+        setIsEditModalVisible(false);
+        logger.info('ProfileScreen', 'Profile updated successfully');
+        Alert.alert(
+          'Success',
+          response.message || 'Profile updated successfully!',
+        );
+
+        // Update the user context with new data if needed
+        // You might want to refresh user data here
+      } else {
+        throw new Error(response.error || 'Failed to update profile');
+      }
+    } catch (error) {
+      logger.error('ProfileScreen', 'Failed to update profile', error);
+      Alert.alert('Error', 'Failed to update profile. Please try again.');
+    } finally {
       setIsLoading(false);
-      setIsEditModalVisible(false);
-      logger.info('ProfileScreen', 'Profile updated successfully');
-      Alert.alert('Success', 'Profile updated successfully!');
-    }, 1000);
+    }
   };
 
   const handleAboutUs = async () => {
@@ -273,16 +293,37 @@ ${user?.name || 'User'}`;
           style: 'destructive',
           onPress: async () => {
             try {
-              // Simulate API call or call your delete API here
-              logger.info('ProfileScreen', 'Account deletion confirmed');
-              Alert.alert('Account Deleted', 'Your account has been deleted.');
-              logout(); // or redirect to onboarding
+              setIsLoading(true);
+
+              // Call the delete account API
+              const response = await fetch('/api/mobile/auth/delete-account', {
+                method: 'DELETE',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${user?.token}`, // Assuming token is stored in user
+                },
+              });
+
+              const data = await response.json();
+
+              if (response.ok && data.success) {
+                logger.info('ProfileScreen', 'Account deletion confirmed');
+                Alert.alert(
+                  'Account Deleted',
+                  'Your account has been deleted successfully.',
+                );
+                logout();
+              } else {
+                throw new Error(data.message || 'Failed to delete account');
+              }
             } catch (error) {
               logger.error('ProfileScreen', 'Failed to delete account', error);
               Alert.alert(
                 'Error',
-                'Unable to delete account. Try again later.',
+                'Unable to delete account. Please try again later.',
               );
+            } finally {
+              setIsLoading(false);
             }
           },
         },

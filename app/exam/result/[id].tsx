@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { useState, useEffect } from 'react';
 import {
   View,
@@ -8,7 +9,6 @@ import {
   Alert,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
-import api from '@/services/api';
 
 // Import result components
 import { ResultsHeader } from '@/components/exam/results/ResultsHeader';

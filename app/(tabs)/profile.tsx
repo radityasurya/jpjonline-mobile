@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import * as React from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -30,10 +31,14 @@ import {
   Phone,
 } from 'lucide-react-native';
 import { useAuth } from '../../contexts/AuthContext';
-import { progressService } from '../../services/progressService';
+import { progressService } from '../../services';
 import { logger } from '../../utils/logger';
 import { getPageBySlug } from '../../services/pagesService';
-import api from '../../services/api';
+import {
+  updateUserProfile,
+  deleteUserAccount,
+  getUserProfile,
+} from '../../services/userService';
 
 interface UserStats {
   totalExams: number;
@@ -171,24 +176,33 @@ export default function ProfileScreen() {
     logger.userAction('Profile save attempted', editedProfile);
 
     try {
-      const response = await api.user.updateProfile(user!.id, {
+      const response = await updateUserProfile(null, {
         name: editedProfile.name,
         email: editedProfile.email,
       });
 
-      if (response.success) {
-        setIsEditModalVisible(false);
-        logger.info('ProfileScreen', 'Profile updated successfully');
-        Alert.alert(
-          'Success',
-          response.message || 'Profile updated successfully!',
-        );
+      setIsEditModalVisible(false);
+      logger.info('ProfileScreen', 'Profile updated successfully');
 
-        // Update the user context with new data if needed
-        // You might want to refresh user data here
-      } else {
-        throw new Error(response.error || 'Failed to update profile');
+      // Refresh user data after successful update
+      try {
+        const updatedUserData = await getUserProfile(null);
+        logger.info(
+          'ProfileScreen',
+          'User data refreshed after profile update',
+        );
+        // Note: In a real implementation, you would update the auth context here
+        // For now, we'll just log the success and show the alert
+      } catch (refreshError) {
+        logger.warn(
+          'ProfileScreen',
+          'Failed to refresh user data',
+          refreshError,
+        );
+        // Continue with success message even if refresh fails
       }
+
+      Alert.alert('Success', 'Profile updated successfully!');
     } catch (error) {
       logger.error('ProfileScreen', 'Failed to update profile', error);
       Alert.alert('Error', 'Failed to update profile. Please try again.');
@@ -226,7 +240,7 @@ export default function ProfileScreen() {
 
   const handleContactUs = async () => {
     logger.userAction('Contact us opened');
-    const email = 'support@jpjonline.com';
+    const email = 'info@jpjonline.com';
     const subject = 'Support Request from Mobile App';
     const body = `Hello JPJOnline Support Team,
 
@@ -253,7 +267,7 @@ ${user?.name || 'User'}`;
       } else {
         Alert.alert(
           'Email Not Available',
-          'Please send an email to support@jpjonline.com or contact us through other means.',
+          'Please send an email to info@jpjonline.com or contact us through other means.',
         );
         logger.warn('ProfileScreen', 'Email client not available');
       }
@@ -261,7 +275,7 @@ ${user?.name || 'User'}`;
       logger.error('ProfileScreen', 'Error opening email client', error);
       Alert.alert(
         'Error',
-        'Unable to open email client. Please contact support@jpjonline.com directly.',
+        'Unable to open email client. Please contact info@jpjonline.com directly.',
       );
     }
   };
@@ -295,27 +309,15 @@ ${user?.name || 'User'}`;
             try {
               setIsLoading(true);
 
-              // Call the delete account API
-              const response = await fetch('/api/mobile/auth/delete-account', {
-                method: 'DELETE',
-                headers: {
-                  'Content-Type': 'application/json',
-                  Authorization: `Bearer ${user?.token}`, // Assuming token is stored in user
-                },
-              });
+              // Call the delete account service
+              const response = await deleteUserAccount(null);
 
-              const data = await response.json();
-
-              if (response.ok && data.success) {
-                logger.info('ProfileScreen', 'Account deletion confirmed');
-                Alert.alert(
-                  'Account Deleted',
-                  'Your account has been deleted successfully.',
-                );
-                logout();
-              } else {
-                throw new Error(data.message || 'Failed to delete account');
-              }
+              logger.info('ProfileScreen', 'Account deletion confirmed');
+              Alert.alert(
+                'Account Deleted',
+                'Your account has been deleted successfully.',
+              );
+              logout();
             } catch (error) {
               logger.error('ProfileScreen', 'Failed to delete account', error);
               Alert.alert(

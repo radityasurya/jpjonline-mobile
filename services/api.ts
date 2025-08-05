@@ -1,3 +1,25 @@
+/**
+ * @deprecated This file is deprecated and will be removed in a future version.
+ *
+ * The API has been refactored into domain-specific service modules for better organization
+ * and maintainability. Please use the new domain-specific services instead:
+ *
+ * - Authentication: import { login, signup, forgotPassword } from '@/services/authService'
+ * - User Management: import { getUserProfile, updateUserProfile } from '@/services/userService'
+ * - Notes: import { getNotesGroupedByCategory, getNoteById } from '@/services/notesService'
+ * - Exams: import { getUserExams, getExamBySlug, submitExamResults } from '@/services/examsService'
+ * - Contact: import { submitContactForm, fetchAboutData } from '@/services/contactService'
+ * - Bookmarks: import bookmarkService from '@/services/bookmarkService'
+ * - Activity: import activityService from '@/services/activityService'
+ *
+ * For backward compatibility, you can still import the legacy API structure:
+ * import api, { notesAPI, examsAPI, authAPI } from '@/services'
+ *
+ * Migration Guide:
+ * - Replace `import api from '@/services/api'` with `import api from '@/services'`
+ * - Or better yet, import specific functions: `import { login, getUserExams } from '@/services'`
+ */
+
 import {
   ApiResponse,
   User,

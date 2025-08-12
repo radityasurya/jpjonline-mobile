@@ -299,7 +299,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 For support and questions:
 
-- **Email**: support@jpjonline.com
+- **Email**: info@jpjonline.com
 - **Documentation**: [Project Wiki](link-to-wiki)
 - **Issues**: [GitHub Issues](link-to-issues)
 

@@ -77,7 +77,7 @@ export function SplashScreen() {
           />
         </Animated.View>
         <Text style={styles.logoText}>JPJOnline</Text>
-        <Text style={styles.tagline}>Digital Learning System</Text>
+        <Text style={styles.tagline}>Portal Latihan Ujian JPJ KPP Malaysia</Text>
       </Animated.View>
     </View>
   );

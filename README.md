@@ -95,72 +95,32 @@ jpj-online/
 - `npm run build:web` - Build for web deployment
 - `npm run lint` - Run ESLint
 
-## 📱 Building for Mobile Platforms
+## 📱 Building & Deployment
 
-### Prerequisites for Mobile Builds
+### Quick Start
+```bash
+# Install required tools
+npm install -g @expo/cli eas-cli
 
-1. **Install Expo CLI globally**
-   ```bash
-   npm install -g @expo/cli
-   ```
+# Login to Expo
+eas login
 
-2. **Install EAS CLI for builds**
-   ```bash
-   npm install -g eas-cli
-   ```
+# Build for production
+eas build --platform all --profile production
 
-### iOS Build
+# Submit to app stores
+eas submit --platform all
+```
 
-1. **Configure iOS build**
-   ```bash
-   eas build:configure
-   ```
+### Comprehensive Guide
+For detailed instructions on building and submitting your app to iOS App Store and Google Play Store, see **[EAS Build & Submission Guide](./eas.md)**.
 
-2. **Build for iOS**
-   ```bash
-   # Development build
-   eas build --platform ios --profile development
-   
-   # Production build
-   eas build --platform ios --profile production
-   ```
-
-3. **Requirements**
-   - Apple Developer Account (for App Store distribution)
-   - macOS with Xcode (for local builds)
-
-### Android Build
-
-1. **Build for Android**
-   ```bash
-   # Development build
-   eas build --platform android --profile development
-   
-   # Production build
-   eas build --platform android --profile production
-   ```
-
-2. **Generate APK for testing**
-   ```bash
-   eas build --platform android --profile preview
-   ```
-
-### Local Development Builds
-
-For faster development iterations:
-
-1. **Create development build**
-   ```bash
-   # iOS
-   eas build --platform ios --profile development --local
-   
-   # Android
-   eas build --platform android --profile development --local
-   ```
-
-2. **Install on device**
-   - iOS: Install via Xcode or TestFlight
-   - Android: Install APK directly
+The guide covers:
+- Complete setup process
+- iOS App Store submission
+- Google Play Store submission
+- Troubleshooting common issues
+- Testing and deployment workflows
 
 ## 🌐 Web Deployment
 
@@ -247,17 +207,41 @@ npm run test:coverage
 
 ### Mobile App Store Deployment
 
-1. **iOS App Store**
-   ```bash
-   eas submit --platform ios
-   ```
+For complete mobile deployment instructions, see **[EAS Build & Submission Guide](./eas.md)**.
 
-2. **Google Play Store**
-   ```bash
-   eas submit --platform android
-   ```
+**Quick Commands:**
+```bash
+# Build and submit to both stores
+eas build --platform all --profile production
+eas submit --platform all
+```
+
+**Important Notes:**
+- Remove unused dependencies before building (especially `expo-camera` if not used)
+- Ensure proper bundle identifiers in `app.json`
+- Test thoroughly on physical devices before submission
 
 ## 🔧 Configuration
+
+### App Configuration
+
+The app uses a centralized configuration system in [`config/app.js`](config/app.js):
+
+```javascript
+// Demo account configuration
+const DEMO_CONFIG = {
+  showDemoAccounts: false, // Set to false for production releases
+  accounts: {
+    premium: { email: 'premium@jpjonline.com', password: 'premium123' },
+    free: { email: 'user@jpjonline.com', password: 'user123' }
+  }
+};
+```
+
+**Important for Production**:
+- Demo accounts are **disabled by default** for App Store/Play Store releases
+- Set `showDemoAccounts: true` only for development/testing builds
+- This prevents demo login buttons from appearing in production
 
 ### Environment Variables
 
@@ -268,7 +252,7 @@ EXPO_PUBLIC_API_URL=https://api.jpjonline.com
 EXPO_PUBLIC_API_KEY=your_api_key_here
 ```
 
-### App Configuration
+### Expo Configuration
 
 Modify `app.json` for app-specific settings:
 

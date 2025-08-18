@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { router } from 'expo-router';
 import { logger } from '@/utils/logger';
 import { Eye, EyeOff } from 'lucide-react-native';
+import { DEMO_CONFIG } from '@/config/app';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -58,13 +59,9 @@ export default function LoginScreen() {
 
   const fillDemoCredentials = (type: 'premium' | 'free') => {
     logger.userAction('Demo credentials filled', { type });
-    if (type === 'premium') {
-      setEmail('premium@jpjonline.com');
-      setPassword('premium123');
-    } else {
-      setEmail('user@jpjonline.com');
-      setPassword('user123');
-    }
+    const credentials = DEMO_CONFIG.accounts[type];
+    setEmail(credentials.email);
+    setPassword(credentials.password);
   };
 
   return (
@@ -139,23 +136,25 @@ export default function LoginScreen() {
           )}
         </TouchableOpacity>
 
-        <View style={styles.demoContainer}>
-          <Text style={styles.demoTitle}>Demo Accounts:</Text>
-          <View style={styles.demoButtons}>
-            <TouchableOpacity
-              style={styles.demoButton}
-              onPress={() => fillDemoCredentials('premium')}
-            >
-              <Text style={styles.demoButtonText}>Premium</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.demoButton, styles.freeDemoButton]}
-              onPress={() => fillDemoCredentials('free')}
-            >
-              <Text style={styles.demoButtonText}>Free</Text>
-            </TouchableOpacity>
+        {DEMO_CONFIG.showDemoAccounts && (
+          <View style={styles.demoContainer}>
+            <Text style={styles.demoTitle}>Demo Accounts:</Text>
+            <View style={styles.demoButtons}>
+              <TouchableOpacity
+                style={styles.demoButton}
+                onPress={() => fillDemoCredentials('premium')}
+              >
+                <Text style={styles.demoButtonText}>Premium</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.demoButton, styles.freeDemoButton]}
+                onPress={() => fillDemoCredentials('free')}
+              >
+                <Text style={styles.demoButtonText}>Free</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        )}
 
         <View style={styles.registerContainer}>
           <Text style={styles.registerText}>Don&apos;t have an account? </Text>

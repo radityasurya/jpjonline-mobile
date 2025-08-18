@@ -20,14 +20,18 @@
       "output": "single",
       "favicon": "./assets/images/favicon.png"
     },
-    "plugins": ["expo-router", "expo-font", "expo-web-browser"],
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-web-browser"
+    ],
     "experiments": {
       "typedRoutes": true
     },
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "644434ca-4869-4714-9cfa-90dd590d7579"
+        "projectId": "726c6314-8756-43fa-85b4-3ab9567f6077"
       }
     },
     "android": {

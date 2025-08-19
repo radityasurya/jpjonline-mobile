@@ -332,6 +332,104 @@ eas update --branch production --message "Bug fixes"
 3. Submit to stores
 4. Wait for approval
 
+## 🔄 Version Management & Internal Testing
+
+### Bumping Version Numbers
+
+Before building for internal testing or production, you need to update version numbers:
+
+#### 1. **Update App Version (Semantic Versioning)**
+In [`app.json`](app.json):
+```json
+{
+  "expo": {
+    "version": "1.0.1", // Increment for new releases
+    "ios": {
+      "buildNumber": "2" // Increment for each iOS build
+    },
+    "android": {
+      "versionCode": 2 // Increment for each Android build
+    }
+  }
+}
+```
+
+#### 2. **Version Bumping Commands**
+```bash
+# Quick version bump (patch version: 1.0.0 → 1.0.1)
+npm version patch
+
+# Minor version bump (1.0.0 → 1.1.0)
+npm version minor
+
+# Major version bump (1.0.0 → 2.0.0)
+npm version major
+```
+
+**Note**: These commands update `package.json`. You still need to manually update `app.json`.
+
+### Internal Testing Workflow
+
+#### Step 1: Build for Internal Testing
+```bash
+# Build preview version for internal testing
+eas build --platform all --profile preview
+
+# Or build specific platform
+eas build --platform ios --profile preview
+eas build --platform android --profile preview
+```
+
+#### Step 2: Distribute to Internal Testers
+
+**iOS - TestFlight Internal Testing:**
+```bash
+# Submit to TestFlight for internal testing
+eas submit --platform ios --profile preview
+```
+
+**Android - Internal Testing Track:**
+```bash
+# Submit to Google Play Internal Testing
+eas submit --platform android --profile preview
+```
+
+#### Step 3: Manual Distribution (Alternative)
+```bash
+# Get build URLs for manual distribution
+eas build:list
+
+# Share the download links with your internal testers
+# iOS: .ipa file (install via TestFlight or Apple Configurator)
+# Android: .apk file (direct install)
+```
+
+### Complete Internal Testing Commands
+
+**Quick Internal Testing Release:**
+```bash
+# 1. Update version in app.json (done above: v1.0.1, build 2)
+
+# 2. Build for internal testing
+eas build --platform all --profile preview
+
+# 3. Submit to internal testing tracks
+eas submit --platform all --profile preview
+
+# 4. Check status
+eas build:list
+eas submit:list
+```
+
+### Version History Tracking
+
+Keep track of your releases:
+
+| Version | Build | Platform | Type | Date | Notes |
+|---------|-------|----------|------|------|-------|
+| 1.0.0 | 1 | iOS/Android | Production | 2024-01-15 | Initial release |
+| 1.0.1 | 2 | iOS/Android | Internal | 2024-01-20 | Demo accounts disabled |
+
 ## 📋 Pre-Submission Checklist
 
 ### Before Building

@@ -30,7 +30,7 @@ const DEMO_CONFIG = {
 // API Configuration
 const API_CONFIG = {
   baseUrl: isProduction 
-    ? 'https://api.jpjonline.com' 
+    ? 'https://jpjonline.com' 
     : 'http://localhost:3000',
   timeout: 10000,
   retryAttempts: 3

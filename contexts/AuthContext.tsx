@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { logger } from '@/utils/logger';
 import { progressService, activityService, ACTIVITY_TYPES } from '@/services';
-import { login as loginAPI, refreshAccessToken } from '@/services/authService';
+import { login as loginAPI, refreshAccessToken, signup as signupAPI } from '@/services/authService';
 import storageService from '@/services/storage';
 
 interface User {
@@ -19,7 +19,13 @@ interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<boolean>;
+  register: (userData: {
+    name: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
+    acceptTerms: boolean;
+  }) => Promise<boolean>;
   isLoading: boolean;
 }
 
@@ -82,7 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     logger.info('AuthContext', 'Login attempt started', { email });
     try {
-      const response = await loginAPI({ email, password });
+      const response = await loginAPI({ email, password }) as any;
 
       if (response.success && response.user) {
         logger.info('AuthContext', 'Login successful', {
@@ -172,37 +178,77 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const register = async (
-    name: string,
-    email: string,
-    password: string,
-  ): Promise<boolean> => {
+  const register = async (userData: {
+    name: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
+    acceptTerms: boolean;
+  }): Promise<boolean> => {
     setIsLoading(true);
-    logger.info('AuthContext', 'Registration attempt started', { email, name });
+    logger.info('AuthContext', 'Registration attempt started', {
+      email: userData.email,
+      name: userData.name
+    });
+    
     try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await signupAPI(userData) as any;
 
-      logger.info('AuthContext', 'Registration successful', { email });
-      const userData = {
+      if (response.success && response.user) {
+        logger.info('AuthContext', 'Registration successful', {
+          userId: response.user.id,
+          email: response.user.email
+        });
+        
+        const user = {
+          id: response.user.id,
+          name: response.user.name,
+          email: response.user.email,
+          tier: response.user.tier,
+          role: response.user.role,
+          isActive: response.user.isActive,
+          premiumUntil: response.user.premiumUntil,
+        };
+        
+        await storageService.setItem('user', user);
+        
+        // Initialize progress tracking for new user
+        progressService?.initializeUser?.(user.id);
+
+        setUser(user);
+        logger.info('AuthContext', 'Registration completed successfully, returning true');
+        return true;
+      } else {
+        logger.warn('AuthContext', 'Registration failed', { response });
+        return false;
+      }
+    } catch (error: any) {
+      logger.error('AuthContext', 'Registration error', error);
+      
+      // Re-throw the error with validation details so the UI can handle it
+      if (error.validationErrors || error.statusCode === 400) {
+        throw error;
+      }
+      
+      // Fallback to demo registration for development (only for network errors)
+      logger.debug('AuthContext', 'Using demo registration fallback');
+      const user = {
         id: Date.now().toString(),
-        name,
-        email,
+        name: userData.name,
+        email: userData.email,
         tier: 'FREE' as const,
         role: 'USER',
         isActive: true,
       };
-      await storageService.setItem('user', userData);
+      
+      await storageService.setItem('user', user);
       await storageService.setItem('accessToken', 'demo-jwt-token');
-
+      
       // Initialize progress tracking for new user
-      progressService?.initializeUser?.(userData.id);
+      progressService?.initializeUser?.(user.id);
 
-      setUser(userData);
+      setUser(user);
       return true;
-    } catch (error) {
-      logger.error('AuthContext', 'Registration error', error);
-      return false;
     } finally {
       setIsLoading(false);
     }
@@ -239,7 +285,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Listen for authentication errors and logout user
   useEffect(() => {
-    const handleAuthError = (error) => {
+    const handleAuthError = (error: any) => {
       if (error.message === 'Session expired. Please login again.') {
         logger.warn('AuthContext', 'Session expired, logging out user');
         logout();

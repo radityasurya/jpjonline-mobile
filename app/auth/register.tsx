@@ -19,6 +19,7 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [acceptTerms, setAcceptTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<{
@@ -26,6 +27,7 @@ export default function RegisterScreen() {
     email?: string;
     password?: string;
     confirmPassword?: string;
+    acceptTerms?: string;
   }>({});
   const { register, isLoading } = useAuth();
 
@@ -34,8 +36,8 @@ export default function RegisterScreen() {
 
     if (!name) {
       newErrors.name = 'Name is required';
-    } else if (name.length < 2) {
-      newErrors.name = 'Name must be at least 2 characters';
+    } else if (name.length < 1 || name.length > 100) {
+      newErrors.name = 'Name must be between 1-100 characters';
     }
 
     if (!email) {
@@ -56,6 +58,10 @@ export default function RegisterScreen() {
       newErrors.confirmPassword = 'Passwords do not match';
     }
 
+    if (!acceptTerms) {
+      newErrors.acceptTerms = 'You must accept the terms and conditions';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -63,37 +69,81 @@ export default function RegisterScreen() {
   const handleRegister = async () => {
     if (!validateForm()) return;
 
+    console.log('Registration data:', { name, email, password, confirmPassword, acceptTerms });
+    
     try {
-      const response = await fetch('/api/mobile/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          password,
-          confirmPassword,
-        }),
+      const success = await register({
+        name,
+        email,
+        password,
+        confirmPassword,
+        acceptTerms,
       });
 
-      const data = await response.json();
+      console.log('Registration success result:', success);
 
-      if (response.ok && data.success) {
-        // Store the tokens and user data
-        // You might want to update your auth context here
-        Alert.alert('Success', 'Your account has been registered!', [
-          { text: 'OK', onPress: () => router.replace('/(tabs)') },
-        ]);
+      if (success) {
+        console.log('Registration successful, navigating to welcome screen...');
+        
+        // Navigate to welcome screen with user's name
+        router.replace(`/auth/welcome?name=${encodeURIComponent(name)}`);
       } else {
-        Alert.alert(
-          'Error',
-          data.message || 'Registration failed. Please try again.',
-        );
+        console.log('Registration returned false, showing error');
+        Alert.alert('Error', 'Registration failed. Please check your information and try again.');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Registration error:', error);
-      Alert.alert('Error', 'Registration failed. Please try again.');
+      
+      // Handle validation errors from API
+      if (error.validationErrors && error.validationErrors.length > 0) {
+        // Clear existing errors first
+        setErrors({});
+        
+        // Map API validation errors to form errors
+        const newErrors: any = {};
+        error.validationErrors.forEach((validationError: any) => {
+          const field = validationError.field;
+          const message = validationError.message;
+          
+          // Map API field names to form field names
+          if (field === 'acceptTerms') {
+            newErrors.acceptTerms = message;
+          } else if (field === 'email') {
+            newErrors.email = message;
+          } else if (field === 'password') {
+            newErrors.password = message;
+          } else if (field === 'confirmPassword') {
+            newErrors.confirmPassword = message;
+          } else if (field === 'name') {
+            newErrors.name = message;
+          }
+        });
+        
+        setErrors(newErrors);
+        
+        // Show a general validation error message
+        Alert.alert(
+          'Validation Error',
+          error.message || 'Please check the highlighted fields and try again.'
+        );
+      } else if (error.message.includes('email already exists') ||
+                 error.message.includes('email address already exists') ||
+                 error.message.includes('User with this email already exists')) {
+        // Also show the error under the email field
+        setErrors({ email: 'This email is already registered' });
+        
+        Alert.alert(
+          'Email Already Exists',
+          'An account with this email address already exists. Please use a different email or try logging in.'
+        );
+      } else if (error.statusCode === 400) {
+        Alert.alert(
+          'Validation Error',
+          error.message || 'Please check all fields are filled correctly and try again.'
+        );
+      } else {
+        Alert.alert('Error', 'Registration failed. Please try again.');
+      }
     }
   };
 
@@ -197,6 +247,24 @@ export default function RegisterScreen() {
           </View>
           {errors.confirmPassword && (
             <Text style={styles.errorText}>{errors.confirmPassword}</Text>
+          )}
+        </View>
+
+        <View style={styles.termsContainer}>
+          <TouchableOpacity
+            style={styles.checkboxContainer}
+            onPress={() => setAcceptTerms(!acceptTerms)}
+          >
+            <View style={[styles.checkbox, acceptTerms && styles.checkboxChecked]}>
+              {acceptTerms && <Text style={styles.checkmark}>✓</Text>}
+            </View>
+            <Text style={styles.termsText}>
+              I accept the{' '}
+              <Text style={styles.termsLink}>Terms and Conditions</Text>
+            </Text>
+          </TouchableOpacity>
+          {errors.acceptTerms && (
+            <Text style={styles.errorText}>{errors.acceptTerms}</Text>
           )}
         </View>
 
@@ -320,5 +388,40 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#333333',
+  },
+  termsContainer: {
+    marginBottom: 20,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderColor: '#E0E0E0',
+    borderRadius: 4,
+    marginRight: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: '#333333',
+    borderColor: '#333333',
+  },
+  checkmark: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  termsText: {
+    fontSize: 14,
+    color: '#666666',
+    flex: 1,
+  },
+  termsLink: {
+    color: '#333333',
+    fontWeight: '600',
   },
 });

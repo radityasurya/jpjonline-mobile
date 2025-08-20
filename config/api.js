@@ -9,10 +9,11 @@
  */
 
 export const API_CONFIG = {
-  BASE_URL: 'https://jpjonline.com',
+  // BASE_URL: 'https://jpjonline.com',
+  BASE_URL: 'http://localhost:3000',
   ENDPOINTS: {
     AUTH: {
-      SIGNUP: '/api/mobile/auth/signup',
+      SIGNUP: '/api/mobile/auth/register',
       LOGIN: '/api/mobile/auth/login',
       REFRESH: '/api/mobile/auth/refresh',
       SESSION: '/api/auth/session',

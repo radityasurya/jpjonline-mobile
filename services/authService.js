@@ -120,37 +120,55 @@ export const signup = async (userData) => {
       name: userData.name,
     });
 
-    const response = await fetch(
-      buildApiUrl(API_CONFIG.ENDPOINTS.AUTH.SIGNUP),
-      {
-        method: 'POST',
-        headers: API_CONFIG.HEADERS,
-        body: JSON.stringify(userData),
-      },
-    );
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Signup failed');
-    }
+    const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.AUTH.SIGNUP), {
+      method: 'POST',
+      headers: API_CONFIG.HEADERS,
+      body: JSON.stringify({
+        name: userData.name,
+        email: userData.email,
+        password: userData.password,
+        confirmPassword: userData.confirmPassword,
+        acceptTerms: userData.acceptTerms,
+      }),
+    });
 
     const data = await response.json();
 
-    if (data.success) {
+    console.log('API Response:', { status: response.status, data });
+
+    if (response.ok && data.success) {
+      // Handle the response structure from auth.md documentation
+      const userData = data.data || data.user || data;
+      
+      // Check if userData exists and has required fields
+      if (!userData || !userData.id) {
+        logger.error('AuthService', 'Invalid response structure', { data });
+        throw new Error('Invalid response from server');
+      }
+      
+      logger.info('AuthService', 'Signup successful', { userId: userData.id });
+      logger.apiResponse('POST', API_CONFIG.ENDPOINTS.AUTH.SIGNUP, 201, { success: true });
       return {
         success: true,
         user: {
-          id: data.user.id,
-          name: data.user.name,
-          email: data.user.email,
-          tier: data.user.tier,
-          role: data.user.role,
-          premiumUntil: data.user.premiumUntil,
-          isActive: data.user.isActive,
+          id: userData.id,
+          name: userData.name,
+          email: userData.email,
+          tier: userData.tier || 'FREE', // Default tier for new users
+          role: userData.role || 'USER',
+          premiumUntil: userData.premiumUntil,
+          isActive: userData.isActive !== undefined ? userData.isActive : true,
         },
       };
     } else {
-      throw new Error(data.error || 'Signup failed');
+      logger.warn('AuthService', 'Signup failed', { error: data.error, errors: data.errors });
+      logger.apiResponse('POST', API_CONFIG.ENDPOINTS.AUTH.SIGNUP, response.status, { error: data.error });
+      
+      // Create a structured error object for better handling
+      const error = new Error(data.error || 'Signup failed');
+      error.validationErrors = data.errors || [];
+      error.statusCode = response.status;
+      throw error;
     }
 
     // Mock response - kept for debugging
@@ -436,21 +454,31 @@ export const forgotPassword = async (data) => {
       email: data.email,
     });
 
-    const response = await fetch(
-      buildApiUrl(API_CONFIG.ENDPOINTS.AUTH.FORGOT_PASSWORD),
-      {
-        method: 'POST',
-        headers: API_CONFIG.HEADERS,
-        body: JSON.stringify(data),
-      },
-    );
+    const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.AUTH.FORGOT_PASSWORD), {
+      method: 'POST',
+      headers: API_CONFIG.HEADERS,
+      body: JSON.stringify({
+        email: data.email,
+      }),
+    });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to send reset email');
+    const result = await response.json();
+
+    if (response.ok) {
+      logger.info('AuthService', 'Password reset email sent', { email: data.email });
+      logger.apiResponse('POST', API_CONFIG.ENDPOINTS.AUTH.FORGOT_PASSWORD, 200, { success: true });
+      return {
+        success: true,
+        message: result.message,
+      };
+    } else {
+      logger.warn('AuthService', 'Password reset failed', { error: result.error });
+      logger.apiResponse('POST', API_CONFIG.ENDPOINTS.AUTH.FORGOT_PASSWORD, response.status, { error: result.error });
+      if (response.status === 429) {
+        throw new Error(result.error || 'Too many requests. Please try again later.');
+      }
+      throw new Error(result.error || 'Failed to send reset email');
     }
-
-    return await response.json();
   } catch (error) {
     logger.error('AuthService', 'Forgot password failed', error);
 
@@ -485,21 +513,30 @@ export const resetPassword = async (data) => {
       token: data.token,
     });
 
-    const response = await fetch(
-      buildApiUrl(API_CONFIG.ENDPOINTS.AUTH.RESET_PASSWORD),
-      {
-        method: 'POST',
-        headers: API_CONFIG.HEADERS,
-        body: JSON.stringify(data),
-      },
-    );
+    const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.AUTH.RESET_PASSWORD), {
+      method: 'POST',
+      headers: API_CONFIG.HEADERS,
+      body: JSON.stringify({
+        token: data.token,
+        password: data.password,
+        confirmPassword: data.confirmPassword,
+      }),
+    });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Password reset failed');
+    const result = await response.json();
+
+    if (response.ok && result.success) {
+      logger.info('AuthService', 'Password reset successful');
+      logger.apiResponse('POST', API_CONFIG.ENDPOINTS.AUTH.RESET_PASSWORD, 200, { success: true });
+      return {
+        success: true,
+        message: result.message,
+      };
+    } else {
+      logger.warn('AuthService', 'Password reset failed', { error: result.error });
+      logger.apiResponse('POST', API_CONFIG.ENDPOINTS.AUTH.RESET_PASSWORD, response.status, { error: result.error });
+      throw new Error(result.error || 'Password reset failed');
     }
-
-    return await response.json();
   } catch (error) {
     logger.error('AuthService', 'Reset password failed', error);
 

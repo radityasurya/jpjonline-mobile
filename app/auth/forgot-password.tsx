@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { ArrowLeft, Mail } from 'lucide-react-native';
+import { forgotPassword } from '@/services/authService';
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('');
@@ -30,29 +31,26 @@ export default function ForgotPasswordScreen() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/mobile/auth/forgot-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
+      const result = await forgotPassword({ email }) as any;
+      
+      if (result.success) {
         setEmailSent(true);
       } else {
         Alert.alert(
           'Error',
-          data.message || 'Failed to send reset email. Please try again.',
+          result.message || 'Failed to send reset email. Please try again.',
         );
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Forgot password error:', error);
-      Alert.alert('Error', 'Failed to send reset email. Please try again.');
+      if (error.message && error.message.includes('Too many requests')) {
+        Alert.alert(
+          'Too Many Requests',
+          'Too many password reset requests. Please wait before trying again.',
+        );
+      } else {
+        Alert.alert('Error', 'Network error. Please check your connection and try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -74,8 +72,8 @@ export default function ForgotPasswordScreen() {
           <Mail size={64} color="#4CAF50" />
           <Text style={styles.successTitle}>Email Sent</Text>
           <Text style={styles.successMessage}>
-            A password reset link has been sent to {email}. Please check your
-            inbox.
+            If an account with that email exists, a password reset link has been sent to {email}.
+            Please check your inbox and spam folder. The link will expire in 15 minutes.
           </Text>
           <TouchableOpacity
             style={styles.backToLoginButton}

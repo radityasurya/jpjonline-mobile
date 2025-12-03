@@ -5,17 +5,22 @@ import {
   StyleSheet,
   ActivityIndicator,
   FlatList,
+  TouchableOpacity,
+  Modal,
+  ScrollView,
 } from 'react-native';
+import { ChevronDown } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 import { logger } from '@/utils/logger';
+import { activityService, ACTIVITY_TYPES } from '@/services';
+import { getCategoryBySlug } from '@/services/notesService';
 import {
-  getNotesGroupedByCategory,
-  activityService,
-  ACTIVITY_TYPES,
-} from '@/services';
-import bookmarkService from '@/services/bookmarkService';
-import CategorySelector from '@/components/shared/CategorySelector';
+  getPlatformInfo,
+  isBookmarked,
+  toggleBookmark,
+} from '@/services/bookmarkService';
 import SearchBar from '@/components/shared/SearchBar';
 import BookmarkFilter from '@/components/shared/BookmarkFilter';
 import NoteCard from '@/components/notes/NoteCard';
@@ -31,16 +36,16 @@ interface ApiNote {
   topicId: string;
   createdAt: string;
   updatedAt: string;
-  author: {
+  author?: {
     id: string;
     name: string;
     email: string;
   };
-  topic: {
+  topic?: {
     id: string;
     title: string;
     slug: string;
-    category: {
+    category?: {
       id: string;
       title: string;
       slug: string;
@@ -48,38 +53,35 @@ interface ApiNote {
   };
 }
 
-interface CategoryGroup {
-  category: {
-    id: string;
-    title: string;
-    slug: string;
-  };
-  notes: ApiNote[];
-  count: number;
+interface Topic {
+  id: string;
+  title: string;
+  slug: string;
 }
 
-interface NotesApiResponse {
-  notesByCategory: Record<string, CategoryGroup>;
-  allCategories: {
-    id: string;
-    title: string;
-    slug: string;
-  }[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-  groupedByCategory: boolean;
+interface CategoryData {
+  id: string;
+  title: string;
+  slug: string;
+  topics: TopicWithNotes[];
 }
+
+interface TopicWithNotes extends Topic {
+  notes: ApiNote[];
+}
+
+interface CategoryResponse {
+  data: CategoryData;
+}
+
 export default function NotesScreen() {
   const { user } = useAuth();
-  const [notesData, setNotesData] = useState<NotesApiResponse | null>(null);
+  const { t } = useI18n();
+  const [category, setCategory] = useState<CategoryData | null>(null);
+  const [selectedTopicId, setSelectedTopicId] = useState<string>('all');
+  const [showTopicDropdown, setShowTopicDropdown] = useState(false);
   const [filteredNotes, setFilteredNotes] = useState<ApiNote[]>([]);
-  const [categories, setCategories] = useState<
-    { id: string; title: string; slug: string }[]
-  >([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
   const [showBookmarksOnly, setShowBookmarksOnly] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [bookmarkStates, setBookmarkStates] = useState<{
@@ -87,8 +89,8 @@ export default function NotesScreen() {
   }>({});
 
   // Check if features are supported on current platform
-  const featuresSupported =
-    bookmarkService?.getPlatformInfo()?.supported || false;
+  const platformInfo = getPlatformInfo() as { supported?: boolean } | undefined;
+  const featuresSupported = platformInfo?.supported || false;
 
   useEffect(() => {
     // Check if user is logged in before fetching notes
@@ -99,46 +101,51 @@ export default function NotesScreen() {
     }
 
     fetchNotesData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    applyFilters();
-  }, [searchQuery, selectedCategory, notesData, showBookmarksOnly, user]);
+    if (!category || !user || !featuresSupported) return;
+    loadBookmarkStates();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [category, user]);
 
   useEffect(() => {
-    if (!notesData || !user || !featuresSupported) return;
-    loadBookmarkStates();
-  }, [notesData, user]);
+    applyFilters();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    selectedTopicId,
+    searchQuery,
+    showBookmarksOnly,
+    bookmarkStates,
+    category,
+  ]);
 
   const loadBookmarkStates = () => {
-    if (!notesData || !featuresSupported) {
+    if (!category || !featuresSupported) {
       logger.info('NotesScreen', 'Bookmark features disabled on web platform');
       return;
     }
 
     const states: { [key: string]: boolean } = {};
-    Object.values(notesData.notesByCategory).forEach((categoryGroup) => {
-      categoryGroup.notes.forEach((note) => {
-        states[note.id] = bookmarkService.isBookmarked(note.id);
+    category.topics.forEach((topic) => {
+      topic.notes.forEach((note) => {
+        states[note.id] = isBookmarked(note.id);
       });
     });
     setBookmarkStates(states);
   };
   const fetchNotesData = async () => {
     setIsLoading(true);
-    logger.debug('NotesScreen', 'Fetching notes grouped by category');
+    logger.debug('NotesScreen', 'Fetching semua-kategori category data');
     try {
-      const response = await getNotesGroupedByCategory();
-      logger.debug('NotesScreen', 'Notes data loaded', {
-        categoriesCount: response.allCategories.length,
-        totalNotes: response.total,
-      });
+      const categoryRes = await getCategoryBySlug('semua-kategori');
+      const categoryData = categoryRes as CategoryResponse;
+      setCategory(categoryData.data || null);
 
-      setNotesData(response);
-      setCategories([
-        { id: 'all', title: 'All', slug: 'all' },
-        ...response.allCategories,
-      ]);
+      logger.debug('NotesScreen', 'Category data loaded', {
+        topicsCount: categoryData.data?.topics?.length || 0,
+      });
     } catch (error) {
       logger.error('NotesScreen', 'Error fetching notes', error);
     } finally {
@@ -147,48 +154,72 @@ export default function NotesScreen() {
   };
 
   const applyFilters = () => {
-    if (!notesData) {
+    if (!category) {
       setFilteredNotes([]);
       return;
     }
 
-    // Flatten all notes from all categories
-    let allNotes: ApiNote[] = [];
-    Object.values(notesData.notesByCategory).forEach((categoryGroup) => {
-      allNotes = [...allNotes, ...categoryGroup.notes];
-    });
+    try {
+      let filtered: ApiNote[] = [];
 
-    let filtered = [...allNotes];
+      // If showing bookmarks only, get all notes from all topics first
+      if (showBookmarksOnly) {
+        // Get all notes from all topics
+        category.topics.forEach((topic) => {
+          filtered = [...filtered, ...topic.notes];
+        });
+        // Filter to only bookmarked notes
+        filtered = filtered.filter((note) => bookmarkStates[note.id]);
+      } else {
+        // Get notes based on selected topic
+        if (selectedTopicId === 'all') {
+          // Show all notes from all topics
+          category.topics.forEach((topic) => {
+            filtered = [...filtered, ...topic.notes];
+          });
+        } else {
+          // Show notes from selected topic only
+          const selectedTopic = category.topics.find(
+            (t) => t.id === selectedTopicId,
+          );
+          if (selectedTopic) {
+            filtered = [...selectedTopic.notes];
+          }
+        }
+      }
 
-    if (showBookmarksOnly) {
-      filtered = filtered.filter((note) => bookmarkStates[note.id]);
-    }
-
-    // Apply category filter
-    if (selectedCategory !== 'All') {
-      const selectedCategoryData = categories.find(
-        (cat) => cat.title === selectedCategory,
-      );
-      if (selectedCategoryData) {
-        filtered = filtered.filter(
-          (note) => note.topic.category.slug === selectedCategoryData.slug,
+      // Apply search filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        filtered = filtered.filter((note) =>
+          note.title.toLowerCase().includes(query),
         );
       }
-    }
 
-    // Apply search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (note) =>
-          note.title.toLowerCase().includes(query) ||
-          note.content.toLowerCase().includes(query) ||
-          note.topic.title.toLowerCase().includes(query) ||
-          note.topic.category.title.toLowerCase().includes(query),
-      );
+      setFilteredNotes(filtered);
+    } catch (error) {
+      logger.error('NotesScreen', 'Error applying filters', error);
+      setFilteredNotes([]);
     }
+  };
 
-    setFilteredNotes(filtered);
+  const getSelectedTopicTitle = () => {
+    if (selectedTopicId === 'all') return 'Semua Topik';
+    const topic = category?.topics.find((t) => t.id === selectedTopicId);
+    return topic?.title || 'Pilih Topik';
+  };
+
+  const formatTopicTitle = (title: string) => {
+    return title
+      .toLowerCase()
+      .split(' ')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  const handleTopicSelect = (topicId: string) => {
+    setSelectedTopicId(topicId);
+    setShowTopicDropdown(false);
   };
 
   const handleToggleBookmark = async (noteId: string) => {
@@ -204,9 +235,8 @@ export default function NotesScreen() {
     try {
       // Find note details for activity tracking
       const note = filteredNotes.find((n) => n.id === noteId);
-      const isCurrentlyBookmarked = bookmarkService.isBookmarked(noteId);
 
-      const newBookmarkStatus = bookmarkService.toggleBookmark(noteId);
+      const newBookmarkStatus = toggleBookmark(noteId);
       setBookmarkStates((prev) => ({
         ...prev,
         [noteId]: newBookmarkStatus,
@@ -256,20 +286,11 @@ export default function NotesScreen() {
     router.push(`/notes/${note.id}`);
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
-  };
-
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#facc15" />
-        <Text style={styles.loadingText}>Loading notes...</Text>
+        <Text style={styles.loadingText}>{t('notes.failedToLoad')}...</Text>
       </View>
     );
   }
@@ -279,27 +300,87 @@ export default function NotesScreen() {
       <SearchBar
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        placeholder="Search study notes..."
+        placeholder={t('notes.searchTopics')}
       />
 
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          paddingHorizontal: 20,
-          marginBottom: 16,
-        }}
-      >
-        <BookmarkFilter
-          showBookmarksOnly={showBookmarksOnly}
-          onToggle={() => setShowBookmarksOnly(!showBookmarksOnly)}
-          featuresSupported={featuresSupported}
-        />
-        <View style={{ flex: 1 }}>
-          <CategorySelector
-            categories={categories}
-            selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
+      <View style={styles.filtersContainer}>
+        <View style={styles.filtersRow}>
+          {/* Topic Dropdown */}
+          {category?.topics && category.topics.length > 0 && (
+            <View style={styles.topicDropdownContainer}>
+              <TouchableOpacity
+                style={styles.topicDropdownButton}
+                onPress={() => setShowTopicDropdown(true)}
+              >
+                <Text style={styles.topicDropdownText}>
+                  {formatTopicTitle(getSelectedTopicTitle())}
+                </Text>
+                <ChevronDown size={20} color="#666666" />
+              </TouchableOpacity>
+
+              <Modal
+                visible={showTopicDropdown}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setShowTopicDropdown(false)}
+              >
+                <TouchableOpacity
+                  style={styles.modalOverlay}
+                  activeOpacity={1}
+                  onPress={() => setShowTopicDropdown(false)}
+                >
+                  <View style={styles.dropdownModal}>
+                    <ScrollView>
+                      <TouchableOpacity
+                        style={[
+                          styles.dropdownItem,
+                          selectedTopicId === 'all' &&
+                            styles.dropdownItemActive,
+                        ]}
+                        onPress={() => handleTopicSelect('all')}
+                      >
+                        <Text
+                          style={[
+                            styles.dropdownItemText,
+                            selectedTopicId === 'all' &&
+                              styles.dropdownItemTextActive,
+                          ]}
+                        >
+                          {formatTopicTitle('Semua Topik')}
+                        </Text>
+                      </TouchableOpacity>
+                      {category.topics.map((topic) => (
+                        <TouchableOpacity
+                          key={topic.id}
+                          style={[
+                            styles.dropdownItem,
+                            selectedTopicId === topic.id &&
+                              styles.dropdownItemActive,
+                          ]}
+                          onPress={() => handleTopicSelect(topic.id)}
+                        >
+                          <Text
+                            style={[
+                              styles.dropdownItemText,
+                              selectedTopicId === topic.id &&
+                                styles.dropdownItemTextActive,
+                            ]}
+                          >
+                            {formatTopicTitle(topic.title)}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
+                </TouchableOpacity>
+              </Modal>
+            </View>
+          )}
+
+          <BookmarkFilter
+            showBookmarksOnly={showBookmarksOnly}
+            onToggle={() => setShowBookmarksOnly(!showBookmarksOnly)}
+            featuresSupported={featuresSupported}
           />
         </View>
       </View>
@@ -318,17 +399,23 @@ export default function NotesScreen() {
             featuresSupported={featuresSupported}
             onPress={openNote}
             onToggleBookmark={handleToggleBookmark}
+            topicTitle={
+              selectedTopicId === 'all'
+                ? note.topic?.title
+                : category?.topics.find((t) => t.id === selectedTopicId)?.title
+            }
+            categoryTitle={category?.title}
           />
         )}
         ListEmptyComponent={() => (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyTitle}>No notes found</Text>
+            <Text style={styles.emptyTitle}>Tiada nota dijumpai</Text>
             <Text style={styles.emptyMessage}>
               {searchQuery
-                ? 'Try adjusting your search terms'
+                ? 'Cuba laraskan istilah carian anda'
                 : showBookmarksOnly
-                  ? 'No bookmarked notes found'
-                  : 'No notes available in this category'}
+                  ? 'Tiada nota yang ditanda buku'
+                  : 'Tiada nota tersedia dalam kategori ini'}
             </Text>
           </View>
         )}
@@ -377,5 +464,67 @@ const styles = StyleSheet.create({
     color: '#666666',
     textAlign: 'center',
     lineHeight: 20,
+  },
+  filtersContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  filtersRow: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    gap: 12,
+  },
+  topicDropdownContainer: {
+    flex: 1,
+  },
+  topicDropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+  },
+  topicDropdownText: {
+    fontSize: 14,
+    color: '#333333',
+    fontWeight: '500',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dropdownModal: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    width: '80%',
+    maxHeight: '60%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  dropdownItem: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  dropdownItemActive: {
+    backgroundColor: '#FFF9E6',
+  },
+  dropdownItemText: {
+    fontSize: 14,
+    color: '#333333',
+  },
+  dropdownItemTextActive: {
+    fontWeight: '600',
+    color: '#000000',
   },
 });

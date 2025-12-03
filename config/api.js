@@ -28,6 +28,8 @@ export const API_CONFIG = {
       GROUPED_BY_CATEGORY: '/api/notes',
       BY_ID: '/api/notes',
       SEARCH: '/api/notes/search',
+      CATEGORIES: '/api/notes/categories',
+      CATEGORY_BY_SLUG: '/api/notes/categories',
     },
     EXAMS: {
       USER_EXAMS: '/api/me/exams',

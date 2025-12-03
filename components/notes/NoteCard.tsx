@@ -21,16 +21,16 @@ interface ApiNote {
   topicId: string;
   createdAt: string;
   updatedAt: string;
-  author: {
+  author?: {
     id: string;
     name: string;
     email: string;
   };
-  topic: {
+  topic?: {
     id: string;
     title: string;
     slug: string;
-    category: {
+    category?: {
       id: string;
       title: string;
       slug: string;
@@ -44,6 +44,8 @@ interface NoteCardProps {
   featuresSupported: boolean;
   onPress: (note: ApiNote) => void;
   onToggleBookmark: (noteId: string) => void;
+  topicTitle?: string;
+  categoryTitle?: string;
 }
 
 export default function NoteCard({
@@ -52,6 +54,8 @@ export default function NoteCard({
   featuresSupported,
   onPress,
   onToggleBookmark,
+  topicTitle,
+  categoryTitle,
 }: NoteCardProps) {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -74,7 +78,10 @@ export default function NoteCard({
       <View style={styles.noteHeader}>
         <View style={styles.categoryBadge}>
           <Text style={styles.categoryBadgeText}>
-            {note.topic.category.title}
+            {categoryTitle ||
+              note.topic?.category?.title ||
+              topicTitle ||
+              'Note'}
           </Text>
         </View>
         <View style={styles.noteActions}>
@@ -115,13 +122,14 @@ const styles = StyleSheet.create({
     width: cardWidth,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    padding: 12,
+    padding: 14,
     marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    minHeight: 140,
   },
   lockedCard: {
     opacity: 0.7,
@@ -133,26 +141,28 @@ const styles = StyleSheet.create({
   noteHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
+    alignItems: 'flex-start',
+    marginBottom: 10,
   },
   categoryBadge: {
     backgroundColor: '#F0F0F0',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 8,
+    maxWidth: '75%',
   },
   categoryBadgeText: {
     fontSize: 10,
-    fontWeight: '500',
+    fontWeight: '600',
     color: '#666666',
   },
   noteTitle: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: 'bold',
     color: '#333333',
-    marginBottom: 6,
-    lineHeight: 18,
+    marginBottom: 8,
+    lineHeight: 20,
+    minHeight: 40,
   },
   notePreview: {
     fontSize: 12,
@@ -165,6 +175,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: 'auto',
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#F5F5F5',
   },
   dateText: {
     fontSize: 10,
@@ -173,6 +187,7 @@ const styles = StyleSheet.create({
   readTime: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 4,
   },
   readTimeText: {
     fontSize: 10,

@@ -13,7 +13,7 @@ import { useState, useEffect } from 'react';
 import { progressService, activityService, ACTIVITY_TYPES } from '@/services';
 
 export default function HomeScreen() {
-  const { user, logout, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
 
   // Check if features are supported on current platform
   const featuresSupported = progressService.getPlatformInfo().supported;
@@ -49,6 +49,7 @@ export default function HomeScreen() {
 
     logger.info('HomeScreen', 'Loading user stats', { userId: user.id });
     loadStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   if (isLoading || !user) {

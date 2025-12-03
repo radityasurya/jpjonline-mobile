@@ -11,6 +11,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 import { router } from 'expo-router';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react-native';
 
@@ -30,36 +31,40 @@ export default function RegisterScreen() {
     acceptTerms?: string;
   }>({});
   const { register, isLoading } = useAuth();
+  const { t } = useI18n();
 
   const validateForm = () => {
     const newErrors: any = {};
 
     if (!name) {
-      newErrors.name = 'Name is required';
+      newErrors.name = t('auth.signup.fullName') + ' diperlukan';
     } else if (name.length < 1 || name.length > 100) {
-      newErrors.name = 'Name must be between 1-100 characters';
+      newErrors.name =
+        t('auth.signup.fullName') + ' mestilah antara 1-100 aksara';
     }
 
     if (!email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = t('auth.signup.email') + ' diperlukan';
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Invalid email format';
+      newErrors.email =
+        'Format ' + t('auth.signup.email').toLowerCase() + ' tidak sah';
     }
 
     if (!password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = t('auth.signup.password') + ' diperlukan';
     } else if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = t('auth.signup.errors.passwordTooShort');
     }
 
     if (!confirmPassword) {
-      newErrors.confirmPassword = 'Password confirmation is required';
+      newErrors.confirmPassword =
+        t('auth.signup.confirmPassword') + ' diperlukan';
     } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = t('auth.signup.errors.passwordsDoNotMatch');
     }
 
     if (!acceptTerms) {
-      newErrors.acceptTerms = 'You must accept the terms and conditions';
+      newErrors.acceptTerms = 'Anda mesti menerima terma dan syarat';
     }
 
     setErrors(newErrors);
@@ -69,8 +74,14 @@ export default function RegisterScreen() {
   const handleRegister = async () => {
     if (!validateForm()) return;
 
-    console.log('Registration data:', { name, email, password, confirmPassword, acceptTerms });
-    
+    console.log('Registration data:', {
+      name,
+      email,
+      password,
+      confirmPassword,
+      acceptTerms,
+    });
+
     try {
       const success = await register({
         name,
@@ -84,27 +95,27 @@ export default function RegisterScreen() {
 
       if (success) {
         console.log('Registration successful, navigating to welcome screen...');
-        
+
         // Navigate to welcome screen with user's name
         router.replace(`/auth/welcome?name=${encodeURIComponent(name)}`);
       } else {
         console.log('Registration returned false, showing error');
-        Alert.alert('Error', 'Registration failed. Please check your information and try again.');
+        Alert.alert('Ralat', t('auth.signup.errors.signupFailed'));
       }
     } catch (error: any) {
       console.error('Registration error:', error);
-      
+
       // Handle validation errors from API
       if (error.validationErrors && error.validationErrors.length > 0) {
         // Clear existing errors first
         setErrors({});
-        
+
         // Map API validation errors to form errors
         const newErrors: any = {};
         error.validationErrors.forEach((validationError: any) => {
           const field = validationError.field;
           const message = validationError.message;
-          
+
           // Map API field names to form field names
           if (field === 'acceptTerms') {
             newErrors.acceptTerms = message;
@@ -118,28 +129,31 @@ export default function RegisterScreen() {
             newErrors.name = message;
           }
         });
-        
+
         setErrors(newErrors);
-        
+
         // Show a general validation error message
         Alert.alert(
           'Validation Error',
-          error.message || 'Please check the highlighted fields and try again.'
+          error.message || 'Please check the highlighted fields and try again.',
         );
-      } else if (error.message.includes('email already exists') ||
-                 error.message.includes('email address already exists') ||
-                 error.message.includes('User with this email already exists')) {
+      } else if (
+        error.message.includes('email already exists') ||
+        error.message.includes('email address already exists') ||
+        error.message.includes('User with this email already exists')
+      ) {
         // Also show the error under the email field
         setErrors({ email: 'This email is already registered' });
-        
+
         Alert.alert(
           'Email Already Exists',
-          'An account with this email address already exists. Please use a different email or try logging in.'
+          'An account with this email address already exists. Please use a different email or try logging in.',
         );
       } else if (error.statusCode === 400) {
         Alert.alert(
           'Validation Error',
-          error.message || 'Please check all fields are filled correctly and try again.'
+          error.message ||
+            'Please check all fields are filled correctly and try again.',
         );
       } else {
         Alert.alert('Error', 'Registration failed. Please try again.');
@@ -156,18 +170,18 @@ export default function RegisterScreen() {
         >
           <ArrowLeft size={24} color="#333333" />
         </TouchableOpacity>
-        <Text style={styles.title}>Create Account</Text>
-        <Text style={styles.subtitle}>Create a new JPJOnline account</Text>
+        <Text style={styles.title}>{t('auth.signup.title')}</Text>
+        <Text style={styles.subtitle}>{t('auth.signup.subtitle')}</Text>
       </View>
 
       <View style={styles.form}>
         <View style={styles.inputContainer}>
-          <Text style={styles.label}>Full Name</Text>
+          <Text style={styles.label}>{t('auth.signup.fullName')}</Text>
           <TextInput
             style={[styles.input, errors.name && styles.inputError]}
             value={name}
             onChangeText={setName}
-            placeholder="Enter your full name"
+            placeholder={'Masukkan ' + t('auth.signup.fullName').toLowerCase()}
             autoCapitalize="words"
             autoCorrect={false}
           />
@@ -175,12 +189,12 @@ export default function RegisterScreen() {
         </View>
 
         <View style={styles.inputContainer}>
-          <Text style={styles.label}>Email</Text>
+          <Text style={styles.label}>{t('auth.signup.email')}</Text>
           <TextInput
             style={[styles.input, errors.email && styles.inputError]}
             value={email}
             onChangeText={setEmail}
-            placeholder="Enter your email"
+            placeholder={'Masukkan ' + t('auth.signup.email').toLowerCase()}
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
@@ -189,7 +203,7 @@ export default function RegisterScreen() {
         </View>
 
         <View style={styles.inputContainer}>
-          <Text style={styles.label}>Password</Text>
+          <Text style={styles.label}>{t('auth.signup.password')}</Text>
           <View style={styles.passwordContainer}>
             <TextInput
               style={[
@@ -198,7 +212,9 @@ export default function RegisterScreen() {
               ]}
               value={password}
               onChangeText={setPassword}
-              placeholder="Enter your password"
+              placeholder={
+                'Masukkan ' + t('auth.signup.password').toLowerCase()
+              }
               secureTextEntry={!showPassword}
               autoCapitalize="none"
               autoCorrect={false}
@@ -220,7 +236,7 @@ export default function RegisterScreen() {
         </View>
 
         <View style={styles.inputContainer}>
-          <Text style={styles.label}>Confirm Password</Text>
+          <Text style={styles.label}>{t('auth.signup.confirmPassword')}</Text>
           <View style={styles.passwordContainer}>
             <TextInput
               style={[
@@ -229,7 +245,7 @@ export default function RegisterScreen() {
               ]}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
-              placeholder="Confirm your password"
+              placeholder={t('auth.signup.confirmPassword')}
               secureTextEntry={!showConfirmPassword}
               autoCapitalize="none"
               autoCorrect={false}
@@ -255,7 +271,9 @@ export default function RegisterScreen() {
             style={styles.checkboxContainer}
             onPress={() => setAcceptTerms(!acceptTerms)}
           >
-            <View style={[styles.checkbox, acceptTerms && styles.checkboxChecked]}>
+            <View
+              style={[styles.checkbox, acceptTerms && styles.checkboxChecked]}
+            >
               {acceptTerms && <Text style={styles.checkmark}>✓</Text>}
             </View>
             <Text style={styles.termsText}>
@@ -276,14 +294,18 @@ export default function RegisterScreen() {
           {isLoading ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (
-            <Text style={styles.registerButtonText}>Create Account</Text>
+            <Text style={styles.registerButtonText}>
+              {t('auth.signup.createAccount')}
+            </Text>
           )}
         </TouchableOpacity>
 
         <View style={styles.loginContainer}>
-          <Text style={styles.loginText}>Already have an account? </Text>
+          <Text style={styles.loginText}>
+            {t('auth.signup.alreadyHaveAccount')}{' '}
+          </Text>
           <TouchableOpacity onPress={() => router.push('/auth/login')}>
-            <Text style={styles.loginLink}>Sign in here</Text>
+            <Text style={styles.loginLink}>{t('auth.signup.signIn')}</Text>
           </TouchableOpacity>
         </View>
       </View>

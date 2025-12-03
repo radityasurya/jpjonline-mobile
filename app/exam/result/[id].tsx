@@ -21,10 +21,11 @@ export default function ExamResultScreen() {
   const [result, setResult] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSharing, setIsSharing] = useState(false);
-  const [questions, setQuestions] = useState<any[]>([]);
+  const [questions] = useState<any[]>([]);
 
   useEffect(() => {
     loadResultData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resultData]);
 
   const loadResultData = async () => {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Share,
+  Image,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import {
@@ -17,6 +18,7 @@ import {
   Clock,
   User,
 } from 'lucide-react-native';
+import Markdown from 'react-native-markdown-display';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   getNoteById,
@@ -25,7 +27,11 @@ import {
   ACTIVITY_TYPES,
 } from '@/services';
 import { logger } from '@/utils/logger';
-import bookmarkService from '@/services/bookmarkService';
+import {
+  getPlatformInfo,
+  isBookmarked,
+  toggleBookmark,
+} from '@/services/bookmarkService';
 
 export default function NoteDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -35,8 +41,8 @@ export default function NoteDetailScreen() {
   const [noteIsBookmarked, setNoteIsBookmarked] = useState(false);
 
   // Check if features are supported on current platform
-  const featuresSupported =
-    bookmarkService?.getPlatformInfo()?.supported || false;
+  const platformInfo = getPlatformInfo() as { supported?: boolean } | undefined;
+  const featuresSupported = platformInfo?.supported || false;
 
   useEffect(() => {
     // Check if user is logged in before fetching note
@@ -50,14 +56,15 @@ export default function NoteDetailScreen() {
     }
 
     fetchNote();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, user]);
 
   const fetchNote = async () => {
     setIsLoading(true);
     logger.debug('NoteDetailScreen', 'Fetching note by id', { id: id });
     try {
-      const noteDataRaw = await getNoteById(id as string);
-      const noteData = noteDataRaw.note;
+      const noteDataRaw = (await getNoteById(id as string)) as any;
+      const noteData = noteDataRaw.note || noteDataRaw;
       logger.info('NoteDetailScreen', 'Note loaded successfully', {
         noteId: noteData.id,
         title: noteData.title,
@@ -83,8 +90,8 @@ export default function NoteDetailScreen() {
 
       // Check bookmark status
       if (featuresSupported) {
-        const isBookmarked = bookmarkService.isBookmarked(noteData.id);
-        setNoteIsBookmarked(isBookmarked);
+        const bookmarked = isBookmarked(noteData.id);
+        setNoteIsBookmarked(bookmarked);
       }
     } catch (error) {
       logger.error('NoteDetailScreen', 'Error fetching note', error);
@@ -104,9 +111,7 @@ export default function NoteDetailScreen() {
 
     logger.userAction('Bookmark toggle attempted', { noteId: note?.id });
     try {
-      const isCurrentlyBookmarked = bookmarkService.isBookmarked(note.id);
-
-      const newBookmarkStatus = bookmarkService.toggleBookmark(note.id);
+      const newBookmarkStatus = toggleBookmark(note.id);
       setNoteIsBookmarked(newBookmarkStatus);
 
       // Track activity
@@ -158,91 +163,46 @@ export default function NoteDetailScreen() {
     });
   };
 
-  const renderContent = (content: string) => {
-    // Simple markdown-like rendering
-    const lines = content.split('\n');
-    const elements: JSX.Element[] = [];
+  // Custom rules for rendering markdown with proper image URLs
+  const markdownRules = {
+    image: (node: any, children: any, parent: any, styles: any) => {
+      const { src, alt } = node.attributes;
+      // Convert relative URLs to absolute URLs
+      const imageUrl = src.startsWith('http')
+        ? src
+        : `https://jpjonline.com${src}`;
 
-    lines.forEach((line, index) => {
-      // Process inline formatting first
-      const processInlineFormatting = (text: string) => {
-        const parts: (string | JSX.Element)[] = [];
-        let currentIndex = 0;
+      return (
+        <View key={node.key} style={imageContainerStyle}>
+          <Image
+            source={{ uri: imageUrl }}
+            style={imageStyle}
+            resizeMode="contain"
+          />
+          {alt && <Text style={imageCaptionStyle}>{alt}</Text>}
+        </View>
+      );
+    },
+  };
 
-        // Bold text **text**
-        const boldRegex = /\*\*(.*?)\*\*/g;
-        let match;
-        let lastIndex = 0;
+  // Styles for custom image rendering
+  const imageContainerStyle: any = {
+    marginVertical: 12,
+    width: '100%',
+  };
 
-        while ((match = boldRegex.exec(text)) !== null) {
-          // Add text before match
-          if (match.index > lastIndex) {
-            parts.push(text.substring(lastIndex, match.index));
-          }
-          // Add bold text
-          parts.push(
-            <Text key={`bold-${match.index}`} style={styles.boldInline}>
-              {match[1]}
-            </Text>,
-          );
-          lastIndex = match.index + match[0].length;
-        }
+  const imageStyle: any = {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+  };
 
-        // Add remaining text
-        if (lastIndex < text.length) {
-          parts.push(text.substring(lastIndex));
-        }
-
-        return parts;
-      };
-
-      if (line.startsWith('# ')) {
-        elements.push(
-          <Text key={index} style={styles.heading1}>
-            {line.substring(2)}
-          </Text>,
-        );
-      } else if (line.startsWith('## ')) {
-        elements.push(
-          <Text key={index} style={styles.heading2}>
-            {line.substring(3)}
-          </Text>,
-        );
-      } else if (line.startsWith('### ')) {
-        elements.push(
-          <Text key={index} style={styles.heading3}>
-            {line.substring(4)}
-          </Text>,
-        );
-      } else if (line.startsWith('- ')) {
-        elements.push(
-          <View key={index} style={styles.listItemContainer}>
-            <Text style={styles.listBullet}>•</Text>
-            <Text style={styles.listItem}>
-              {processInlineFormatting(line.substring(2))}
-            </Text>
-          </View>,
-        );
-      } else if (line.trim() === '') {
-        elements.push(<View key={index} style={styles.spacing} />);
-      } else if (line.match(/^\d+\./)) {
-        elements.push(
-          <View key={index} style={styles.listItemContainer}>
-            <Text style={styles.paragraph}>
-              {processInlineFormatting(line)}
-            </Text>
-          </View>,
-        );
-      } else {
-        elements.push(
-          <Text key={index} style={styles.paragraph}>
-            {processInlineFormatting(line)}
-          </Text>,
-        );
-      }
-    });
-
-    return elements;
+  const imageCaptionStyle: any = {
+    fontSize: 12,
+    color: '#666666',
+    fontStyle: 'italic' as const,
+    textAlign: 'center' as const,
+    marginTop: 8,
   };
 
   if (isLoading) {
@@ -250,6 +210,23 @@ export default function NoteDetailScreen() {
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#facc15" />
         <Text style={styles.loadingText}>Memuatkan nota...</Text>
+      </View>
+    );
+  }
+
+  if (!user) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Sila log masuk untuk melihat nota</Text>
+        <Text style={styles.errorSubText}>
+          Anda perlu log masuk untuk mengakses nota pembelajaran
+        </Text>
+        <TouchableOpacity
+          style={styles.loginButton}
+          onPress={() => router.replace('/auth/login')}
+        >
+          <Text style={styles.loginButtonText}>Log Masuk</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -302,14 +279,20 @@ export default function NoteDetailScreen() {
         <View style={styles.titleSection}>
           <Text style={styles.noteTitle}>{note.title}</Text>
 
-          <View style={styles.categoryBadge}>
-            <Text style={styles.categoryText}>General</Text>
-          </View>
+          {note.topic && (
+            <View style={styles.categoryBadge}>
+              <Text style={styles.categoryText}>
+                {note.topic.category?.title || 'General'} / {note.topic.title}
+              </Text>
+            </View>
+          )}
 
           <View style={styles.metaInfo}>
             <View style={styles.authorInfo}>
               <User size={14} color="#666666" />
-              <Text style={styles.authorText}>JPJOnline</Text>
+              <Text style={styles.authorText}>
+                {note.author?.name || 'JPJOnline'}
+              </Text>
             </View>
             <View style={styles.readTime}>
               <Clock size={14} color="#666666" />
@@ -326,7 +309,11 @@ export default function NoteDetailScreen() {
           </View>
         </View>
 
-        <View style={styles.articleContent}>{renderContent(note.content)}</View>
+        <View style={styles.articleContent}>
+          <Markdown style={markdownStyles} rules={markdownRules}>
+            {note.content}
+          </Markdown>
+        </View>
       </ScrollView>
     </View>
   );
@@ -360,6 +347,25 @@ const styles = StyleSheet.create({
     color: '#666666',
     marginBottom: 20,
     textAlign: 'center',
+  },
+  errorSubText: {
+    fontSize: 14,
+    color: '#999999',
+    marginBottom: 24,
+    textAlign: 'center',
+    paddingHorizontal: 20,
+  },
+  loginButton: {
+    backgroundColor: '#facc15',
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  loginButtonText: {
+    color: '#333333',
+    fontSize: 16,
+    fontWeight: '600',
   },
   backButton: {
     backgroundColor: '#333333',
@@ -451,90 +457,132 @@ const styles = StyleSheet.create({
   articleContent: {
     padding: 20,
   },
+});
+
+// Markdown styles matching the design
+const markdownStyles = {
+  body: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#444444',
+  },
   heading1: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
+    marginTop: 20,
+    marginBottom: 12,
     color: '#333333',
-    marginBottom: 16,
     lineHeight: 32,
   },
   heading2: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
+    marginTop: 16,
+    marginBottom: 10,
     color: '#333333',
-    marginTop: 24,
-    marginBottom: 12,
     lineHeight: 28,
   },
   heading3: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#333333',
-    marginTop: 20,
+    fontWeight: '600' as const,
+    marginTop: 12,
     marginBottom: 8,
+    color: '#333333',
     lineHeight: 24,
   },
   paragraph: {
     fontSize: 16,
-    color: '#444444',
     lineHeight: 24,
     marginBottom: 12,
-  },
-  listItemContainer: {
-    flexDirection: 'row',
-    marginBottom: 8,
-    marginLeft: 16,
-  },
-  listBullet: {
-    fontSize: 16,
     color: '#444444',
-    marginRight: 8,
-    lineHeight: 24,
   },
   listItem: {
-    flex: 1,
     fontSize: 16,
-    color: '#444444',
     lineHeight: 24,
+    color: '#444444',
+    marginBottom: 4,
   },
-  boldInline: {
-    fontWeight: 'bold',
+  bullet_list: {
+    marginBottom: 12,
+  },
+  ordered_list: {
+    marginBottom: 12,
+  },
+  strong: {
+    fontWeight: 'bold' as const,
     color: '#333333',
   },
-  italicInline: {
-    fontStyle: 'italic',
-    color: '#444444',
+  em: {
+    fontStyle: 'italic' as const,
   },
-  underlineInline: {
-    textDecorationLine: 'underline',
-    color: '#444444',
-  },
-  codeInline: {
-    fontFamily: 'monospace',
+  code_inline: {
     backgroundColor: '#F5F5F5',
     paddingHorizontal: 4,
     paddingVertical: 2,
     borderRadius: 4,
-    fontSize: 16,
+    fontFamily: 'monospace',
+    fontSize: 14,
     color: '#444444',
   },
-  spacing: {
-    height: 12,
-  },
-  topicInfo: {
-    padding: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-  },
-  topicTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333333',
+  code_block: {
+    backgroundColor: '#F5F5F5',
+    padding: 12,
+    borderRadius: 8,
+    fontFamily: 'monospace',
     marginBottom: 12,
-  },
-  topicText: {
     fontSize: 14,
-    color: '#666666',
-    fontStyle: 'italic',
   },
-});
+  fence: {
+    backgroundColor: '#F5F5F5',
+    padding: 12,
+    borderRadius: 8,
+    fontFamily: 'monospace',
+    marginBottom: 12,
+    fontSize: 14,
+  },
+  blockquote: {
+    backgroundColor: '#fef3c7',
+    borderLeftWidth: 4,
+    borderLeftColor: '#facc15',
+    padding: 12,
+    marginBottom: 12,
+    borderRadius: 4,
+  },
+  link: {
+    color: '#facc15',
+    textDecorationLine: 'underline' as const,
+  },
+  table: {
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    marginBottom: 12,
+    borderRadius: 4,
+  },
+  thead: {
+    backgroundColor: '#f9fafb',
+  },
+  th: {
+    padding: 8,
+    fontWeight: 'bold' as const,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  td: {
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  tr: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  image: {
+    marginVertical: 12,
+    borderRadius: 8,
+  },
+  hr: {
+    backgroundColor: '#e5e7eb',
+    height: 1,
+    marginVertical: 16,
+  },
+};

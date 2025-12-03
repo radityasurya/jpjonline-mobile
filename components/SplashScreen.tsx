@@ -1,14 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Animated,
-  Dimensions,
-  Image,
-} from 'react-native';
-
-const { width, height } = Dimensions.get('window');
+import { View, Text, StyleSheet, Animated, Image } from 'react-native';
 
 export function SplashScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -77,7 +68,9 @@ export function SplashScreen() {
           />
         </Animated.View>
         <Text style={styles.logoText}>JPJOnline</Text>
-        <Text style={styles.tagline}>Portal Latihan Ujian JPJ KPP Malaysia</Text>
+        <Text style={styles.tagline}>
+          Portal Latihan Ujian JPJ KPP Malaysia
+        </Text>
       </Animated.View>
     </View>
   );

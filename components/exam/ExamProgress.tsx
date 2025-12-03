@@ -7,7 +7,6 @@ import {
   ScrollView,
 } from 'react-native';
 import {
-  CircleCheck as CheckCircle,
   Menu,
   Volume2,
   VolumeX,

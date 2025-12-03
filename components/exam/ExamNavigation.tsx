@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import { ChevronLeft, ChevronRight, Menu } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 
 interface ExamNavigationProps {
   currentQuestionIndex: number;

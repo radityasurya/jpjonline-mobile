@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,33 +10,61 @@ import {
   ScrollView,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 import { router } from 'expo-router';
 import { logger } from '@/utils/logger';
-import { Eye, EyeOff } from 'lucide-react-native';
+import { Eye, EyeOff, Check } from 'lucide-react-native';
 import { DEMO_CONFIG } from '@/config/app';
+import storageService from '@/services/storage';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
     {},
   );
   const { login, isLoading } = useAuth();
+  const { t } = useI18n();
+
+  // Load saved credentials on mount
+  useEffect(() => {
+    loadSavedCredentials();
+  }, []);
+
+  const loadSavedCredentials = async () => {
+    try {
+      const savedEmail = await storageService.getItem('rememberedEmail');
+      const savedPassword = await storageService.getItem('rememberedPassword');
+      const wasRemembered = await storageService.getItem('rememberMe');
+
+      if (wasRemembered && savedEmail && savedPassword) {
+        setEmail(savedEmail);
+        setPassword(savedPassword);
+        setRememberMe(true);
+        logger.info('LoginScreen', 'Loaded saved credentials');
+      }
+    } catch (error) {
+      logger.error('LoginScreen', 'Failed to load saved credentials', error);
+    }
+  };
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
 
     if (!email) {
-      newErrors.email = 'E-mel diperlukan';
+      newErrors.email = t('auth.login.email') + ' diperlukan';
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Format e-mel tidak sah';
+      newErrors.email =
+        'Format ' + t('auth.login.email').toLowerCase() + ' tidak sah';
     }
 
     if (!password) {
-      newErrors.password = 'Kata laluan diperlukan';
+      newErrors.password = t('auth.login.password') + ' diperlukan';
     } else if (password.length < 6) {
-      newErrors.password = 'Kata laluan mestilah sekurang-kurangnya 6 aksara';
+      newErrors.password =
+        t('auth.login.password') + ' mestilah sekurang-kurangnya 6 aksara';
     }
 
     setErrors(newErrors);
@@ -46,14 +74,27 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     if (!validateForm()) return;
 
-    logger.userAction('Login attempt', { email });
+    logger.userAction('Login attempt', { email, rememberMe });
     const success = await login(email, password);
     if (success) {
+      // Save or clear credentials based on remember me
+      if (rememberMe) {
+        await storageService.setItem('rememberedEmail', email);
+        await storageService.setItem('rememberedPassword', password);
+        await storageService.setItem('rememberMe', 'true');
+        logger.info('LoginScreen', 'Credentials saved for next login');
+      } else {
+        await storageService.removeItem('rememberedEmail');
+        await storageService.removeItem('rememberedPassword');
+        await storageService.removeItem('rememberMe');
+        logger.info('LoginScreen', 'Credentials cleared');
+      }
+
       logger.navigation('Home', { from: 'login' });
       router.replace('/(tabs)');
     } else {
       logger.warn('LoginScreen', 'Login failed - showing error alert');
-      Alert.alert('Ralat', 'E-mel atau kata laluan tidak sah');
+      Alert.alert('Ralat', t('auth.login.errors.invalidCredentials'));
     }
   };
 
@@ -67,18 +108,18 @@ export default function LoginScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Welcome Back</Text>
-        <Text style={styles.subtitle}>Sign in to your JPJOnline account</Text>
+        <Text style={styles.title}>{t('auth.login.title')}</Text>
+        <Text style={styles.subtitle}>{t('auth.login.subtitle')}</Text>
       </View>
 
       <View style={styles.form}>
         <View style={styles.inputContainer}>
-          <Text style={styles.label}>Email</Text>
+          <Text style={styles.label}>{t('auth.login.email')}</Text>
           <TextInput
             style={[styles.input, errors.email && styles.inputError]}
             value={email}
             onChangeText={setEmail}
-            placeholder="Enter your email"
+            placeholder={t('auth.login.enterEmail')}
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
@@ -87,7 +128,7 @@ export default function LoginScreen() {
         </View>
 
         <View style={styles.inputContainer}>
-          <Text style={styles.label}>Password</Text>
+          <Text style={styles.label}>{t('auth.login.password')}</Text>
           <View style={styles.passwordContainer}>
             <TextInput
               style={[
@@ -96,7 +137,7 @@ export default function LoginScreen() {
               ]}
               value={password}
               onChangeText={setPassword}
-              placeholder="Enter your password"
+              placeholder={t('auth.login.enterPassword')}
               secureTextEntry={!showPassword}
               autoCapitalize="none"
               autoCorrect={false}
@@ -117,12 +158,29 @@ export default function LoginScreen() {
           )}
         </View>
 
-        <TouchableOpacity
-          style={styles.forgotButton}
-          onPress={() => router.push('/auth/forgot-password')}
-        >
-          <Text style={styles.forgotText}>Forgot password?</Text>
-        </TouchableOpacity>
+        {/* Remember Me Checkbox */}
+        <View style={styles.rememberMeContainer}>
+          <TouchableOpacity
+            style={styles.checkboxContainer}
+            onPress={() => setRememberMe(!rememberMe)}
+          >
+            <View
+              style={[styles.checkbox, rememberMe && styles.checkboxChecked]}
+            >
+              {rememberMe && <Check size={16} color="#FFFFFF" />}
+            </View>
+            <Text style={styles.rememberMeText}>Remember Me</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.forgotButton}
+            onPress={() => router.push('/auth/forgot-password')}
+          >
+            <Text style={styles.forgotText}>
+              {t('auth.login.forgotPassword')}
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         <TouchableOpacity
           style={styles.loginButton}
@@ -132,7 +190,7 @@ export default function LoginScreen() {
           {isLoading ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (
-            <Text style={styles.loginButtonText}>Sign In</Text>
+            <Text style={styles.loginButtonText}>{t('auth.login.signIn')}</Text>
           )}
         </TouchableOpacity>
 
@@ -157,9 +215,11 @@ export default function LoginScreen() {
         )}
 
         <View style={styles.registerContainer}>
-          <Text style={styles.registerText}>Don&apos;t have an account? </Text>
+          <Text style={styles.registerText}>
+            {t('auth.login.dontHaveAccount')}{' '}
+          </Text>
           <TouchableOpacity onPress={() => router.push('/auth/register')}>
-            <Text style={styles.registerLink}>Sign up now</Text>
+            <Text style={styles.registerLink}>{t('auth.login.signUp')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -235,9 +295,37 @@ const styles = StyleSheet.create({
     color: '#FF3B30',
     marginTop: 4,
   },
-  forgotButton: {
-    alignSelf: 'flex-end',
+  rememberMeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 24,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderColor: '#E0E0E0',
+    borderRadius: 4,
+    marginRight: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  checkboxChecked: {
+    backgroundColor: '#333333',
+    borderColor: '#333333',
+  },
+  rememberMeText: {
+    fontSize: 14,
+    color: '#666666',
+  },
+  forgotButton: {
+    padding: 4,
   },
   forgotText: {
     fontSize: 14,

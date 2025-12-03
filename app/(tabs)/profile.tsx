@@ -87,6 +87,7 @@ export default function ProfileScreen() {
     if (user) {
       initializeUserProgress();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const initializeUserProgress = async () => {
@@ -176,7 +177,7 @@ export default function ProfileScreen() {
     logger.userAction('Profile save attempted', editedProfile);
 
     try {
-      const response = await updateUserProfile(null, {
+      await updateUserProfile(null, {
         name: editedProfile.name,
         email: editedProfile.email,
       });
@@ -186,7 +187,7 @@ export default function ProfileScreen() {
 
       // Refresh user data after successful update
       try {
-        const updatedUserData = await getUserProfile(null);
+        await getUserProfile(null);
         logger.info(
           'ProfileScreen',
           'User data refreshed after profile update',
@@ -310,7 +311,7 @@ ${user?.name || 'User'}`;
               setIsLoading(true);
 
               // Call the delete account service
-              const response = await deleteUserAccount(null);
+              await deleteUserAccount(null);
 
               logger.info('ProfileScreen', 'Account deletion confirmed');
               Alert.alert(
@@ -348,7 +349,6 @@ ${user?.name || 'User'}`;
       // Process inline formatting first
       const processInlineFormatting = (text: string) => {
         const parts: (string | JSX.Element)[] = [];
-        let currentIndex = 0;
 
         // Bold text **text**
         const boldRegex = /\*\*(.*?)\*\*/g;
@@ -426,13 +426,15 @@ ${user?.name || 'User'}`;
     return elements;
   };
 
-  const handleActivityClick = (activity: any) => {
-    logger.userAction('Activity clicked', {
-      type: activity.type,
-      id: activity.id,
-    });
-    // Navigation logic can be added here when activity data is available
-  };
+  // Commented out unused function - can be enabled when activity navigation is implemented
+  // const handleActivityClick = (activity: any) => {
+  //   logger.userAction('Activity clicked', {
+  //     type: activity.type,
+  //     id: activity.id,
+  //   });
+  //   // Navigation logic can be added here when activity data is available
+  // };
+
   return (
     <ScrollView style={styles.container}>
       {/* Profile Header */}

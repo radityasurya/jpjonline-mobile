@@ -1,7 +1,11 @@
+import React from 'react';
 import { Tabs } from 'expo-router';
 import { BookOpen, ClipboardList, UserCircle, Home } from 'lucide-react-native';
+import { useI18n } from '@/contexts/I18nContext';
 
 export default function TabLayout() {
+  const { t } = useI18n();
+
   return (
     <Tabs
       screenOptions={{
@@ -32,7 +36,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="notes"
         options={{
-          title: 'Notes',
+          title: t('nav.notes'),
           tabBarIcon: ({ size, color }) => (
             <BookOpen size={size} color={color} />
           ),
@@ -41,7 +45,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="tests"
         options={{
-          title: 'Exams',
+          title: t('nav.exams'),
           tabBarIcon: ({ size, color }) => (
             <ClipboardList size={size} color={color} />
           ),

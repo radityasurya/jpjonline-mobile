@@ -37,7 +37,7 @@ export default function WelcomeScreen() {
     }, 4000);
 
     return () => clearTimeout(autoNavigate);
-  }, []);
+  }, [fadeAnim, scaleAnim]);
 
   const handleGetStarted = () => {
     router.replace('/(tabs)');
@@ -66,24 +66,23 @@ export default function WelcomeScreen() {
           <View style={styles.iconContainer}>
             <CheckCircle size={60} color="#4CAF50" />
           </View>
-          
+
           <Text style={styles.message}>
-            Hi {name || 'there'}! You're now ready to start your JPJ driving test preparation journey.
-          </Text>
-          
-          <Text style={styles.description}>
-            Access comprehensive study materials, practice tests, and track your progress as you prepare for your Malaysian driving license exam.
+            Hi {name || 'there'}! You&apos;re now ready to start your JPJ
+            driving test preparation journey.
           </Text>
 
-          <TouchableOpacity
-            style={styles.button}
-            onPress={handleGetStarted}
-          >
+          <Text style={styles.description}>
+            Access comprehensive study materials, practice tests, and track your
+            progress as you prepare for your Malaysian driving license exam.
+          </Text>
+
+          <TouchableOpacity style={styles.button} onPress={handleGetStarted}>
             <Text style={styles.buttonText}>Get Started</Text>
           </TouchableOpacity>
 
           <Text style={styles.autoText}>
-            You'll be automatically redirected in a few seconds...
+            You&apos;ll be automatically redirected in a few seconds...
           </Text>
         </Animated.View>
       </View>

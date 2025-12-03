@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -22,7 +22,6 @@ import {
 
 // Import components
 import { ExamHeader } from '@/components/exam/ExamHeader';
-import { ExamControls } from '@/components/exam/ExamControls';
 import { ExamProgress } from '@/components/exam/ExamProgress';
 import { QuestionDisplay } from '@/components/exam/QuestionDisplay';
 import { AnswerOptions } from '@/components/exam/AnswerOptions';
@@ -110,6 +109,7 @@ export default function ExamScreen() {
     }
 
     fetchExamData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [examSlug, user]);
 
   const fetchExamData = async () => {
@@ -307,12 +307,6 @@ export default function ExamScreen() {
 
   const handleSubmitExam = async () => {
     if (isSubmitting) return;
-
-    // Calculate actual time spent
-    const endTime = new Date();
-    const timeSpentMinutes = Math.round(
-      (endTime.getTime() - startTime.getTime()) / (1000 * 60),
-    );
 
     logger.info('ExamScreen', 'Exam submission initiated', {
       examSlug: exam!.slug,

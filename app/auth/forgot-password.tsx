@@ -31,8 +31,8 @@ export default function ForgotPasswordScreen() {
     setIsLoading(true);
 
     try {
-      const result = await forgotPassword({ email }) as any;
-      
+      const result = (await forgotPassword({ email })) as any;
+
       if (result.success) {
         setEmailSent(true);
       } else {
@@ -49,7 +49,10 @@ export default function ForgotPasswordScreen() {
           'Too many password reset requests. Please wait before trying again.',
         );
       } else {
-        Alert.alert('Error', 'Network error. Please check your connection and try again.');
+        Alert.alert(
+          'Error',
+          'Network error. Please check your connection and try again.',
+        );
       }
     } finally {
       setIsLoading(false);
@@ -72,8 +75,9 @@ export default function ForgotPasswordScreen() {
           <Mail size={64} color="#4CAF50" />
           <Text style={styles.successTitle}>Email Sent</Text>
           <Text style={styles.successMessage}>
-            If an account with that email exists, a password reset link has been sent to {email}.
-            Please check your inbox and spam folder. The link will expire in 15 minutes.
+            If an account with that email exists, a password reset link has been
+            sent to {email}. Please check your inbox and spam folder. The link
+            will expire in 15 minutes.
           </Text>
           <TouchableOpacity
             style={styles.backToLoginButton}

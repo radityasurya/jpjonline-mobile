@@ -401,20 +401,26 @@ class BookmarkService {
 // Create singleton instance
 const bookmarkService = new BookmarkService();
 
-// Export service methods
-export const {
-  getBookmarks,
-  isBookmarked,
-  addBookmark,
-  removeBookmark,
-  toggleBookmark,
-  getBookmarkedNotes,
-  clearAllBookmarks,
-  getBookmarkStats,
-  exportBookmarks,
-  importBookmarks,
-  getPlatformInfo,
-} = bookmarkService;
+// Export service methods with proper binding
+export const getBookmarks = bookmarkService.getBookmarks.bind(bookmarkService);
+export const isBookmarked = bookmarkService.isBookmarked.bind(bookmarkService);
+export const addBookmark = bookmarkService.addBookmark.bind(bookmarkService);
+export const removeBookmark =
+  bookmarkService.removeBookmark.bind(bookmarkService);
+export const toggleBookmark =
+  bookmarkService.toggleBookmark.bind(bookmarkService);
+export const getBookmarkedNotes =
+  bookmarkService.getBookmarkedNotes.bind(bookmarkService);
+export const clearAllBookmarks =
+  bookmarkService.clearAllBookmarks.bind(bookmarkService);
+export const getBookmarkStats =
+  bookmarkService.getBookmarkStats.bind(bookmarkService);
+export const exportBookmarks =
+  bookmarkService.exportBookmarks.bind(bookmarkService);
+export const importBookmarks =
+  bookmarkService.importBookmarks.bind(bookmarkService);
+export const getPlatformInfo =
+  bookmarkService.getPlatformInfo.bind(bookmarkService);
 
 // Export the service instance
 export default bookmarkService;

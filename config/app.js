@@ -1,6 +1,6 @@
 /**
  * App Configuration
- * 
+ *
  * Central configuration for app behavior across different environments
  */
 
@@ -13,27 +13,24 @@ const DEMO_CONFIG = {
   // Set to false to hide demo accounts in production
   // Change this to true only for development/testing builds
   showDemoAccounts: false, // PRODUCTION: Set to false for App Store/Play Store releases
-  
   // Demo account credentials (only used when showDemoAccounts is true)
   accounts: {
     premium: {
       email: 'premium@jpjonline.com',
-      password: 'premium123'
+      password: 'premium123',
     },
     free: {
       email: 'user@jpjonline.com',
-      password: 'user123'
-    }
-  }
+      password: 'user123',
+    },
+  },
 };
 
 // API Configuration
 const API_CONFIG = {
-  baseUrl: isProduction 
-    ? 'https://jpjonline.com' 
-    : 'http://localhost:3000',
+  baseUrl: isProduction ? 'https://jpjonline.com' : 'http://localhost:3000',
   timeout: 10000,
-  retryAttempts: 3
+  retryAttempts: 3,
 };
 
 // Feature flags
@@ -42,15 +39,15 @@ const FEATURES = {
   enableCrashReporting: isProduction,
   enableDebugLogs: isDevelopment,
   enableOfflineMode: true,
-  enablePushNotifications: isProduction
+  enablePushNotifications: isProduction,
 };
 
 // App metadata
 const APP_INFO = {
   name: 'JPJOnline',
-  version: '1.0.0',
-  buildNumber: '1',
-  environment: isDevelopment ? 'development' : 'production'
+  version: '1.0.1',
+  buildNumber: '2',
+  environment: isDevelopment ? 'development' : 'production',
 };
 
 export {
@@ -59,7 +56,7 @@ export {
   FEATURES,
   APP_INFO,
   isDevelopment,
-  isProduction
+  isProduction,
 };
 
 export default {
@@ -68,5 +65,5 @@ export default {
   features: FEATURES,
   app: APP_INFO,
   isDevelopment,
-  isProduction
+  isProduction,
 };

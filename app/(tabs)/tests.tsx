@@ -3,11 +3,11 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   ActivityIndicator,
   FlatList,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 import { logger } from '@/utils/logger';
 import { Trophy } from 'lucide-react-native';
 import { router } from 'expo-router';
@@ -57,6 +57,7 @@ interface ExamResult {
 
 export default function TestsScreen() {
   const { user } = useAuth();
+  const { t } = useI18n();
   const [examsData, setExamsData] = useState<ExamsApiResponse | null>(null);
   const [filteredExams, setFilteredExams] = useState<ApiExam[]>([]);
   const [testResults, setTestResults] = useState<ExamResult[]>([]);
@@ -122,6 +123,7 @@ export default function TestsScreen() {
 
   useEffect(() => {
     applyFilters();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, selectedCategory, examsData]);
 
   const applyFilters = () => {
@@ -190,7 +192,7 @@ export default function TestsScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#facc15" />
-        <Text style={styles.loadingText}>Loading exams...</Text>
+        <Text style={styles.loadingText}>{t('exams.failedToLoad')}...</Text>
       </View>
     );
   }
@@ -206,7 +208,7 @@ export default function TestsScreen() {
           <SearchBar
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
-            placeholder="Search exams..."
+            placeholder={'Cari ' + t('exams.title').toLowerCase() + '...'}
           />
           <CategorySelector
             categories={categories.map((cat) => ({
@@ -229,11 +231,11 @@ export default function TestsScreen() {
           ListEmptyComponent={() => (
             <View style={styles.emptyState}>
               <Trophy size={64} color="#CCCCCC" />
-              <Text style={styles.emptyTitle}>No Exams Found</Text>
+              <Text style={styles.emptyTitle}>{t('exams.examNotFound')}</Text>
               <Text style={styles.emptyMessage}>
                 {searchQuery
-                  ? 'Try adjusting your search terms'
-                  : 'No exams available in this category'}
+                  ? 'Cuba laraskan istilah carian anda'
+                  : 'Tiada ujian tersedia dalam kategori ini'}
               </Text>
             </View>
           )}
@@ -248,10 +250,10 @@ export default function TestsScreen() {
           ListEmptyComponent={() => (
             <View style={styles.emptyState}>
               <Trophy size={64} color="#CCCCCC" />
-              <Text style={styles.emptyTitle}>No Results</Text>
+              <Text style={styles.emptyTitle}>Tiada Keputusan</Text>
               <Text style={styles.emptyMessage}>
-                You haven&apos;t completed any exams yet. Start your first exam
-                now!
+                Anda belum melengkapkan sebarang ujian lagi. Mulakan ujian
+                pertama anda sekarang!
               </Text>
             </View>
           )}
@@ -260,18 +262,6 @@ export default function TestsScreen() {
     </View>
   );
 }
-
-const formatDuration = (seconds: number) => {
-  if (!seconds) return null;
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
-
-  if (hours > 0) {
-    return `${hours}h ${remainingMinutes}m`;
-  }
-  return `${minutes}m`;
-};
 
 const styles = StyleSheet.create({
   container: {

@@ -32,8 +32,12 @@ export default function ResetPasswordScreen() {
       validateToken();
     } else {
       setIsValidating(false);
-      Alert.alert('Error', 'Invalid reset link. Please request a new password reset.');
+      Alert.alert(
+        'Error',
+        'Invalid reset link. Please request a new password reset.',
+      );
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const validateToken = async () => {
@@ -43,7 +47,7 @@ export default function ResetPasswordScreen() {
         {
           method: 'GET',
           headers: API_CONFIG.HEADERS,
-        }
+        },
       );
 
       const data = await response.json();
@@ -54,7 +58,7 @@ export default function ResetPasswordScreen() {
         Alert.alert(
           'Invalid Link',
           'This password reset link is invalid or has expired. Please request a new one.',
-          [{ text: 'OK', onPress: () => router.push('/auth/forgot-password') }]
+          [{ text: 'OK', onPress: () => router.push('/auth/forgot-password') }],
         );
       }
     } catch (error) {
@@ -62,7 +66,7 @@ export default function ResetPasswordScreen() {
       Alert.alert(
         'Error',
         'Unable to validate reset link. Please check your connection and try again.',
-        [{ text: 'OK', onPress: () => router.push('/auth/forgot-password') }]
+        [{ text: 'OK', onPress: () => router.push('/auth/forgot-password') }],
       );
     } finally {
       setIsValidating(false);
@@ -94,15 +98,18 @@ export default function ResetPasswordScreen() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.AUTH.RESET_PASSWORD), {
-        method: 'POST',
-        headers: API_CONFIG.HEADERS,
-        body: JSON.stringify({
-          token,
-          password,
-          confirmPassword,
-        }),
-      });
+      const response = await fetch(
+        buildApiUrl(API_CONFIG.ENDPOINTS.AUTH.RESET_PASSWORD),
+        {
+          method: 'POST',
+          headers: API_CONFIG.HEADERS,
+          body: JSON.stringify({
+            token,
+            password,
+            confirmPassword,
+          }),
+        },
+      );
 
       const data = await response.json();
 
@@ -110,22 +117,27 @@ export default function ResetPasswordScreen() {
         Alert.alert(
           'Success',
           'Your password has been reset successfully. You can now log in with your new password.',
-          [{ text: 'OK', onPress: () => router.push('/auth/login') }]
+          [{ text: 'OK', onPress: () => router.push('/auth/login') }],
         );
       } else {
         if (data.errors && data.errors.length > 0) {
-          const errorMessages = data.errors.map((err: any) => err.message).join('\n');
+          const errorMessages = data.errors
+            .map((err: any) => err.message)
+            .join('\n');
           Alert.alert('Validation Error', errorMessages);
         } else {
           Alert.alert(
             'Error',
-            data.error || 'Failed to reset password. Please try again.'
+            data.error || 'Failed to reset password. Please try again.',
           );
         }
       }
     } catch (error) {
       console.error('Reset password error:', error);
-      Alert.alert('Error', 'Network error. Please check your connection and try again.');
+      Alert.alert(
+        'Error',
+        'Network error. Please check your connection and try again.',
+      );
     } finally {
       setIsLoading(false);
     }
@@ -177,9 +189,7 @@ export default function ResetPasswordScreen() {
           <ArrowLeft size={24} color="#333333" />
         </TouchableOpacity>
         <Text style={styles.title}>Reset Password</Text>
-        <Text style={styles.subtitle}>
-          Enter your new password below
-        </Text>
+        <Text style={styles.subtitle}>Enter your new password below</Text>
       </View>
 
       <View style={styles.form}>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { RefreshCw, Home, ArrowLeft } from 'lucide-react-native';
+import { RefreshCw, ArrowLeft } from 'lucide-react-native';
 
 interface ResultsActionsProps {
   onRetry: () => void;

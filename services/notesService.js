@@ -10,6 +10,98 @@ import { makeAuthenticatedRequest } from './authService.js';
  */
 
 /**
+ * Get all note categories
+ * @param {string} [token] - JWT token (optional for mobile)
+ * @returns {Promise<Object>} All note categories
+ */
+export const getNoteCategories = async (token = null) => {
+  try {
+    const authToken = token || (await storageService.getItem('accessToken'));
+
+    logger.info('NotesService', 'Fetching note categories');
+    logger.apiRequest('GET', API_CONFIG.ENDPOINTS.NOTES.CATEGORIES);
+
+    const headers = getAuthHeaders(authToken);
+    const response = await fetch(
+      buildApiUrl(API_CONFIG.ENDPOINTS.NOTES.CATEGORIES),
+      {
+        method: 'GET',
+        headers,
+      },
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to fetch categories');
+    }
+
+    const data = await response.json();
+
+    logger.info('NotesService', 'Categories fetched successfully', {
+      categoriesCount: data.data?.categories?.length || 0,
+    });
+    logger.apiResponse('GET', API_CONFIG.ENDPOINTS.NOTES.CATEGORIES, 200, {
+      success: true,
+    });
+
+    return data;
+  } catch (error) {
+    logger.error('NotesService', 'Failed to fetch categories', error);
+    throw error;
+  }
+};
+
+/**
+ * Get category by slug with topics and notes
+ * @param {string} slug - Category slug (e.g., 'semua-kategori')
+ * @param {string} [token] - JWT token (optional for mobile)
+ * @returns {Promise<Object>} Category with topics and notes
+ */
+export const getCategoryBySlug = async (slug, token = null) => {
+  try {
+    const authToken = token || (await storageService.getItem('accessToken'));
+
+    logger.info('NotesService', 'Fetching category by slug', { slug });
+    logger.apiRequest(
+      'GET',
+      `${API_CONFIG.ENDPOINTS.NOTES.CATEGORY_BY_SLUG}/${slug}`,
+    );
+
+    const headers = getAuthHeaders(authToken);
+    const response = await fetch(
+      buildApiUrl(`${API_CONFIG.ENDPOINTS.NOTES.CATEGORY_BY_SLUG}/${slug}`),
+      {
+        method: 'GET',
+        headers,
+      },
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to fetch category');
+    }
+
+    const data = await response.json();
+
+    logger.info('NotesService', 'Category fetched successfully', {
+      categoryId: data.data?.id,
+      topicsCount: data.data?.topics?.length || 0,
+    });
+    logger.apiResponse(
+      'GET',
+      `${API_CONFIG.ENDPOINTS.NOTES.CATEGORY_BY_SLUG}/${slug}`,
+      200,
+      { success: true },
+    );
+
+    return data;
+  } catch (error) {
+    logger.error('NotesService', 'Failed to fetch category', error);
+    throw error;
+  }
+};
+
+/**
  * Get Notes Grouped by Category
  * @param {string} [token] - JWT token (optional for mobile)
  * @param {Object} [params] - Query parameters
@@ -165,7 +257,7 @@ export const getNoteById = async (id, token = null) => {
     logger.info('NotesService', 'Fetching note by ID', { id });
     logger.apiRequest('GET', `${API_CONFIG.ENDPOINTS.NOTES.BY_ID}/${id}`);
 
-    const headers = authToken ? getAuthHeaders(authToken) : API_CONFIG.HEADERS;
+    const headers = getAuthHeaders(authToken);
     const response = await fetch(
       buildApiUrl(`${API_CONFIG.ENDPOINTS.NOTES.BY_ID}/${id}`),
       {
@@ -182,8 +274,8 @@ export const getNoteById = async (id, token = null) => {
     const data = await response.json();
 
     logger.info('NotesService', 'Note fetched successfully', {
-      noteId: data.id,
-      slug: data.slug,
+      noteId: data.note?.id || data.id,
+      slug: data.note?.slug || data.slug,
     });
     logger.apiResponse(
       'GET',

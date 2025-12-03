@@ -1,12 +1,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-  <uses-permission android:name="android.permission.CAMERA"/>
+  <!-- Required permissions -->
   <uses-permission android:name="android.permission.INTERNET"/>
-  <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
-  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-  <uses-permission android:name="android.permission.RECORD_AUDIO"/>
-  <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
   <uses-permission android:name="android.permission.VIBRATE"/>
-  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+  
+  <!-- Removed unused permissions:
+       - CAMERA: Not used in the app
+       - RECORD_AUDIO: Not used in the app
+       - MODIFY_AUDIO_SETTINGS: Not needed for sound playback
+       - READ_EXTERNAL_STORAGE: Not needed with current implementation
+       - WRITE_EXTERNAL_STORAGE: Not needed with current implementation
+       - SYSTEM_ALERT_WINDOW: Not needed
+  -->
   <queries>
     <intent>
       <action android:name="android.intent.action.VIEW"/>

@@ -1,7 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { router } from 'expo-router';
 import { logger } from '@/utils/logger';
 import { progressService, activityService, ACTIVITY_TYPES } from '@/services';
-import { login as loginAPI, refreshAccessToken, signup as signupAPI } from '@/services/authService';
+import {
+  login as loginAPI,
+  refreshAccessToken,
+  signup as signupAPI,
+} from '@/services/authService';
 import storageService from '@/services/storage';
 
 interface User {
@@ -88,7 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     logger.info('AuthContext', 'Login attempt started', { email });
     try {
-      const response = await loginAPI({ email, password }) as any;
+      const response = (await loginAPI({ email, password })) as any;
 
       if (response.success && response.user) {
         logger.info('AuthContext', 'Login successful', {
@@ -188,18 +193,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     logger.info('AuthContext', 'Registration attempt started', {
       email: userData.email,
-      name: userData.name
+      name: userData.name,
     });
-    
+
     try {
-      const response = await signupAPI(userData) as any;
+      const response = (await signupAPI(userData)) as any;
 
       if (response.success && response.user) {
         logger.info('AuthContext', 'Registration successful', {
           userId: response.user.id,
-          email: response.user.email
+          email: response.user.email,
         });
-        
+
         const user = {
           id: response.user.id,
           name: response.user.name,
@@ -209,14 +214,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           isActive: response.user.isActive,
           premiumUntil: response.user.premiumUntil,
         };
-        
+
         await storageService.setItem('user', user);
-        
+
         // Initialize progress tracking for new user
         progressService?.initializeUser?.(user.id);
 
         setUser(user);
-        logger.info('AuthContext', 'Registration completed successfully, returning true');
+        logger.info(
+          'AuthContext',
+          'Registration completed successfully, returning true',
+        );
         return true;
       } else {
         logger.warn('AuthContext', 'Registration failed', { response });
@@ -224,12 +232,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error: any) {
       logger.error('AuthContext', 'Registration error', error);
-      
+
       // Re-throw the error with validation details so the UI can handle it
       if (error.validationErrors || error.statusCode === 400) {
         throw error;
       }
-      
+
       // Fallback to demo registration for development (only for network errors)
       logger.debug('AuthContext', 'Using demo registration fallback');
       const user = {
@@ -240,10 +248,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role: 'USER',
         isActive: true,
       };
-      
+
       await storageService.setItem('user', user);
       await storageService.setItem('accessToken', 'demo-jwt-token');
-      
+
       // Initialize progress tracking for new user
       progressService?.initializeUser?.(user.id);
 
@@ -278,6 +286,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await storageService.removeItem('refreshToken');
       setUser(null);
       logger.info('AuthContext', 'User logout completed');
+
+      // Navigate to login screen
+      router.replace('/auth/login');
     } catch (error) {
       logger.error('AuthContext', 'Logout error', error);
     }

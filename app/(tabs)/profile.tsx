@@ -1,5 +1,4 @@
-import * as React from 'react';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -28,7 +27,6 @@ import {
   X,
   Save,
   Mail,
-  Phone,
 } from 'lucide-react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { progressService } from '../../services';
@@ -78,7 +76,6 @@ export default function ProfileScreen() {
   const [editedProfile, setEditedProfile] = useState({
     name: user?.name || '',
     email: user?.email || '',
-    phone: '',
   });
   const [aboutData, setAboutData] = useState<AboutData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -135,14 +132,17 @@ export default function ProfileScreen() {
 
     try {
       logger.debug('ProfileScreen', 'Loading user statistics');
-      const response = await progressService.getDashboardSummary();
+      const response: any = await progressService.getDashboardSummary();
       if (response.success) {
         logger.debug(
           'ProfileScreen',
           'Stats loaded successfully',
           response.summary,
         );
-        setStats(response.summary);
+        setStats({
+          ...response.summary,
+          streak: response.summary.currentStreak || 0,
+        });
       } else {
         logger.warn('ProfileScreen', 'Failed to load stats', response.error);
         // Fallback to default stats
@@ -167,7 +167,6 @@ export default function ProfileScreen() {
     setEditedProfile({
       name: user?.name || '',
       email: user?.email || '',
-      phone: '',
     });
     setIsEditModalVisible(true);
   };
@@ -177,36 +176,44 @@ export default function ProfileScreen() {
     logger.userAction('Profile save attempted', editedProfile);
 
     try {
-      await updateUserProfile(null, {
+      const response: any = await updateUserProfile(null, {
         name: editedProfile.name,
         email: editedProfile.email,
       });
 
-      setIsEditModalVisible(false);
-      logger.info('ProfileScreen', 'Profile updated successfully');
+      if (response.success) {
+        setIsEditModalVisible(false);
+        logger.info('ProfileScreen', 'Profile updated successfully', {
+          message: response.message,
+        });
 
-      // Refresh user data after successful update
-      try {
-        await getUserProfile(null);
-        logger.info(
-          'ProfileScreen',
-          'User data refreshed after profile update',
-        );
-        // Note: In a real implementation, you would update the auth context here
-        // For now, we'll just log the success and show the alert
-      } catch (refreshError) {
-        logger.warn(
-          'ProfileScreen',
-          'Failed to refresh user data',
-          refreshError,
-        );
-        // Continue with success message even if refresh fails
+        // Refresh user data after successful update
+        try {
+          const userResponse: any = await getUserProfile(null);
+          logger.info(
+            'ProfileScreen',
+            'User data refreshed after profile update',
+            { userId: userResponse.id },
+          );
+          // Note: In a real implementation, you would update the auth context here
+          // For now, we'll just log the success and show the alert
+        } catch (refreshError) {
+          logger.warn(
+            'ProfileScreen',
+            'Failed to refresh user data',
+            refreshError,
+          );
+          // Continue with success message even if refresh fails
+        }
+
+        Alert.alert('Success', response.message || 'Profile updated successfully!');
+      } else {
+        throw new Error('Update failed');
       }
-
-      Alert.alert('Success', 'Profile updated successfully!');
     } catch (error) {
       logger.error('ProfileScreen', 'Failed to update profile', error);
-      Alert.alert('Error', 'Failed to update profile. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update profile. Please try again.';
+      Alert.alert('Error', errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -217,7 +224,7 @@ export default function ProfileScreen() {
     setIsAboutModalVisible(true);
     setIsLoading(true);
     try {
-      const response = await getPageBySlug('about');
+      const response: any = await getPageBySlug('about');
       setAboutData({
         title: response.title,
         content: response.content,
@@ -343,12 +350,12 @@ ${user?.name || 'User'}`;
   const renderContent = (content: string) => {
     // Simple markdown-like rendering
     const lines = content.split('\n');
-    const elements: JSX.Element[] = [];
+    const elements: React.ReactElement[] = [];
 
     lines.forEach((line, index) => {
       // Process inline formatting first
       const processInlineFormatting = (text: string) => {
-        const parts: (string | JSX.Element)[] = [];
+        const parts: (string | React.ReactElement)[] = [];
 
         // Bold text **text**
         const boldRegex = /\*\*(.*?)\*\*/g;
@@ -578,6 +585,7 @@ ${user?.name || 'User'}`;
                   setEditedProfile((prev) => ({ ...prev, name: text }))
                 }
                 placeholder="Enter your full name"
+                autoCapitalize="words"
               />
             </View>
 
@@ -593,25 +601,15 @@ ${user?.name || 'User'}`;
                   }
                   placeholder="Enter your email"
                   keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
                 />
               </View>
             </View>
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Phone Number</Text>
-              <View style={styles.inputWithIcon}>
-                <Phone size={20} color="#666666" />
-                <TextInput
-                  style={styles.inputWithIconText}
-                  value={editedProfile.phone}
-                  onChangeText={(text) =>
-                    setEditedProfile((prev) => ({ ...prev, phone: text }))
-                  }
-                  placeholder="Enter your phone number"
-                  keyboardType="phone-pad"
-                />
-              </View>
-            </View>
+            <Text style={styles.helpText}>
+              All fields are optional. Update only the information you want to change.
+            </Text>
           </ScrollView>
         </View>
       </Modal>
@@ -889,6 +887,14 @@ const styles = StyleSheet.create({
   aboutUpdated: {
     fontSize: 14,
     color: '#666666',
+  },
+  helpText: {
+    fontSize: 14,
+    color: '#666666',
+    marginTop: 16,
+    marginHorizontal: 4,
+    fontStyle: 'italic',
+    lineHeight: 20,
   },
   aboutContentContainer: {
     marginBottom: 30,

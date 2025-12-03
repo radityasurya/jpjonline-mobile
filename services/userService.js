@@ -10,11 +10,13 @@ import { logger } from '../utils/logger.js';
 
 /**
  * Get User Profile
- * @param {string} token - JWT token
+ * @param {string|null} token - JWT token (optional, will use stored token if null)
  * @returns {Promise<Object>} User profile data
  */
-export const getUserProfile = async (token) => {
+export const getUserProfile = async (token = null) => {
   try {
+    const authToken = token || (await import('./storage.js').then(m => m.default.getItem('accessToken')));
+    
     logger.debug('UserService', 'Fetching user profile');
     logger.apiRequest('GET', API_CONFIG.ENDPOINTS.USER.PROFILE);
 
@@ -22,7 +24,7 @@ export const getUserProfile = async (token) => {
       buildApiUrl(API_CONFIG.ENDPOINTS.USER.PROFILE),
       {
         method: 'GET',
-        headers: getAuthHeaders(token),
+        headers: getAuthHeaders(authToken),
       },
     );
 
@@ -59,14 +61,16 @@ export const getUserProfile = async (token) => {
 
 /**
  * Update User Profile
- * @param {string} token - JWT token
+ * @param {string|null} token - JWT token (optional, will use stored token if null)
  * @param {Object} profileData - Profile update data
  * @param {string} [profileData.name] - User name
- * @param {string} [profileData.image] - User avatar URL
+ * @param {string} [profileData.email] - User email
  * @returns {Promise<Object>} Updated user profile
  */
-export const updateUserProfile = async (token, profileData) => {
+export const updateUserProfile = async (token = null, profileData) => {
   try {
+    const authToken = token || (await import('./storage.js').then(m => m.default.getItem('accessToken')));
+    
     logger.info('UserService', 'Updating user profile', profileData);
     logger.apiRequest('PUT', API_CONFIG.ENDPOINTS.USER.PROFILE, profileData);
 
@@ -74,7 +78,7 @@ export const updateUserProfile = async (token, profileData) => {
       buildApiUrl(API_CONFIG.ENDPOINTS.USER.PROFILE),
       {
         method: 'PUT',
-        headers: getAuthHeaders(token),
+        headers: getAuthHeaders(authToken),
         body: JSON.stringify(profileData),
       },
     );
@@ -84,7 +88,17 @@ export const updateUserProfile = async (token, profileData) => {
       throw new Error(errorData.error || 'Failed to update profile');
     }
 
-    return await response.json();
+    const data = await response.json();
+    
+    logger.info('UserService', 'Profile updated successfully', {
+      userId: data.data?.id,
+      message: data.message,
+    });
+    logger.apiResponse('PUT', API_CONFIG.ENDPOINTS.USER.PROFILE, 200, {
+      success: true,
+    });
+
+    return data;
 
     // Mock response - commented out for actual API usage
     // logger.debug('UserService', 'Using mock profile update response');
@@ -122,14 +136,16 @@ export const updateUserProfile = async (token, profileData) => {
 
 /**
  * Change Password
- * @param {string} token - JWT token
+ * @param {string|null} token - JWT token (optional, will use stored token if null)
  * @param {Object} passwordData - Password change data
  * @param {string} passwordData.currentPassword - Current password
  * @param {string} passwordData.newPassword - New password
  * @returns {Promise<Object>} API response
  */
-export const changePassword = async (token, passwordData) => {
+export const changePassword = async (token = null, passwordData) => {
   try {
+    const authToken = token || (await import('./storage.js').then(m => m.default.getItem('accessToken')));
+    
     logger.info('UserService', 'Changing user password');
     logger.apiRequest('POST', API_CONFIG.ENDPOINTS.USER.CHANGE_PASSWORD);
 
@@ -137,7 +153,7 @@ export const changePassword = async (token, passwordData) => {
       buildApiUrl(API_CONFIG.ENDPOINTS.USER.CHANGE_PASSWORD),
       {
         method: 'POST',
-        headers: getAuthHeaders(token),
+        headers: getAuthHeaders(authToken),
         body: JSON.stringify(passwordData),
       },
     );
@@ -175,11 +191,13 @@ export const changePassword = async (token, passwordData) => {
 
 /**
  * Delete User Account
- * @param {string} token - JWT token
+ * @param {string|null} token - JWT token (optional, will use stored token if null)
  * @returns {Promise<Object>} API response
  */
-export const deleteUserAccount = async (token) => {
+export const deleteUserAccount = async (token = null) => {
   try {
+    const authToken = token || (await import('./storage.js').then(m => m.default.getItem('accessToken')));
+    
     logger.info('UserService', 'Deleting user account');
     logger.apiRequest('DELETE', API_CONFIG.ENDPOINTS.USER.PROFILE);
 
@@ -187,7 +205,7 @@ export const deleteUserAccount = async (token) => {
       buildApiUrl(API_CONFIG.ENDPOINTS.USER.PROFILE),
       {
         method: 'DELETE',
-        headers: getAuthHeaders(token),
+        headers: getAuthHeaders(authToken),
       },
     );
 

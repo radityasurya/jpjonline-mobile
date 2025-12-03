@@ -3,11 +3,22 @@
  *
  * Manages audio feedback for correct/incorrect answers during exams.
  * Uses expo-audio for cross-platform audio support with local assets.
+ *
+ * IMPORTANT: Sound files must be actual audio files (WAV or MP3).
+ * If sounds don't play, check that the files are valid audio files.
+ * You can convert to MP3 using: ffmpeg -i input.wav -acodec libmp3lame output.mp3
  */
 
 import { Audio } from 'expo-av';
 import { Platform } from 'react-native';
 import { logger } from './logger.js';
+
+// Sound file configuration - using MP3 files
+const SOUND_FILES = {
+  correct: require('../assets/sounds/correct.mp3'),
+  incorrect: require('../assets/sounds/wrong.mp3'),
+  warning: require('../assets/sounds/correct.mp3'), // Using correct sound for warning
+};
 
 class SoundManager {
   constructor() {
@@ -47,35 +58,57 @@ class SoundManager {
    */
   async loadSounds() {
     try {
-      // Load correct answer sound
-      const correctSound = await Audio.Sound.createAsync(
-        require('../assets/sounds/correct.wav'),
-        { shouldPlay: false, volume: 0.5 },
-      );
-      this.sounds.correct = correctSound.sound;
+      // Try to load sounds, but don't fail if they don't work
+      // iOS AVFoundation requires valid audio files (not text files)
+      
+      try {
+        const correctSound = await Audio.Sound.createAsync(
+          SOUND_FILES.correct,
+          { shouldPlay: false, volume: 0.5 },
+        );
+        this.sounds.correct = correctSound.sound;
+        logger.info('SoundManager', 'Correct sound loaded successfully');
+      } catch (e) {
+        logger.warn('SoundManager', 'Could not load correct sound - file may be invalid or corrupted', e.message);
+        this.sounds.correct = null;
+      }
 
-      // Load incorrect answer sound
-      const incorrectSound = await Audio.Sound.createAsync(
-        require('../assets/sounds/incorrect.wav'),
-        { shouldPlay: false, volume: 0.5 },
-      );
-      this.sounds.incorrect = incorrectSound.sound;
+      try {
+        const incorrectSound = await Audio.Sound.createAsync(
+          SOUND_FILES.incorrect,
+          { shouldPlay: false, volume: 0.5 },
+        );
+        this.sounds.incorrect = incorrectSound.sound;
+        logger.info('SoundManager', 'Incorrect sound loaded successfully');
+      } catch (e) {
+        logger.warn('SoundManager', 'Could not load incorrect sound - file may be invalid or corrupted', e.message);
+        this.sounds.incorrect = null;
+      }
 
-      // Load timer warning sound
-      const warningSound = await Audio.Sound.createAsync(
-        require('../assets/sounds/warning.wav'),
-        { shouldPlay: false, volume: 0.3 },
-      );
-      this.sounds.warning = warningSound.sound;
+      try {
+        const warningSound = await Audio.Sound.createAsync(
+          SOUND_FILES.warning,
+          { shouldPlay: false, volume: 0.3 },
+        );
+        this.sounds.warning = warningSound.sound;
+        logger.info('SoundManager', 'Warning sound loaded successfully');
+      } catch (e) {
+        logger.warn('SoundManager', 'Could not load warning sound - file may be invalid or corrupted', e.message);
+        this.sounds.warning = null;
+      }
 
-      logger.info('SoundManager', 'All sounds loaded successfully');
+      const loadedCount = Object.values(this.sounds).filter(s => s !== null).length;
+      logger.info('SoundManager', `Sound loading completed: ${loadedCount}/3 sounds loaded`);
+      
+      if (loadedCount === 0) {
+        logger.warn('SoundManager', 'No sounds loaded - check that audio files are valid WAV or MP3 files');
+      }
     } catch (error) {
-      logger.error(
+      logger.warn(
         'SoundManager',
-        'Failed to load sounds, using fallback',
+        'Sound system unavailable, using haptic feedback only',
         error,
       );
-      // Use system sounds as fallback
       this.loadFallbackSounds();
     }
   }
@@ -84,13 +117,13 @@ class SoundManager {
    * Load fallback system sounds
    */
   loadFallbackSounds() {
-    // For web and fallback scenarios, we'll use silent operation
+    // For web and fallback scenarios, we'll use haptic feedback only
     this.sounds = {
       correct: null,
       incorrect: null,
       warning: null,
     };
-    logger.info('SoundManager', 'Using fallback silent sounds');
+    logger.info('SoundManager', 'Using haptic feedback only (no audio)');
   }
 
   /**
@@ -98,21 +131,19 @@ class SoundManager {
    */
   async playCorrect() {
     if (!this.isEnabled || !this.isInitialized) {
-      logger.debug('SoundManager', 'Sound disabled or not initialized');
       return;
     }
 
+    // Always use haptic feedback first for immediate response
+    this.playHapticFeedback('success');
+
+    // Try to play sound if available
     try {
       if (this.sounds.correct) {
         await this.sounds.correct.replayAsync();
-        logger.debug('SoundManager', 'Played correct answer sound');
-      } else {
-        // Fallback: Use haptic feedback if available
-        this.playHapticFeedback('success');
       }
     } catch (error) {
-      logger.error('SoundManager', 'Failed to play correct sound', error);
-      this.playHapticFeedback('success');
+      logger.debug('SoundManager', 'Could not play correct sound, haptic feedback used');
     }
   }
 
@@ -121,21 +152,19 @@ class SoundManager {
    */
   async playIncorrect() {
     if (!this.isEnabled || !this.isInitialized) {
-      logger.debug('SoundManager', 'Sound disabled or not initialized');
       return;
     }
 
+    // Always use haptic feedback first for immediate response
+    this.playHapticFeedback('error');
+
+    // Try to play sound if available
     try {
       if (this.sounds.incorrect) {
         await this.sounds.incorrect.replayAsync();
-        logger.debug('SoundManager', 'Played incorrect answer sound');
-      } else {
-        // Fallback: Use haptic feedback if available
-        this.playHapticFeedback('error');
       }
     } catch (error) {
-      logger.error('SoundManager', 'Failed to play incorrect sound', error);
-      this.playHapticFeedback('error');
+      logger.debug('SoundManager', 'Could not play incorrect sound, haptic feedback used');
     }
   }
 
@@ -147,18 +176,21 @@ class SoundManager {
       return;
     }
 
+    // Use haptic feedback for warning
+    this.playHapticFeedback('warning');
+
+    // Try to play sound if available
     try {
       if (this.sounds.warning) {
         await this.sounds.warning.replayAsync();
-        logger.debug('SoundManager', 'Played warning sound');
       }
     } catch (error) {
-      logger.error('SoundManager', 'Failed to play warning sound', error);
+      logger.debug('SoundManager', 'Could not play warning sound, haptic feedback used');
     }
   }
 
   /**
-   * Haptic feedback fallback
+   * Haptic feedback (primary feedback mechanism)
    */
   playHapticFeedback(type) {
     if (Platform.OS !== 'web') {
@@ -179,9 +211,9 @@ class SoundManager {
           default:
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         }
-        logger.debug('SoundManager', `Played haptic feedback: ${type}`);
       } catch (error) {
-        logger.warn('SoundManager', 'Haptic feedback not available', error);
+        // Silently fail if haptics not available
+        logger.debug('SoundManager', 'Haptic feedback not available');
       }
     }
   }

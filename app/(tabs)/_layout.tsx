@@ -1,10 +1,13 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
+import { Platform } from 'react-native';
 import { BookOpen, ClipboardList, UserCircle, Home } from 'lucide-react-native';
 import { useI18n } from '@/contexts/I18nContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
   const { t } = useI18n();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
@@ -16,9 +19,9 @@ export default function TabLayout() {
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
           borderTopColor: '#E5E5EA',
-          paddingBottom: 10,
+          paddingBottom: Platform.OS === 'ios' ? insets.bottom : 10,
           paddingTop: 10,
-          height: 70,
+          height: Platform.OS === 'ios' ? 70 + insets.bottom : 70,
         },
         tabBarLabelStyle: {
           fontSize: 12,

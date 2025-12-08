@@ -45,6 +45,8 @@ export function AnswerOptions({
 
   const getAnswerOptionStyle = (optionIndex: number) => {
     const isSelected = selectedAnswer === optionIndex;
+    // Support both answerIndex (from API) and correctAnswer (legacy)
+    const correctAnswerIndex = question.answerIndex ?? question.correctAnswer;
 
     if (examMode === 'OPEN' && hasValidation) {
       if (isSelected) {
@@ -52,7 +54,7 @@ export function AnswerOptions({
           backgroundColor: isCorrect ? '#E8F5E8' : '#FFEBEE',
           borderColor: isCorrect ? '#4CAF50' : '#F44336',
         };
-      } else if (optionIndex === question.correctAnswer) {
+      } else if (optionIndex === correctAnswerIndex) {
         return {
           backgroundColor: '#E8F5E8',
           borderColor: '#4CAF50',
@@ -76,20 +78,34 @@ export function AnswerOptions({
       ? question.options
       : question.options?.choices || [];
 
+  // Check if optionImages array exists and has images
+  const optionImages = question.optionImages || [];
+  const hasOptionImages = optionImages.some(
+    (img: string) => img && img.trim() !== '',
+  );
+
   const isImageOnlyOptions =
-    typeof question.options === 'object' &&
-    question.options.type === 'image' &&
-    Array.isArray(options) &&
-    options.every(
-      (option: any) =>
-        typeof option === 'object' && option.image && !option.text,
-    );
+    (typeof question.options === 'object' &&
+      question.options.type === 'image' &&
+      Array.isArray(options) &&
+      options.every(
+        (option: any) =>
+          typeof option === 'object' && option.image && !option.text,
+      )) ||
+    (hasOptionImages &&
+      options.every((opt: string) => !opt || opt.trim() === ''));
 
   return (
     <View style={styles.optionsContainer}>
       {options.map((option: any, index: number) => {
         const isImageLoading = imageLoadingStates[index] !== false;
         const hasImageError = imageErrorStates[index] === true;
+
+        // Get option image from optionImages array or from option object
+        const optionImageUrl =
+          optionImages[index] ||
+          (typeof option === 'object' ? option.image : null);
+        const hasImage = optionImageUrl && optionImageUrl.trim() !== '';
 
         return (
           <TouchableOpacity
@@ -121,7 +137,7 @@ export function AnswerOptions({
               </View>
             )}
 
-            {typeof option === 'object' && option.image && (
+            {hasImage && (
               <View
                 style={[
                   styles.optionImageContainer,
@@ -135,7 +151,7 @@ export function AnswerOptions({
                 )}
                 {!hasImageError && (
                   <Image
-                    source={{ uri: option.image }}
+                    source={{ uri: optionImageUrl }}
                     style={[
                       styles.optionImage,
                       isImageOnlyOptions && styles.imageOnlyOption,

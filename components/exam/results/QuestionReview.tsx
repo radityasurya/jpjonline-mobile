@@ -15,8 +15,7 @@ interface QuestionReviewProps {
     explanation: string;
     questionImage?: string;
     options: any;
-    questionImage?: string;
-    options: any;
+    optionImages?: string[];
   };
   questionIndex: number;
 }
@@ -61,7 +60,13 @@ export function QuestionReview({
       loading: true,
       error: false,
     };
-    const hasImage = typeof option === 'object' && option.image;
+
+    // Get option image from optionImages array or from option object
+    const optionImages = questionResult.optionImages || [];
+    const optionImageUrl =
+      optionImages[index] || (typeof option === 'object' ? option.image : null);
+    const hasImage = optionImageUrl && optionImageUrl.trim() !== '';
+
     const hasText =
       typeof option === 'string' ||
       (typeof option === 'object' && option.text && option.text.trim());
@@ -109,7 +114,7 @@ export function QuestionReview({
             )}
             {!optionState.error && (
               <Image
-                source={{ uri: option.image }}
+                source={{ uri: optionImageUrl }}
                 style={[
                   styles.optionImage,
                   optionState.loading && styles.hiddenImage,

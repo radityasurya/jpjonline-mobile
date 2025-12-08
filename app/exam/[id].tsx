@@ -36,6 +36,7 @@ interface ApiQuestion {
   answerIndex: number;
   explanation: string | null;
   imageUrl: string | null;
+  optionImages?: string[];
   order: number;
 }
 

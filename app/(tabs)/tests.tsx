@@ -17,6 +17,7 @@ import ResultCard from '@/components/tests/ResultCard';
 import SearchBar from '@/components/shared/SearchBar';
 import CategorySelector from '@/components/shared/CategorySelector';
 import TabSelector from '@/components/tests/TabSelector';
+import SortButton, { SortOption } from '@/components/tests/SortButton';
 
 // Types for the new API structure
 interface ApiExam {
@@ -68,6 +69,7 @@ export default function TestsScreen() {
   const [selectedTab, setSelectedTab] = useState<'available' | 'results'>(
     'available',
   );
+  const [sortOption, setSortOption] = useState<SortOption>('name-asc');
 
   useEffect(() => {
     // Check if user is logged in before fetching exams
@@ -81,7 +83,7 @@ export default function TestsScreen() {
       setIsLoading(true);
       logger.debug('TestsScreen', 'Fetching available exams');
       try {
-        const response = await getUserExams();
+        const response = (await getUserExams('')) as ExamsApiResponse;
         logger.info('TestsScreen', 'Exams loaded successfully', {
           categoriesCount: response.categories.length,
           userTier: user?.tier,
@@ -91,7 +93,8 @@ export default function TestsScreen() {
 
         // Filter out categories that are not accessible to the user
         const accessibleCategories = response.categories.filter(
-          (category) => category.accessible && category.name !== 'Premium Only',
+          (category: ExamCategory) =>
+            category.accessible && category.name !== 'Premium Only',
         );
         setCategories([
           { id: 'all', name: 'All', accessible: true, exams: [] },
@@ -107,7 +110,10 @@ export default function TestsScreen() {
     const fetchTestResults = async () => {
       logger.debug('TestsScreen', 'Fetching exam results');
       try {
-        const response = await getUserExamHistory();
+        const response = (await getUserExamHistory('')) as {
+          results: ExamResult[];
+          total: number;
+        };
         logger.debug('TestsScreen', 'Exam results loaded', {
           count: response.results.length,
         });
@@ -124,7 +130,7 @@ export default function TestsScreen() {
   useEffect(() => {
     applyFilters();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, selectedCategory, examsData]);
+  }, [searchQuery, selectedCategory, examsData, sortOption]);
 
   const applyFilters = () => {
     if (!examsData) {
@@ -160,7 +166,31 @@ export default function TestsScreen() {
       );
     }
 
+    // Apply sorting
+    filtered = applySorting(filtered, sortOption);
+
     setFilteredExams(filtered);
+  };
+
+  const applySorting = (exams: ApiExam[], sort: SortOption): ApiExam[] => {
+    const sorted = [...exams];
+
+    switch (sort) {
+      case 'name-asc':
+        return sorted.sort((a, b) => a.title.localeCompare(b.title));
+      case 'name-desc':
+        return sorted.sort((a, b) => b.title.localeCompare(a.title));
+      case 'questions-asc':
+        return sorted.sort((a, b) => a.questionCount - b.questionCount);
+      case 'questions-desc':
+        return sorted.sort((a, b) => b.questionCount - a.questionCount);
+      case 'newest':
+        return sorted.sort((a, b) => b.id.localeCompare(a.id));
+      case 'oldest':
+        return sorted.sort((a, b) => a.id.localeCompare(b.id));
+      default:
+        return sorted;
+    }
   };
 
   const startExam = (exam: ApiExam) => {
@@ -210,15 +240,20 @@ export default function TestsScreen() {
             onSearchChange={setSearchQuery}
             placeholder={'Cari ' + t('exams.title').toLowerCase() + '...'}
           />
-          <CategorySelector
-            categories={categories.map((cat) => ({
-              id: cat.id,
-              title: cat.name,
-              slug: cat.id,
-            }))}
-            selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
-          />
+          <View style={styles.filterRow}>
+            <View style={styles.categoryContainer}>
+              <CategorySelector
+                categories={categories.map((cat) => ({
+                  id: cat.id,
+                  title: cat.name,
+                  slug: cat.id,
+                }))}
+                selectedCategory={selectedCategory}
+                onCategoryChange={setSelectedCategory}
+              />
+            </View>
+            <SortButton currentSort={sortOption} onSortChange={setSortOption} />
+          </View>
         </>
       )}
       {selectedTab === 'available' ? (
@@ -279,6 +314,16 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 16,
     color: '#666666',
+  },
+  filterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    gap: 12,
+    marginBottom: 16,
+  },
+  categoryContainer: {
+    flex: 1,
   },
   listContainer: {
     paddingHorizontal: 20,

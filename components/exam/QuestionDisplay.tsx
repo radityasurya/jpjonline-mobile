@@ -13,11 +13,14 @@ export function QuestionDisplay({
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
 
+  // Support both imageUrl (from API) and image (legacy)
+  const questionImageUrl = question.imageUrl || question.image;
+
   return (
     <View style={styles.questionContainer}>
       <Text style={styles.questionNumber}>Question {questionIndex + 1}</Text>
 
-      {question.image && (
+      {questionImageUrl && (
         <View style={styles.imageContainer}>
           {imageLoading && (
             <View style={styles.imageLoadingContainer}>
@@ -27,14 +30,14 @@ export function QuestionDisplay({
           )}
           {!imageError && (
             <Image
-              source={{ uri: question.image }}
+              source={{ uri: questionImageUrl }}
               style={[styles.questionImage, imageLoading && styles.hiddenImage]}
               onLoad={() => setImageLoading(false)}
               onError={() => {
                 setImageError(true);
                 setImageLoading(false);
               }}
-              resizeMode="cover"
+              resizeMode="contain"
             />
           )}
           {imageError && (

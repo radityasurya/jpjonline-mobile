@@ -107,6 +107,9 @@ export interface QuestionResult {
   correctAnswer: number;
   isCorrect: boolean;
   explanation: string;
+  questionImage?: string;
+  options?: string[];
+  optionImages?: string[];
 }
 
 // Auth Types

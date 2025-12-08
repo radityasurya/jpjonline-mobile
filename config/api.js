@@ -32,9 +32,12 @@ export const API_CONFIG = {
       CATEGORY_BY_SLUG: '/api/notes/categories',
     },
     EXAMS: {
-      USER_EXAMS: '/api/me/exams',
+      CATEGORIES: '/api/exams/categories',
+      LIST: '/api/exams',
       BY_SLUG: '/api/exams',
       BY_SLUG_FULL: '/api/exams',
+      USER_EXAMS: '/api/me/exams',
+      USER_HISTORY: '/api/me/exam-history',
     },
   },
   HEADERS: {

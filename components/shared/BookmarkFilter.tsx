@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { BookmarkCheck } from 'lucide-react-native';
 
 interface BookmarkFilterProps {
@@ -18,31 +18,23 @@ export default function BookmarkFilter({
   }
 
   return (
-    <View style={styles.filtersContainer}>
-      <TouchableOpacity
-        style={[
-          styles.bookmarkIconFilter,
-          showBookmarksOnly && styles.activeBookmarkIconFilter,
-        ]}
-        onPress={onToggle}
-      >
-        <BookmarkCheck
-          size={20}
-          color={showBookmarksOnly ? '#FFFFFF' : '#666666'}
-        />
-      </TouchableOpacity>
-    </View>
+    <TouchableOpacity
+      style={[
+        styles.bookmarkFilter,
+        showBookmarksOnly && styles.activeBookmarkFilter,
+      ]}
+      onPress={onToggle}
+    >
+      <BookmarkCheck
+        size={16}
+        color={showBookmarksOnly ? '#FFFFFF' : '#374151'}
+      />
+    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  filtersContainer: {
-    paddingHorizontal: 0,
-    paddingBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  bookmarkIconFilter: {
+  bookmarkFilter: {
     width: 44,
     height: 44,
     backgroundColor: '#F8F9FA',
@@ -51,9 +43,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#E0E0E0',
-    marginRight: 12,
   },
-  activeBookmarkIconFilter: {
+  activeBookmarkFilter: {
     backgroundColor: '#333333',
     borderColor: '#333333',
   },

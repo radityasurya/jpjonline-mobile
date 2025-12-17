@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { X } from 'lucide-react-native';
 import { ExamTimer } from './ExamTimer';
+import { LAYOUT_CONSTANTS } from '@/constants/layout';
 
 interface ExamHeaderProps {
   examTitle: string;
@@ -96,8 +97,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
+    paddingTop: LAYOUT_CONSTANTS.headerPaddingTop,
+    paddingBottom: LAYOUT_CONSTANTS.headerPaddingBottom,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',

@@ -15,40 +15,39 @@ export default function SearchBar({
 }: SearchBarProps) {
   return (
     <View style={styles.searchContainer}>
-      <View style={styles.searchBox}>
-        <Search size={20} color="#666666" />
-        <TextInput
-          style={styles.searchInput}
-          placeholder={placeholder}
-          value={searchQuery}
-          onChangeText={onSearchChange}
-        />
-      </View>
+      <Search size={20} color="#9CA3AF" style={styles.searchIcon} />
+      <TextInput
+        style={styles.searchInput}
+        placeholder={placeholder}
+        placeholderTextColor="#9CA3AF"
+        value={searchQuery}
+        onChangeText={onSearchChange}
+        autoCapitalize="none"
+        autoCorrect={false}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   searchContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 16,
-    backgroundColor: '#FFFFFF',
-  },
-  searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#F9FAFB',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: '#E5E7EB',
+    flex: 1,
+  },
+  searchIcon: {
+    marginRight: 12,
   },
   searchInput: {
     flex: 1,
-    marginLeft: 12,
     fontSize: 16,
-    color: '#333333',
+    color: '#111827',
+    padding: 0,
   },
 });

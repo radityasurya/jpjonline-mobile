@@ -27,6 +27,7 @@ import {
   ACTIVITY_TYPES,
 } from '@/services';
 import { logger } from '@/utils/logger';
+import { LAYOUT_CONSTANTS } from '@/constants/layout';
 import {
   getPlatformInfo,
   isBookmarked,
@@ -209,7 +210,7 @@ export default function NoteDetailScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#facc15" />
-        <Text style={styles.loadingText}>Memuatkan nota...</Text>
+        <Text style={styles.loadingText}>Loading note...</Text>
       </View>
     );
   }
@@ -383,8 +384,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
+    paddingTop: LAYOUT_CONSTANTS.headerPaddingTop,
+    paddingBottom: LAYOUT_CONSTANTS.headerPaddingBottom,
     backgroundColor: '#facc15',
   },
   headerButton: {

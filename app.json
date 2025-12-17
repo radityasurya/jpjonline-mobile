@@ -11,9 +11,18 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.onepage.jpjonline",
-      "buildNumber": "2",
+      "buildNumber": "26",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": false,
+          "NSExceptionDomains": {
+            "jpjonline.com": {
+              "NSExceptionAllowsInsecureHTTPLoads": true,
+              "NSIncludesSubdomains": true
+            }
+          }
+        }
       }
     },
     "web": {

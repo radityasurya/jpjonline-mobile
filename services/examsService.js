@@ -170,19 +170,49 @@ export const submitExamResults = async (examSlug, results, token) => {
 
     examData.questions.forEach((question, index) => {
       const userAnswer = results.answers[index] ?? -1;
-      const isCorrect = userAnswer === question.answerIndex;
+      
+      // Handle both answerIndex (new API) and correctAnswer (legacy) fields
+      const correctAnswerIndex = question.answerIndex ?? question.correctAnswer;
+      const isCorrect = userAnswer === correctAnswerIndex;
       if (isCorrect) correctAnswers++;
+
+      // Normalize options and optionImages for consistent handling
+      let normalizedOptions = [];
+      let normalizedOptionImages = [];
+
+      // Handle legacy format with options.choices
+      if (question.options?.choices && Array.isArray(question.options.choices)) {
+        normalizedOptions = question.options.choices.map((choice) => 
+          typeof choice === 'string' ? choice : (choice.text || '')
+        );
+        normalizedOptionImages = question.options.choices.map((choice) => 
+          typeof choice === 'object' ? (choice.image || null) : null
+        );
+      }
+      // Handle new API format with options as array and separate optionImages
+      else if (Array.isArray(question.options)) {
+        normalizedOptions = question.options;
+        // Ensure optionImages is properly handled - if null/undefined, use empty array
+        normalizedOptionImages = question.optionImages && Array.isArray(question.optionImages) 
+          ? question.optionImages 
+          : [];
+      }
+      // Handle simple array format
+      else if (Array.isArray(question.options)) {
+        normalizedOptions = question.options;
+        normalizedOptionImages = [];
+      }
 
       questionResults.push({
         questionId: question.id,
-        question: question.text,
+        question: question.text || question.question,
         userAnswer: userAnswer,
-        correctAnswer: question.answerIndex,
+        correctAnswer: correctAnswerIndex,
         isCorrect: isCorrect,
         explanation: question.explanation || '',
-        questionImage: question.imageUrl,
-        options: question.options,
-        optionImages: question.optionImages || [],
+        questionImage: question.imageUrl || question.image,
+        options: normalizedOptions,
+        optionImages: normalizedOptionImages,
       });
     });
 

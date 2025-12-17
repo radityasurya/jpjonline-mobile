@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,8 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/utils/logger';
 import soundManager from '@/utils/soundManager';
+import { decodeHtmlEntities } from '@/utils/htmlDecoder';
+import { LAYOUT_CONSTANTS } from '@/constants/layout';
 import {
   getExamBySlug,
   submitExamResults,
@@ -117,7 +119,7 @@ export default function ExamScreen() {
     setIsLoading(true);
     logger.info('ExamScreen', 'Loading exam data', { examSlug });
     try {
-      const examData = await getExamBySlug(examSlug as string);
+      const examData = (await getExamBySlug(examSlug as string, '')) as ApiExam;
       logger.info('ExamScreen', 'Exam data loaded successfully', {
         examSlug,
         questionsCount: examData.questions.length,
@@ -172,16 +174,12 @@ export default function ExamScreen() {
       setQuestionRetryStates(newRetryStates);
     }
 
-    logger.debug('ExamScreen', 'Answer selected', {
-      questionIndex: currentQuestionIndex,
-      answerIndex,
-    });
     const newAnswers = [...answers];
     newAnswers[currentQuestionIndex] = answerIndex;
     setAnswers(newAnswers);
   };
 
-  const handleCheckAnswer = () => {
+  const handleCheckAnswer = useCallback(() => {
     if (answers[currentQuestionIndex] === -1) {
       logger.warn('ExamScreen', 'Check answer attempted with no selection');
       Alert.alert('No Answer Selected', 'Please select an answer first.');
@@ -212,7 +210,7 @@ export default function ExamScreen() {
     } else if (examMode === 'OPEN' && isSoundEnabled) {
       soundManager.playIncorrect();
     }
-  };
+  }, [answers, currentQuestionIndex, questions, answerValidation, hasCheckedAnswer, examMode, isSoundEnabled]);
 
   const handleRetryQuestion = () => {
     logger.userAction('Question retry', {
@@ -249,24 +247,26 @@ export default function ExamScreen() {
     setCurrentQuestionIndex(index);
   };
 
-  const handleTimeExpired = () => {
+  const handleTimeExpired = useCallback(() => {
     logger.warn('ExamScreen', 'Exam time expired, auto-submitting');
+    setIsTimerActive(false);
+    
     Alert.alert(
       'Time Expired',
       'Your exam time has expired. The exam will be submitted automatically.',
       [
         {
-          text: 'OK',
+          text: 'Submit Now',
           onPress: () => {
-            setIsTimerActive(false);
-            handleSubmitExam();
+            submitExam();
           },
         },
       ],
+      { cancelable: false } // Prevent dismissing the alert
     );
-  };
+  }, []);
 
-  const handleQuestionTimeExpired = () => {
+  const handleQuestionTimeExpired = useCallback(() => {
     logger.debug('ExamScreen', 'Question time expired');
     if (isSoundEnabled) {
       soundManager.playWarning();
@@ -284,9 +284,9 @@ export default function ExamScreen() {
 
     // Auto-advance to next question
     if (currentQuestionIndex < questions.length - 1) {
-      handleNextQuestion();
+      setCurrentQuestionIndex(prev => prev + 1);
     }
-  };
+  }, [examMode, answers, currentQuestionIndex, hasCheckedAnswer, isSoundEnabled, handleCheckAnswer]);
 
   const handleToggleSound = () => {
     const newSoundState = !isSoundEnabled;
@@ -362,14 +362,14 @@ export default function ExamScreen() {
     });
 
     try {
-      const response = await submitExamResults(
+      const response = (await submitExamResults(
         exam!.slug,
         {
           answers: answers,
           timeSpent: timeSpentMinutes,
         },
-        null, // Token will be retrieved from storage by the service
-      );
+        '', // Token will be retrieved from storage by the service
+      )) as { success: boolean; result: any };
 
       if (response.success) {
         logger.info('ExamScreen', 'Exam submitted successfully', {
@@ -419,9 +419,13 @@ export default function ExamScreen() {
           )}`,
         );
       }
-    } catch (error) {
+    } catch (error: any) {
       logger.error('ExamScreen', 'Failed to submit exam', error);
-      Alert.alert('Error', 'Failed to submit exam. Please try again.');
+      const errorMessage = error?.message || 'Unknown error occurred';
+      Alert.alert(
+        'Submission Failed',
+        `Failed to submit exam: ${errorMessage}\n\nPlease try again.`,
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -496,12 +500,6 @@ export default function ExamScreen() {
           hasValidation={hasCheckedAnswer[currentQuestionIndex]}
           isCorrect={answerValidation[currentQuestionIndex]}
           examMode={examMode}
-          canRetryQuestion={
-            examMode === 'OPEN' &&
-            hasCheckedAnswer[currentQuestionIndex] &&
-            !answerValidation[currentQuestionIndex]
-          }
-          onRetryQuestion={handleRetryQuestion}
           disabled={false}
         />
 
@@ -512,7 +510,7 @@ export default function ExamScreen() {
             <View style={styles.explanationContainer}>
               <Text style={styles.explanationTitle}>Explanation:</Text>
               <Text style={styles.explanationText}>
-                {currentQuestion.explanation}
+                {decodeHtmlEntities(currentQuestion.explanation)}
               </Text>
             </View>
           )}

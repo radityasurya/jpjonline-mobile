@@ -21,8 +21,6 @@ export default function ExamResultScreen() {
   const [result, setResult] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSharing, setIsSharing] = useState(false);
-  const [questions] = useState<any[]>([]);
-
   useEffect(() => {
     loadResultData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -37,13 +35,6 @@ export default function ExamResultScreen() {
           decodeURIComponent(resultData as string),
         );
         setResult(parsedResult);
-
-        // Load questions for detailed review
-        if (parsedResult.examSlug) {
-          // TODO: Load questions for detailed review when needed
-          // const examData = await getExamBySlug(parsedResult.examSlug, user?.token);
-          // setQuestions(examData.questions);
-        }
       } else {
         // TODO: Load from exam history API when needed
         Alert.alert('Error', 'No result data provided.');
@@ -123,20 +114,13 @@ export default function ExamResultScreen() {
         {/* Detailed Results */}
         <View style={styles.detailsContainer}>
           {result.results &&
-            result.results.map((questionResult: any, index: number) => {
-              const question = questions[index];
-              return (
-                <QuestionReview
-                  key={index}
-                  questionResult={{
-                    ...questionResult,
-                    questionImage: question?.image,
-                    options: question?.options || questionResult.options,
-                  }}
-                  questionIndex={index}
-                />
-              );
-            })}
+            result.results.map((questionResult: any, index: number) => (
+              <QuestionReview
+                key={index}
+                questionResult={questionResult}
+                questionIndex={index}
+              />
+            ))}
         </View>
       </ScrollView>
 

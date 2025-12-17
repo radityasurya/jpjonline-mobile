@@ -30,8 +30,8 @@ export function ExamTimer({
   const [questionTimeRemaining, setQuestionTimeRemaining] =
     useState(questionDuration);
   const [hasWarned, setHasWarned] = useState(false);
-  const timerRef = useRef<NodeJS.Timeout>();
-  const questionTimerRef = useRef<NodeJS.Timeout>();
+  const timerRef = useRef<ReturnType<typeof setInterval>>();
+  const questionTimerRef = useRef<ReturnType<typeof setInterval>>();
 
   // Reset question timer when question changes
   useEffect(() => {
@@ -53,6 +53,8 @@ export function ExamTimer({
       timerRef.current = setInterval(() => {
         setTimeRemaining((prev) => {
           if (prev <= 1) {
+            if (timerRef.current) clearInterval(timerRef.current);
+            soundManager.playWarning();
             onTimeExpired();
             return 0;
           }

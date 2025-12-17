@@ -112,11 +112,14 @@ const styles = StyleSheet.create({
   sortButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f3f4f6',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
+    justifyContent: 'center',
+    backgroundColor: '#F8F9FA',
+    paddingHorizontal: 16,
+    height: 48,
+    borderRadius: 12,
     gap: 6,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
   },
   sortButtonText: {
     fontSize: 14,

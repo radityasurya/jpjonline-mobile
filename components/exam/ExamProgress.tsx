@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -37,6 +37,25 @@ export function ExamProgress({
   onToggleSound,
   onToggleMode,
 }: ExamProgressProps) {
+  const scrollViewRef = useRef<ScrollView>(null);
+  const questionButtonWidth = 32; // Width of each question button
+  const questionButtonMargin = 6; // Margin right of each button
+  const totalButtonWidth = questionButtonWidth + questionButtonMargin;
+
+  // Scroll to active question when currentQuestionIndex changes
+  useEffect(() => {
+    if (scrollViewRef.current) {
+      // Calculate the x position to scroll to
+      // Center the active question in the visible area
+      const scrollToX = currentQuestionIndex * totalButtonWidth - 50;
+      
+      scrollViewRef.current.scrollTo({
+        x: Math.max(0, scrollToX),
+        animated: true,
+      });
+    }
+  }, [currentQuestionIndex]);
+
   return (
     <View style={styles.navigationBar}>
       {/* Left Section: Questions Toggle Button and Question Numbers */}
@@ -51,6 +70,7 @@ export function ExamProgress({
 
         {/* Question Numbers */}
         <ScrollView
+          ref={scrollViewRef}
           horizontal
           showsHorizontalScrollIndicator={false}
           style={styles.questionNumbersContainer}

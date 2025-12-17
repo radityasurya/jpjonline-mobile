@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 
 interface ExamNavigationProps {
@@ -37,6 +38,7 @@ export function ExamNavigation({
   onRetryQuestion,
   onSubmit,
 }: ExamNavigationProps) {
+  const insets = useSafeAreaInsets();
   const isLastQuestion = currentQuestionIndex === totalQuestions - 1;
 
   // OPEN Mode: Must check answer before proceeding
@@ -49,7 +51,7 @@ export function ExamNavigation({
     examMode === 'OPEN' && hasCheckedAnswer && canRetryQuestion;
 
   return (
-    <View style={styles.navigation}>
+    <View style={[styles.navigation, { paddingBottom: Math.max(insets.bottom, 16) }]}>
       <View style={styles.leftSection}>
         <TouchableOpacity
           style={[

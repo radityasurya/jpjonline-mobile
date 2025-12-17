@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, ActivityIndicator } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import Markdown from 'react-native-markdown-display';
 import {
   CircleCheck as CheckCircle,
   Circle as XCircle,
 } from 'lucide-react-native';
+import { RetryImage } from '@/components/shared/RetryImage';
+import { convertImageUrl } from '@/utils/markdownImageHandler';
 
 interface QuestionReviewProps {
   questionResult: {
@@ -24,47 +27,88 @@ export function QuestionReview({
   questionResult,
   questionIndex,
 }: QuestionReviewProps) {
-  const [imageLoading, setImageLoading] = useState(true);
-  const [imageError, setImageError] = useState(false);
-  const [optionImageStates, setOptionImageStates] = useState<{
-    [key: number]: { loading: boolean; error: boolean };
-  }>({});
+  const [lightboxVisible, setLightboxVisible] = useState(false);
+  const [lightboxImageUrl, setLightboxImageUrl] = useState('');
 
-  const handleImageLoad = () => {
-    setImageLoading(false);
-  };
+  // Markdown styles for question text
+  const markdownStyles = useMemo(() => ({
+    body: {
+      color: '#333333',
+    },
+    text: {
+      fontSize: 16,
+      color: '#333333',
+      lineHeight: 22,
+    },
+    paragraph: {
+      marginTop: 0,
+      marginBottom: 8,
+      fontSize: 16,
+      color: '#333333',
+      lineHeight: 22,
+    },
+    strong: {
+      fontWeight: '900' as const,
+      color: '#000000',
+    },
+    em: {
+      fontStyle: 'italic' as const,
+      color: '#333333',
+    },
+    list_item: {
+      flexDirection: 'row' as const,
+      marginBottom: 4,
+      fontSize: 16,
+      color: '#333333',
+      lineHeight: 22,
+    },
+    bullet_list: {
+      marginTop: 8,
+      marginBottom: 8,
+    },
+    ordered_list: {
+      marginTop: 8,
+      marginBottom: 8,
+    },
+    bullet_list_icon: {
+      fontSize: 16,
+      lineHeight: 22,
+      marginRight: 8,
+    },
+    ordered_list_icon: {
+      fontSize: 16,
+      lineHeight: 22,
+      marginRight: 8,
+    },
+  }), []);
 
-  const handleImageError = () => {
-    setImageError(true);
-    setImageLoading(false);
-  };
-
-  const handleOptionImageLoad = (index: number) => {
-    setOptionImageStates((prev) => ({
-      ...prev,
-      [index]: { ...prev[index], loading: false },
-    }));
-  };
-
-  const handleOptionImageError = (index: number) => {
-    setOptionImageStates((prev) => ({
-      ...prev,
-      [index]: { loading: false, error: true },
-    }));
-  };
+  // Custom rules for markdown rendering
+  const markdownRules = useMemo(() => ({
+    image: (node: any) => {
+      const imageUrl = convertImageUrl(node.attributes.src);
+      return (
+        <View key={node.key} style={styles.markdownImageContainer}>
+          <RetryImage
+            uri={imageUrl}
+            style={styles.markdownImage}
+            resizeMode="contain"
+            maxRetries={3}
+            retryDelay={2000}
+          />
+        </View>
+      );
+    },
+  }), []);
 
   const renderAnswerOption = (option: any, index: number) => {
     const isUserAnswer = questionResult.userAnswer === index;
     const isCorrectAnswer = questionResult.correctAnswer === index;
-    const optionState = optionImageStates[index] || {
-      loading: true,
-      error: false,
-    };
 
     // Get option image from optionImages array or from option object
     const optionImages = questionResult.optionImages || [];
-    const optionImageUrl =
+    const rawOptionImageUrl =
       optionImages[index] || (typeof option === 'object' ? option.image : null);
+    const optionImageUrl = rawOptionImageUrl ? convertImageUrl(rawOptionImageUrl) : null;
     const hasImage = optionImageUrl && optionImageUrl.trim() !== '';
 
     const hasText =
@@ -106,30 +150,16 @@ export function QuestionReview({
         </View>
 
         {hasImage && (
-          <View style={styles.optionImageContainer}>
-            {optionState.loading && (
-              <View style={styles.imageLoadingContainer}>
-                <ActivityIndicator size="small" color="#666666" />
-              </View>
-            )}
-            {!optionState.error && (
-              <Image
-                source={{ uri: optionImageUrl }}
-                style={[
-                  styles.optionImage,
-                  optionState.loading && styles.hiddenImage,
-                ]}
-                onLoad={() => handleOptionImageLoad(index)}
-                onError={() => handleOptionImageError(index)}
-                resizeMode="cover"
-              />
-            )}
-            {optionState.error && (
-              <View style={styles.imageErrorContainer}>
-                <Text style={styles.imageErrorText}>Failed to load image</Text>
-              </View>
-            )}
-          </View>
+          <RetryImage
+            uri={optionImageUrl}
+            style={styles.optionImage}
+            containerStyle={styles.optionImageContainer}
+            resizeMode="contain"
+            maxRetries={3}
+            retryDelay={2000}
+            loadingSize="small"
+            loadingColor="#666666"
+          />
         )}
 
         {hasText && (
@@ -157,34 +187,23 @@ export function QuestionReview({
       </View>
 
       {questionResult.questionImage && (
-        <View style={styles.questionImageContainer}>
-          {imageLoading && (
-            <View style={styles.imageLoadingContainer}>
-              <ActivityIndicator size="large" color="#facc15" />
-              <Text style={styles.loadingText}>Loading image...</Text>
-            </View>
-          )}
-          {!imageError && (
-            <Image
-              source={{ uri: questionResult.questionImage }}
-              style={[styles.questionImage, imageLoading && styles.hiddenImage]}
-              onLoad={handleImageLoad}
-              onError={handleImageError}
-              resizeMode="cover"
-            />
-          )}
-          {imageError && (
-            <View style={styles.imageErrorContainer}>
-              <Text style={styles.imageErrorText}>
-                Failed to load question image
-              </Text>
-            </View>
-          )}
-        </View>
+        <RetryImage
+          uri={convertImageUrl(questionResult.questionImage)}
+          style={styles.questionImage}
+          containerStyle={styles.questionImageContainer}
+          resizeMode="contain"
+          maxRetries={3}
+          retryDelay={2000}
+        />
       )}
 
       {questionResult.question && questionResult.question.trim() && (
-        <Text style={styles.questionText}>{questionResult.question}</Text>
+        <Markdown
+          style={markdownStyles}
+          rules={markdownRules}
+        >
+          {questionResult.question}
+        </Markdown>
       )}
 
       <View style={styles.answersContainer}>
@@ -224,52 +243,24 @@ const styles = StyleSheet.create({
     color: '#666666',
   },
   questionImageContainer: {
-    position: 'relative',
     marginBottom: 16,
+    height: 200,
   },
   questionImage: {
     width: '100%',
     height: 200,
     borderRadius: 12,
   },
-  hiddenImage: {
-    opacity: 0,
-  },
-  imageLoadingContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
+  markdownImageContainer: {
+    marginVertical: 12,
     alignItems: 'center',
-    backgroundColor: '#F8F9FA',
-    borderRadius: 12,
-    height: 200,
   },
-  loadingText: {
-    marginTop: 8,
-    fontSize: 14,
-    color: '#666666',
-  },
-  imageErrorContainer: {
-    height: 200,
-    backgroundColor: '#F8F9FA',
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-  },
-  imageErrorText: {
-    fontSize: 14,
-    color: '#999999',
-  },
-  questionText: {
-    fontSize: 16,
-    color: '#333333',
-    marginBottom: 16,
-    lineHeight: 22,
+  markdownImage: {
+    width: '100%',
+    minHeight: 150,
+    height: undefined,
+    aspectRatio: 1,
+    borderRadius: 8,
   },
   answersContainer: {
     gap: 8,
@@ -316,8 +307,8 @@ const styles = StyleSheet.create({
     color: '#666666',
   },
   optionImageContainer: {
-    position: 'relative',
     marginBottom: 8,
+    height: 120,
   },
   optionImage: {
     width: '100%',

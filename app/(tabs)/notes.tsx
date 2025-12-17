@@ -81,6 +81,7 @@ export default function NotesScreen() {
   const [selectedTopicId, setSelectedTopicId] = useState<string>('all');
   const [showTopicDropdown, setShowTopicDropdown] = useState(false);
   const [filteredNotes, setFilteredNotes] = useState<ApiNote[]>([]);
+  const [groupedNotes, setGroupedNotes] = useState<{[key: string]: ApiNote[]}>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [showBookmarksOnly, setShowBookmarksOnly] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -156,26 +157,49 @@ export default function NotesScreen() {
   const applyFilters = () => {
     if (!category) {
       setFilteredNotes([]);
+      setGroupedNotes({});
       return;
     }
 
     try {
       let filtered: ApiNote[] = [];
+      const grouped: {[key: string]: ApiNote[]} = {};
 
       // If showing bookmarks only, get all notes from all topics first
       if (showBookmarksOnly) {
         // Get all notes from all topics
         category.topics.forEach((topic) => {
-          filtered = [...filtered, ...topic.notes];
+          const notesWithTopic = topic.notes.map(note => ({
+            ...note,
+            topic: topic // Ensure each note has the topic data
+          }));
+          filtered = [...filtered, ...notesWithTopic];
         });
         // Filter to only bookmarked notes
         filtered = filtered.filter((note) => bookmarkStates[note.id]);
       } else {
         // Get notes based on selected topic
         if (selectedTopicId === 'all') {
-          // Show all notes from all topics
+          // Show all notes from all topics - group by topic
           category.topics.forEach((topic) => {
-            filtered = [...filtered, ...topic.notes];
+            const notesWithTopic = topic.notes.map(note => ({
+              ...note,
+              topic: topic // Ensure each note has the topic data
+            }));
+            
+            // Apply search filter to this topic's notes
+            let topicNotes = notesWithTopic;
+            if (searchQuery.trim()) {
+              const query = searchQuery.toLowerCase();
+              topicNotes = topicNotes.filter((note) =>
+                note.title.toLowerCase().includes(query),
+              );
+            }
+            
+            if (topicNotes.length > 0) {
+              grouped[topic.title] = topicNotes;
+            }
+            filtered = [...filtered, ...topicNotes];
           });
         } else {
           // Show notes from selected topic only
@@ -183,30 +207,41 @@ export default function NotesScreen() {
             (t) => t.id === selectedTopicId,
           );
           if (selectedTopic) {
-            filtered = [...selectedTopic.notes];
+            const notesWithTopic = selectedTopic.notes.map(note => ({
+              ...note,
+              topic: selectedTopic // Ensure each note has the topic data
+            }));
+            
+            // Apply search filter
+            if (searchQuery.trim()) {
+              const query = searchQuery.toLowerCase();
+              filtered = notesWithTopic.filter((note) =>
+                note.title.toLowerCase().includes(query),
+              );
+            } else {
+              filtered = [...notesWithTopic];
+            }
           }
         }
       }
 
-      // Apply search filter
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase();
-        filtered = filtered.filter((note) =>
-          note.title.toLowerCase().includes(query),
-        );
+      // Apply search filter for non-grouped view (single topic or bookmark only)
+      if (selectedTopicId !== 'all' || showBookmarksOnly) {
+        if (searchQuery.trim()) {
+          const query = searchQuery.toLowerCase();
+          filtered = filtered.filter((note) =>
+            note.title.toLowerCase().includes(query),
+          );
+        }
       }
 
       setFilteredNotes(filtered);
+      setGroupedNotes(grouped);
     } catch (error) {
       logger.error('NotesScreen', 'Error applying filters', error);
       setFilteredNotes([]);
+      setGroupedNotes({});
     }
-  };
-
-  const getSelectedTopicTitle = () => {
-    if (selectedTopicId === 'all') return 'Semua Topik';
-    const topic = category?.topics.find((t) => t.id === selectedTopicId);
-    return topic?.title || 'Pilih Topik';
   };
 
   const formatTopicTitle = (title: string) => {
@@ -215,6 +250,12 @@ export default function NotesScreen() {
       .split(' ')
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
+  };
+
+  const getSelectedTopicTitle = () => {
+    if (selectedTopicId === 'all') return 'All Topics';
+    const topic = category?.topics.find((t) => t.id === selectedTopicId);
+    return topic?.title || 'Select Topic';
   };
 
   const handleTopicSelect = (topicId: string) => {
@@ -290,18 +331,25 @@ export default function NotesScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#facc15" />
-        <Text style={styles.loadingText}>{t('notes.failedToLoad')}...</Text>
+        <Text style={styles.loadingText}>Loading notes...</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <SearchBar
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        placeholder={t('notes.searchTopics')}
-      />
+      <View style={styles.searchRow}>
+        <SearchBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          placeholder={t('notes.searchTopics')}
+        />
+        <BookmarkFilter
+          showBookmarksOnly={showBookmarksOnly}
+          onToggle={() => setShowBookmarksOnly(!showBookmarksOnly)}
+          featuresSupported={featuresSupported}
+        />
+      </View>
 
       <View style={styles.filtersContainer}>
         <View style={styles.filtersRow}>
@@ -346,7 +394,7 @@ export default function NotesScreen() {
                               styles.dropdownItemTextActive,
                           ]}
                         >
-                          {formatTopicTitle('Semua Topik')}
+                          {formatTopicTitle('All Topics')}
                         </Text>
                       </TouchableOpacity>
                       {category.topics.map((topic) => (
@@ -376,50 +424,76 @@ export default function NotesScreen() {
               </Modal>
             </View>
           )}
-
-          <BookmarkFilter
-            showBookmarksOnly={showBookmarksOnly}
-            onToggle={() => setShowBookmarksOnly(!showBookmarksOnly)}
-            featuresSupported={featuresSupported}
-          />
         </View>
       </View>
 
-      <FlatList
-        data={filteredNotes}
-        numColumns={2}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.notesContainer}
-        columnWrapperStyle={styles.row}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item: note }) => (
-          <NoteCard
-            note={note}
-            isBookmarked={bookmarkStates[note.id] || false}
-            featuresSupported={featuresSupported}
-            onPress={openNote}
-            onToggleBookmark={handleToggleBookmark}
-            topicTitle={
-              selectedTopicId === 'all'
-                ? note.topic?.title
-                : category?.topics.find((t) => t.id === selectedTopicId)?.title
-            }
-            categoryTitle={category?.title}
-          />
-        )}
-        ListEmptyComponent={() => (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyTitle}>Tiada nota dijumpai</Text>
-            <Text style={styles.emptyMessage}>
-              {searchQuery
-                ? 'Cuba laraskan istilah carian anda'
-                : showBookmarksOnly
-                  ? 'Tiada nota yang ditanda buku'
+      {selectedTopicId === 'all' && !showBookmarksOnly ? (
+        // Render grouped notes for "All Topics" view
+        <FlatList
+          data={Object.keys(groupedNotes)}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.notesContainer}
+          keyExtractor={(topicTitle) => topicTitle}
+          renderItem={({ item: topicTitle }) => (
+            <View style={styles.topicSection}>
+              <Text style={styles.topicSectionHeader}>{topicTitle}</Text>
+              {groupedNotes[topicTitle].map((note) => (
+                <NoteCard
+                  key={note.id}
+                  note={note}
+                  isBookmarked={bookmarkStates[note.id] || false}
+                  featuresSupported={featuresSupported}
+                  onPress={openNote}
+                  onToggleBookmark={handleToggleBookmark}
+                  topicTitle={note.topic?.title}
+                  categoryTitle={category?.title}
+                />
+              ))}
+            </View>
+          )}
+          ListEmptyComponent={() => (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyTitle}>Tiada nota dijumpai</Text>
+              <Text style={styles.emptyMessage}>
+                {searchQuery
+                  ? 'Cuba laraskan istilah carian anda'
                   : 'Tiada nota tersedia dalam kategori ini'}
-            </Text>
-          </View>
-        )}
-      />
+              </Text>
+            </View>
+          )}
+        />
+      ) : (
+        // Render regular flat list for filtered views
+        <FlatList
+          data={filteredNotes}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.notesContainer}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item: note }) => (
+            <NoteCard
+              note={note}
+              isBookmarked={bookmarkStates[note.id] || false}
+              featuresSupported={featuresSupported}
+              onPress={openNote}
+              onToggleBookmark={handleToggleBookmark}
+              topicTitle={note.topic?.title}
+              categoryTitle={category?.title}
+            />
+          )}
+          ListEmptyComponent={() => (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyTitle}>Tiada nota dijumpai</Text>
+              <Text style={styles.emptyMessage}>
+                {searchQuery
+                  ? 'Cuba laraskan istilah carian anda'
+                  : showBookmarksOnly
+                    ? 'Tiada nota yang ditanda buku'
+                    : 'Tiada nota tersedia dalam kategori ini'}
+              </Text>
+            </View>
+          )}
+        />
+      )}
     </View>
   );
 }
@@ -430,48 +504,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     paddingTop: 60,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
+  searchRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#666666',
-  },
-  notesContainer: {
     paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  row: {
-    justifyContent: 'space-between',
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: 60,
-    paddingHorizontal: 20,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333333',
-    marginBottom: 8,
-  },
-  emptyMessage: {
-    fontSize: 14,
-    color: '#666666',
-    textAlign: 'center',
-    lineHeight: 20,
+    gap: 12,
+    marginBottom: 16,
   },
   filtersContainer: {
     paddingHorizontal: 20,
-    marginBottom: 16,
+    paddingBottom: 16,
   },
   filtersRow: {
     flexDirection: 'row',
-    alignItems: 'stretch',
+    alignItems: 'center',
     gap: 12,
   },
   topicDropdownContainer: {
@@ -482,7 +528,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    height: 48,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E0E0E0',
@@ -526,5 +572,47 @@ const styles = StyleSheet.create({
   dropdownItemTextActive: {
     fontWeight: '600',
     color: '#000000',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666666',
+  },
+  notesContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 20,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333333',
+    marginBottom: 8,
+  },
+  emptyMessage: {
+    fontSize: 14,
+    color: '#666666',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  topicSection: {
+    marginBottom: 24,
+  },
+  topicSectionHeader: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333333',
+    marginBottom: 12,
+    paddingHorizontal: 4,
   },
 });

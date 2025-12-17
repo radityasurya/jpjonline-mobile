@@ -11,6 +11,7 @@ import { logger } from '@/utils/logger';
 import { Book, FileText, Trophy, Clock, Crown } from 'lucide-react-native';
 import { useState, useEffect } from 'react';
 import { progressService, activityService, ACTIVITY_TYPES } from '@/services';
+import { LAYOUT_CONSTANTS } from '@/constants/layout';
 
 export default function HomeScreen() {
   const { user, isLoading } = useAuth();
@@ -283,7 +284,7 @@ const styles = StyleSheet.create({
   headerContainer: {
     padding: 20,
     backgroundColor: '#facc15',
-    paddingTop: 70,
+    paddingTop: LAYOUT_CONSTANTS.headerPaddingTop,
     paddingBottom: 40,
   },
   greeting: {

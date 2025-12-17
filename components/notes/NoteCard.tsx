@@ -8,9 +8,6 @@ import {
 } from 'react-native';
 import { Bookmark, BookmarkCheck, Clock } from 'lucide-react-native';
 
-const { width } = Dimensions.get('window');
-const cardWidth = (width - 60) / 2; // 2 columns with padding
-
 interface ApiNote {
   id: string;
   title: string;
@@ -78,10 +75,7 @@ export default function NoteCard({
       <View style={styles.noteHeader}>
         <View style={styles.categoryBadge}>
           <Text style={styles.categoryBadgeText}>
-            {categoryTitle ||
-              note.topic?.category?.title ||
-              topicTitle ||
-              'Note'}
+            {topicTitle || note.topic?.title || 'Note'}
           </Text>
         </View>
         <View style={styles.noteActions}>
@@ -119,17 +113,15 @@ export default function NoteCard({
 
 const styles = StyleSheet.create({
   noteCard: {
-    width: cardWidth,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    padding: 14,
+    padding: 16,
     marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    minHeight: 140,
   },
   lockedCard: {
     opacity: 0.7,

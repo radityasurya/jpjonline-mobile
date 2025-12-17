@@ -268,6 +268,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
     backgroundColor: '#FAFAFA',
+    color: '#333333',
   },
   inputError: {
     borderColor: '#FF3B30',
@@ -285,6 +286,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
     backgroundColor: '#FAFAFA',
+    color: '#333333',
   },
   eyeButton: {
     position: 'absolute',

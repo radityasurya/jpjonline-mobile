@@ -32,6 +32,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { progressService } from '../../services';
 import { logger } from '../../utils/logger';
 import { getPageBySlug } from '../../services/pagesService';
+import { LAYOUT_CONSTANTS } from '@/constants/layout';
 import {
   updateUserProfile,
   deleteUserAccount,
@@ -665,7 +666,7 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#facc15',
-    paddingTop: 70,
+    paddingTop: LAYOUT_CONSTANTS.headerPaddingTop,
     paddingBottom: 30,
     paddingHorizontal: 20,
   },
@@ -806,8 +807,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
+    paddingTop: LAYOUT_CONSTANTS.headerPaddingTop,
+    paddingBottom: LAYOUT_CONSTANTS.headerPaddingBottom,
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
   },

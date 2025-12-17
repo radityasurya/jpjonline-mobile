@@ -222,37 +222,37 @@ export default function TestsScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#facc15" />
-        <Text style={styles.loadingText}>{t('exams.failedToLoad')}...</Text>
+        <Text style={styles.loadingText}>Loading exams...</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <View style={{ paddingHorizontal: 20 }}>
+      <View style={styles.tabContainer}>
         <TabSelector activeTab={selectedTab} onTabChange={setSelectedTab} />
       </View>
 
       {selectedTab === 'available' && (
         <>
-          <SearchBar
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            placeholder={'Cari ' + t('exams.title').toLowerCase() + '...'}
-          />
-          <View style={styles.filterRow}>
-            <View style={styles.categoryContainer}>
-              <CategorySelector
-                categories={categories.map((cat) => ({
-                  id: cat.id,
-                  title: cat.name,
-                  slug: cat.id,
-                }))}
-                selectedCategory={selectedCategory}
-                onCategoryChange={setSelectedCategory}
-              />
-            </View>
+          <View style={styles.searchRow}>
+            <SearchBar
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              placeholder={'Cari ' + t('exams.title').toLowerCase() + '...'}
+            />
             <SortButton currentSort={sortOption} onSortChange={setSortOption} />
+          </View>
+          <View style={styles.categoryContainer}>
+            <CategorySelector
+              categories={categories.map((cat) => ({
+                id: cat.id,
+                title: cat.name,
+                slug: cat.id,
+              }))}
+              selectedCategory={selectedCategory}
+              onCategoryChange={setSelectedCategory}
+            />
           </View>
         </>
       )}
@@ -315,7 +315,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666666',
   },
-  filterRow: {
+  tabContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 16,
+  },
+  searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
@@ -323,7 +328,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   categoryContainer: {
-    flex: 1,
+    marginBottom: 4,
   },
   listContainer: {
     paddingHorizontal: 20,

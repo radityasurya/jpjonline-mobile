@@ -210,7 +210,15 @@ export default function ExamScreen() {
     } else if (examMode === 'OPEN' && isSoundEnabled) {
       soundManager.playIncorrect();
     }
-  }, [answers, currentQuestionIndex, questions, answerValidation, hasCheckedAnswer, examMode, isSoundEnabled]);
+  }, [
+    answers,
+    currentQuestionIndex,
+    questions,
+    answerValidation,
+    hasCheckedAnswer,
+    examMode,
+    isSoundEnabled,
+  ]);
 
   const handleRetryQuestion = () => {
     logger.userAction('Question retry', {
@@ -250,7 +258,7 @@ export default function ExamScreen() {
   const handleTimeExpired = useCallback(() => {
     logger.warn('ExamScreen', 'Exam time expired, auto-submitting');
     setIsTimerActive(false);
-    
+
     Alert.alert(
       'Time Expired',
       'Your exam time has expired. The exam will be submitted automatically.',
@@ -262,7 +270,7 @@ export default function ExamScreen() {
           },
         },
       ],
-      { cancelable: false } // Prevent dismissing the alert
+      { cancelable: false }, // Prevent dismissing the alert
     );
   }, []);
 
@@ -284,9 +292,16 @@ export default function ExamScreen() {
 
     // Auto-advance to next question
     if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
+      setCurrentQuestionIndex((prev) => prev + 1);
     }
-  }, [examMode, answers, currentQuestionIndex, hasCheckedAnswer, isSoundEnabled, handleCheckAnswer]);
+  }, [
+    examMode,
+    answers,
+    currentQuestionIndex,
+    hasCheckedAnswer,
+    isSoundEnabled,
+    handleCheckAnswer,
+  ]);
 
   const handleToggleSound = () => {
     const newSoundState = !isSoundEnabled;
@@ -359,66 +374,125 @@ export default function ExamScreen() {
 
     logger.info('ExamScreen', 'Submitting exam answers', {
       examSlug: exam!.slug,
+      answeredQuestions: answers.filter((answer) => answer !== -1).length,
+      totalQuestions: questions.length,
     });
 
     try {
-      const response = (await submitExamResults(
-        exam!.slug,
-        {
-          answers: answers,
-          timeSpent: timeSpentMinutes,
-        },
-        '', // Token will be retrieved from storage by the service
-      )) as { success: boolean; result: any };
+      // Calculate score client-side
+      let correctAnswers = 0;
+      const questionResults: Array<{
+        questionId: string;
+        question: string;
+        userAnswer: number;
+        correctAnswer: number;
+        isCorrect: boolean;
+        explanation: string;
+        questionImage: string | null;
+        options: string[];
+        optionImages: string[];
+      }> = [];
 
-      if (response.success) {
-        logger.info('ExamScreen', 'Exam submitted successfully', {
-          examSlug: exam!.slug,
-          score: response.result.score,
-          passed: response.result.passed,
+      questions.forEach((question, index) => {
+        const userAnswer = answers[index] ?? -1;
+        const correctAnswerIndex = question.answerIndex;
+        const isCorrect = userAnswer === correctAnswerIndex;
+        if (isCorrect) correctAnswers++;
+
+        // Normalize options and optionImages
+        let normalizedOptions: string[] = [];
+        let normalizedOptionImages: string[] = [];
+
+        if (Array.isArray(question.options)) {
+          normalizedOptions = question.options;
+          normalizedOptionImages =
+            question.optionImages && Array.isArray(question.optionImages)
+              ? question.optionImages
+              : [];
+        }
+
+        questionResults.push({
+          questionId: question.id,
+          question: question.text,
+          userAnswer: userAnswer,
+          correctAnswer: correctAnswerIndex,
+          isCorrect: isCorrect,
+          explanation: question.explanation || '',
+          questionImage: question.imageUrl || null,
+          options: normalizedOptions,
+          optionImages: normalizedOptionImages,
         });
+      });
 
-        // Track exam completion in progress service
-        progressService.updateStats('exam_completed', {
-          score: response.result.score,
-          passed: response.result.passed,
-          timeSpent: response.result.timeSpent || timeSpentMinutes,
-          examSlug: exam!.slug,
-          examTitle: exam!.title,
-        });
+      const totalQuestions = questions.length;
+      const score = Math.round((correctAnswers / totalQuestions) * 100);
+      const passed = score >= 80; // Default passing score
 
-        // Track exam completion activity
-        const activityType = response.result.passed
-          ? ACTIVITY_TYPES.EXAM_PASSED
-          : ACTIVITY_TYPES.EXAM_FAILED;
-        activityService.addActivity(ACTIVITY_TYPES.EXAM_COMPLETED, {
-          examId: exam!.id,
-          examSlug: exam!.slug,
-          examTitle: exam!.title,
-          score: response.result.score,
-          passed: response.result.passed,
-          timeSpent: response.result.timeSpent || timeSpentMinutes,
-          category: exam!.category?.name,
-          userId: user?.id,
-        });
+      const examResult = {
+        id: `result_${Date.now()}`,
+        examId: exam!.id,
+        examSlug: exam!.slug,
+        examTitle: exam!.title,
+        score: score,
+        correctAnswers: correctAnswers,
+        totalQuestions: totalQuestions,
+        timeSpent: timeSpentMinutes,
+        passed: passed,
+        passingScore: 80,
+        results: questionResults,
+        completedAt: new Date().toISOString(),
+        timestamp: new Date().toISOString(),
+      };
 
-        // Also track pass/fail specific activity
-        activityService.addActivity(activityType, {
-          examId: exam!.id,
-          examSlug: exam!.slug,
-          examTitle: exam!.title,
-          score: response.result.score,
-          timeSpent: response.result.timeSpent || timeSpentMinutes,
-          category: exam!.category?.name,
-          userId: user?.id,
-        });
+      logger.info('ExamScreen', 'Exam results calculated', {
+        examSlug: exam!.slug,
+        score: examResult.score,
+        passed: examResult.passed,
+        correctAnswers: correctAnswers,
+        totalQuestions: totalQuestions,
+      });
 
-        router.replace(
-          `/exam/result/${exam!.slug}?resultData=${encodeURIComponent(
-            JSON.stringify(response.result),
-          )}`,
-        );
-      }
+      // Track exam completion in progress service
+      progressService.updateStats('exam_completed', {
+        score: examResult.score,
+        passed: examResult.passed,
+        timeSpent: examResult.timeSpent,
+        examSlug: exam!.slug,
+        examTitle: exam!.title,
+      });
+
+      // Track exam completion activity
+      const activityType = examResult.passed
+        ? ACTIVITY_TYPES.EXAM_PASSED
+        : ACTIVITY_TYPES.EXAM_FAILED;
+      activityService.addActivity(ACTIVITY_TYPES.EXAM_COMPLETED, {
+        examId: exam!.id,
+        examSlug: exam!.slug,
+        examTitle: exam!.title,
+        score: examResult.score,
+        passed: examResult.passed,
+        timeSpent: examResult.timeSpent,
+        category: exam!.category?.name,
+        userId: user?.id,
+      });
+
+      // Also track pass/fail specific activity
+      activityService.addActivity(activityType, {
+        examId: exam!.id,
+        examSlug: exam!.slug,
+        examTitle: exam!.title,
+        score: examResult.score,
+        timeSpent: examResult.timeSpent,
+        category: exam!.category?.name,
+        userId: user?.id,
+      });
+
+      // Navigate to result page
+      router.replace(
+        `/exam/result/${exam!.slug}?resultData=${encodeURIComponent(
+          JSON.stringify(examResult),
+        )}`,
+      );
     } catch (error: any) {
       logger.error('ExamScreen', 'Failed to submit exam', error);
       const errorMessage = error?.message || 'Unknown error occurred';

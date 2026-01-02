@@ -324,12 +324,25 @@ class ActivityService {
         icon = '🎯';
         break;
 
+      case ACTIVITY_TYPES.EXAM_PASSED:
+        title = activity.data.examTitle || 'Passed an exam';
+        const passedScore = activity.data.score || 0;
+        description = `Passed: ${title} - Score: ${passedScore}%`;
+        icon = '✅';
+        break;
+
+      case ACTIVITY_TYPES.EXAM_FAILED:
+        title = activity.data.examTitle || 'Failed an exam';
+        const failedScore = activity.data.score || 0;
+        description = `Failed: ${title} - Score: ${failedScore}%`;
+        icon = '❌';
+        break;
+
       case ACTIVITY_TYPES.EXAM_COMPLETED:
         title = activity.data.examTitle || 'Completed an exam';
-        description = `Completed: ${title}`;
-        if (activity.data.score) {
-          description += ` (${activity.data.score}%)`;
-        }
+        const completedScore = activity.data.score || 0;
+        const status = activity.data.passed ? 'Passed' : 'Failed';
+        description = `${status}: ${title} - Score: ${completedScore}%`;
         icon = activity.data.passed ? '✅' : '❌';
         break;
 

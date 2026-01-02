@@ -19,7 +19,16 @@ export default function HomeScreen() {
   // Check if features are supported on current platform
   const featuresSupported = progressService.getPlatformInfo().supported;
 
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<{
+    totalExams: number;
+    averageScore: number;
+    passedExams: number;
+    totalStudyTime: number;
+    bookmarkedNotes: number;
+    recentActivity: any[];
+    currentStreak: number;
+    lastActivity: any;
+  }>({
     totalExams: 0,
     averageScore: 0,
     passedExams: 0,
@@ -84,7 +93,7 @@ export default function HomeScreen() {
         });
         setStats(response.summary);
       } else {
-        logger.warn('HomeScreen', 'Failed to load stats', response.error);
+        logger.warn('HomeScreen', 'Failed to load stats');
         // Set default stats on error
         setStats({
           totalExams: 0,
@@ -256,11 +265,6 @@ export default function HomeScreen() {
                   <Text style={styles.activityDate}>{activity.timeAgo}</Text>
                 </View>
               </View>
-              {activity.data?.score && (
-                <Text style={styles.activityScore}>
-                  Score: {activity.data.score}%
-                </Text>
-              )}
             </TouchableOpacity>
           ))
         ) : (

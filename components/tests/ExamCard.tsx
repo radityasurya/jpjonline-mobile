@@ -1,5 +1,12 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Linking,
+} from 'react-native';
+import { useAuth } from '@/contexts/AuthContext';
 import { FileText, Trophy, Clock, Crown, Play } from 'lucide-react-native';
 
 interface ApiExam {
@@ -15,6 +22,7 @@ interface ApiExam {
   totalTimeDuration?: number | null;
   passRate?: number;
   timerType?: boolean;
+  isPremium?: boolean;
 }
 
 interface ExamCardProps {
@@ -35,20 +43,36 @@ const formatDuration = (seconds: number) => {
 };
 
 export default function ExamCard({ exam, onPress }: ExamCardProps) {
+  const { user } = useAuth();
+
+  const isPremiumExam = exam.crown || exam.isPremium;
+  const isFreeUser = user?.tier === 'FREE';
+  const isLocked = isPremiumExam && isFreeUser;
+
+  const handlePress = () => {
+    if (isLocked) {
+      Linking.openURL('https://jpjonline.com/packages');
+    } else {
+      onPress(exam);
+    }
+  };
+
   return (
     <TouchableOpacity
       style={styles.examCard}
-      onPress={() => onPress(exam)}
+      onPress={handlePress}
       activeOpacity={0.9}
     >
-      {/* Title and optional Crown */}
+      {/* Title and optional Crown badge */}
       <View style={styles.examHeader}>
         <Text style={styles.examTitle}>{exam.title}</Text>
-        {exam.crown && (
-          <View style={styles.crownBadge}>
-            <Crown size={14} color="#000" />
-          </View>
-        )}
+        <View style={styles.badgesContainer}>
+          {exam.crown && (
+            <View style={styles.crownBadge}>
+              <Crown size={14} color="#000" />
+            </View>
+          )}
+        </View>
       </View>
 
       {/* Category Badge */}
@@ -96,13 +120,22 @@ export default function ExamCard({ exam, onPress }: ExamCardProps) {
         )}
       </View>
 
-      {/* Start Exam Button */}
+      {/* Start Exam / Upgrade Button */}
       <TouchableOpacity
-        style={styles.startButton}
-        onPress={() => onPress(exam)}
+        style={[styles.startButton, isLocked && styles.upgradeButton]}
+        onPress={handlePress}
       >
-        <Play size={16} color={'#000'} />
-        <Text style={styles.startButtonText}>Start Exam</Text>
+        {isLocked ? (
+          <>
+            <Crown size={16} color="#ca8a04" />
+            <Text style={styles.upgradeButtonText}>Upgrade to Premium</Text>
+          </>
+        ) : (
+          <>
+            <Play size={16} color={'#000'} />
+            <Text style={styles.startButtonText}>Start Exam</Text>
+          </>
+        )}
       </TouchableOpacity>
     </TouchableOpacity>
   );
@@ -131,6 +164,11 @@ const styles = StyleSheet.create({
     color: '#111827',
     flex: 1,
     marginRight: 8,
+  },
+  badgesContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   crownBadge: {
     backgroundColor: '#facc15',
@@ -185,10 +223,21 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 8,
   },
+  upgradeButton: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#facc15',
+  },
   startButtonText: {
     marginLeft: 8,
     fontSize: 14,
     fontWeight: '600',
     color: '#000',
+  },
+  upgradeButtonText: {
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#ca8a04',
   },
 });

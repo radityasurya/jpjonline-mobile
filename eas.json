@@ -34,11 +34,7 @@
       }
     },
     "production": {
-      "ios": {
-        "track": "production",
-        "releaseStatus": "completed",
-        "changesNotSentForReview": true
-      },
+      "ios": {},
       "android": {
         "track": "production",
         "releaseStatus": "completed",

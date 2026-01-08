@@ -176,6 +176,11 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     padding: 4,
   },
+  premiumBadge: {
+    backgroundColor: '#facc15',
+    borderRadius: 50,
+    padding: 4,
+  },
   categoryBadge: {
     borderRadius: 6,
     paddingHorizontal: 8,

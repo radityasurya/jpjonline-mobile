@@ -34,6 +34,7 @@ interface ApiExam {
   totalTimeDuration?: number | null;
   passRate?: number;
   timerType?: boolean;
+  isPremium?: boolean;
 }
 
 interface ExamCategory {

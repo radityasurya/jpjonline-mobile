@@ -3,6 +3,118 @@ import { API_CONFIG, buildApiUrl, getAuthHeaders } from '../config/api.js';
 import { logger } from '../utils/logger.js';
 
 /**
+ * Decode JWT token to get expiration time
+ * @param {string} token - JWT token
+ * @returns {Object|null} Decoded token payload or null if invalid
+ */
+const decodeJWT = (token) => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    logger.error('AuthService', 'Failed to decode JWT', error);
+    return null;
+  }
+};
+
+/**
+ * Check if token is expiring soon (within 5 minutes)
+ * @param {string} token - JWT token
+ * @returns {boolean} True if token is expiring soon or already expired
+ */
+const isTokenExpiringSoon = (token) => {
+  if (!token) return true;
+
+  const decoded = decodeJWT(token);
+  if (!decoded || !decoded.exp) return true;
+
+  const expirationTime = decoded.exp * 1000; // Convert to milliseconds
+  const currentTime = Date.now();
+  const timeUntilExpiration = expirationTime - currentTime;
+
+  // Refresh if token expires within 5 minutes (300,000 ms)
+  const REFRESH_THRESHOLD = 5 * 60 * 1000;
+
+  const isExpiring = timeUntilExpiration < REFRESH_THRESHOLD;
+
+  if (isExpiring) {
+    logger.info('AuthService', 'Token is expiring soon', {
+      timeUntilExpiration: Math.round(timeUntilExpiration / 1000) + 's',
+      expirationTime: new Date(expirationTime).toISOString(),
+    });
+  }
+
+  return isExpiring;
+};
+
+/**
+ * Refresh access token proactively
+ * @returns {Promise<Object>} New tokens or null if refresh failed
+ */
+const proactiveRefreshToken = async () => {
+  try {
+    const refreshToken = await storageService.getItem('refreshToken');
+    if (!refreshToken) {
+      logger.warn('AuthService', 'No refresh token available for proactive refresh');
+      return null;
+    }
+
+    logger.info('AuthService', 'Proactively refreshing access token');
+
+    const response = await fetch(
+      buildApiUrl(API_CONFIG.ENDPOINTS.AUTH.REFRESH),
+      {
+        method: 'POST',
+        headers: API_CONFIG.HEADERS,
+        body: JSON.stringify({ refreshToken }),
+      },
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      logger.error('AuthService', 'Proactive token refresh failed', {
+        status: response.status,
+        error: errorData.error,
+      });
+      return null;
+    }
+
+    const data = await response.json();
+
+    if (data.success) {
+      // Store new tokens (both access and refresh are rotated)
+      if (data.accessToken) {
+        await storageService.setItem('accessToken', data.accessToken);
+        logger.info('AuthService', 'New access token stored');
+      }
+      if (data.refreshToken) {
+        await storageService.setItem('refreshToken', data.refreshToken);
+        logger.info('AuthService', 'New refresh token stored (rotated)');
+      }
+
+      return {
+        success: true,
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+      };
+    } else {
+      logger.error('AuthService', 'Proactive refresh response unsuccessful', data);
+      return null;
+    }
+  } catch (error) {
+    logger.error('AuthService', 'Proactive token refresh error', error);
+    return null;
+  }
+};
+
+/**
  * Make API request with automatic token refresh
  * @param {string} url - API URL
  * @param {Object} options - Fetch options
@@ -16,9 +128,22 @@ export const makeAuthenticatedRequest = async (
 ) => {
   try {
     // Get current token
-    const token = await storageService.getItem('accessToken');
+    let token = await storageService.getItem('accessToken');
 
-    // Make initial request
+    // Check if token is expiring soon and refresh proactively
+    if (token && !isRetry && isTokenExpiringSoon(token)) {
+      logger.info('AuthService', 'Token expiring soon, attempting proactive refresh');
+      const refreshResult = await proactiveRefreshToken();
+
+      if (refreshResult && refreshResult.success) {
+        token = refreshResult.accessToken;
+        logger.info('AuthService', 'Proactive token refresh successful');
+      } else {
+        logger.warn('AuthService', 'Proactive refresh failed, will try reactive refresh');
+      }
+    }
+
+    // Make request with current token
     const response = await fetch(url, {
       ...options,
       headers: {
@@ -27,9 +152,9 @@ export const makeAuthenticatedRequest = async (
       },
     });
 
-    // If unauthorized and this is not already a retry, try to refresh token
+    // If unauthorized and this is not already a retry, try to refresh token reactively
     if (response.status === 401 && !isRetry) {
-      logger.info('AuthService', 'Token expired, attempting refresh');
+      logger.info('AuthService', 'Token expired, attempting reactive refresh');
 
       const refreshToken = await storageService.getItem('refreshToken');
       if (!refreshToken) {
@@ -57,7 +182,7 @@ export const makeAuthenticatedRequest = async (
             );
           }
 
-          logger.info('AuthService', 'Token refreshed successfully');
+          logger.info('AuthService', 'Reactive token refresh successful');
 
           // Retry original request with new token (mark as retry to prevent loops)
           return await fetch(url, {
@@ -69,7 +194,7 @@ export const makeAuthenticatedRequest = async (
           });
         }
       } catch (refreshError) {
-        logger.error('AuthService', 'Token refresh failed', refreshError);
+        logger.error('AuthService', 'Reactive token refresh failed', refreshError);
         // Clear invalid tokens
         await storageService.removeItem('accessToken');
         await storageService.removeItem('refreshToken');
@@ -139,13 +264,13 @@ export const signup = async (userData) => {
     if (response.ok && data.success) {
       // Handle the response structure from auth.md documentation
       const userData = data.data || data.user || data;
-      
+
       // Check if userData exists and has required fields
       if (!userData || !userData.id) {
         logger.error('AuthService', 'Invalid response structure', { data });
         throw new Error('Invalid response from server');
       }
-      
+
       logger.info('AuthService', 'Signup successful', { userId: userData.id });
       logger.apiResponse('POST', API_CONFIG.ENDPOINTS.AUTH.SIGNUP, 201, { success: true });
       return {
@@ -163,7 +288,7 @@ export const signup = async (userData) => {
     } else {
       logger.warn('AuthService', 'Signup failed', { error: data.error, errors: data.errors });
       logger.apiResponse('POST', API_CONFIG.ENDPOINTS.AUTH.SIGNUP, response.status, { error: data.error });
-      
+
       // Create a structured error object for better handling
       const error = new Error(data.error || 'Signup failed');
       error.validationErrors = data.errors || [];

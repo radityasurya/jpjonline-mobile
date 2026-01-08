@@ -22,7 +22,10 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (
+    email: string,
+    password: string,
+  ) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   register: (userData: {
     name: string;
@@ -30,7 +33,7 @@ interface AuthContextType {
     password: string;
     confirmPassword: string;
     acceptTerms: boolean;
-  }) => Promise<boolean>;
+  }) => Promise<{ success: boolean; error?: string }>;
   isLoading: boolean;
 }
 
@@ -89,7 +92,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (
+    email: string,
+    password: string,
+  ): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
     logger.info('AuthContext', 'Login attempt started', { email });
     try {
@@ -133,51 +139,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
 
         setUser(userData);
-        return true;
+        return { success: true };
       }
 
       logger.warn('AuthContext', 'Login failed - invalid response', { email });
-      return false;
-    } catch (error) {
+      return { success: false, error: response.error || 'Login failed' };
+    } catch (error: any) {
       logger.error('AuthContext', 'Login error', error);
-      // Demo users fallback - kept for debugging
-      // logger.debug('AuthContext', 'Falling back to demo users');
-      // const foundUser = DEMO_USERS.find(
-      //   u => u.email === email && u.password === password
-      // );
-      //
-      // if (foundUser) {
-      //   logger.info('AuthContext', 'Demo login successful', { userId: foundUser.id, tier: foundUser.tier });
-      //   const userData = {
-      //     id: foundUser.id,
-      //     name: foundUser.name,
-      //     email: foundUser.email,
-      //     tier: foundUser.tier,
-      //     role: foundUser.role,
-      //     premiumUntil: foundUser.premiumUntil,
-      //     isActive: foundUser.isActive,
-      //   };
-      //   await AsyncStorage.setItem('user', JSON.stringify(userData));
-      //   await AsyncStorage.setItem('accessToken', 'demo-jwt-token');
-      //
-      //   // Initialize progress tracking for new session
-      //   progressService?.initializeUser?.(userData.id);
-      //
-      //   // Track login session
-      //   progressService?.updateStats?.('session_start', { timestamp: new Date().toISOString() });
-      //
-      //   // Track login activity
-      //   activityService?.addActivity?.(ACTIVITY_TYPES.SESSION_STARTED, {
-      //     userId: userData.id,
-      //     userTier: userData.tier,
-      //     timestamp: new Date().toISOString()
-      //   });
-      //
-      //   setUser(userData);
-      //   return true;
-      // }
-
-      return false;
+      const errorMessage = error?.message || 'Login failed';
+      return { success: false, error: errorMessage };
     } finally {
       setIsLoading(false);
     }
@@ -189,7 +159,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     password: string;
     confirmPassword: string;
     acceptTerms: boolean;
-  }): Promise<boolean> => {
+  }): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
     logger.info('AuthContext', 'Registration attempt started', {
       email: userData.email,
@@ -225,13 +195,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           'AuthContext',
           'Registration completed successfully, returning true',
         );
-        return true;
+        return { success: true };
       } else {
         logger.warn('AuthContext', 'Registration failed', { response });
-        return false;
+        return {
+          success: false,
+          error: response.error || 'Registration failed',
+        };
       }
     } catch (error: any) {
       logger.error('AuthContext', 'Registration error', error);
+      const errorMessage = error?.message || 'Registration failed';
 
       // Re-throw the error with validation details so the UI can handle it
       if (error.validationErrors || error.statusCode === 400) {
@@ -256,7 +230,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       progressService?.initializeUser?.(user.id);
 
       setUser(user);
-      return true;
+      return { success: true };
     } finally {
       setIsLoading(false);
     }

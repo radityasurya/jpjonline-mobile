@@ -46,8 +46,9 @@ export default function ExamCard({ exam, onPress }: ExamCardProps) {
   const { user } = useAuth();
 
   const isPremiumExam = exam.crown || exam.isPremium;
+  const isAdmin = user?.role === 'ADMIN';
   const isFreeUser = user?.tier === 'FREE';
-  const isLocked = isPremiumExam && isFreeUser;
+  const isLocked = isPremiumExam && isFreeUser && !isAdmin;
 
   const handlePress = () => {
     if (isLocked) {

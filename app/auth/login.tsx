@@ -75,8 +75,8 @@ export default function LoginScreen() {
     if (!validateForm()) return;
 
     logger.userAction('Login attempt', { email, rememberMe });
-    const success = await login(email, password);
-    if (success) {
+    const result = await login(email, password);
+    if (result.success) {
       // Save or clear credentials based on remember me
       if (rememberMe) {
         await storageService.setItem('rememberedEmail', email);
@@ -93,8 +93,16 @@ export default function LoginScreen() {
       logger.navigation('Home', { from: 'login' });
       router.replace('/(tabs)');
     } else {
-      logger.warn('LoginScreen', 'Login failed - showing error alert');
-      Alert.alert('Ralat', t('auth.login.errors.invalidCredentials'));
+      logger.warn('LoginScreen', 'Login failed - showing error alert', {
+        error: result.error,
+      });
+      Alert.alert(
+        'Ralat',
+        result.error ||
+          t('auth.login.errors.invalidCredentials') ||
+          'Email atau kata laluan tidak sah. Sila cuba lagi.',
+        [{ text: 'OK' }],
+      );
     }
   };
 

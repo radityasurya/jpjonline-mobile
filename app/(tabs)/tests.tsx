@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   FlatList,
+  Alert,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
@@ -96,8 +97,31 @@ export default function TestsScreen() {
           { id: 'all', name: 'All', accessible: true, exams: [] },
           ...response.categories,
         ]);
-      } catch (error) {
+      } catch (error: any) {
         logger.error('TestsScreen', 'Error fetching exams', error);
+
+        // Check if it's an authentication error
+        const errorMessage = error?.message || '';
+        if (
+          errorMessage.includes('Session expired') ||
+          errorMessage.includes('Authentication required') ||
+          errorMessage.includes('Unauthorized') ||
+          errorMessage.includes('401')
+        ) {
+          Alert.alert(
+            'Session Expired',
+            'Your session has expired. Please log in again.',
+            [
+              {
+                text: 'OK',
+                onPress: () => {
+                  router.replace('/auth/login');
+                },
+              },
+            ],
+            { cancelable: false },
+          );
+        }
       } finally {
         setIsLoading(false);
       }

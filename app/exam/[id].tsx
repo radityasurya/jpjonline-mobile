@@ -148,10 +148,34 @@ export default function ExamScreen() {
         category: examData.category?.name,
         userId: user?.id,
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('ExamScreen', 'Failed to load exam data', error);
-      Alert.alert('Error', 'Failed to load exam. Please try again.');
-      router.back();
+
+      // Check if it's an authentication error
+      const errorMessage = error?.message || '';
+      if (
+        errorMessage.includes('Session expired') ||
+        errorMessage.includes('Authentication required') ||
+        errorMessage.includes('Unauthorized') ||
+        errorMessage.includes('401')
+      ) {
+        Alert.alert(
+          'Session Expired',
+          'Your session has expired. Please log in again.',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                router.replace('/auth/login');
+              },
+            },
+          ],
+          { cancelable: false },
+        );
+      } else {
+        Alert.alert('Error', 'Failed to load exam. Please try again.');
+        router.back();
+      }
     } finally {
       setIsLoading(false);
     }

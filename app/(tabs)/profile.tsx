@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Linking,
 } from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
 import {
   User,
   UserPen,
@@ -59,7 +60,22 @@ interface AboutData {
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
+  const router = useRouter();
   const featuresSupported = true; // Enable features for mobile
+
+  // Subscribe to bookmark changes
+  useEffect(() => {
+    if (!featuresSupported) return;
+
+    const { subscribe } = require('../../services/bookmarkService.js');
+    if (subscribe) {
+      const unsubscribe = subscribe(() => {
+        // Refresh stats when bookmarks change
+        loadStats();
+      });
+      return unsubscribe;
+    }
+  }, [featuresSupported]);
 
   const [stats, setStats] = useState<UserStats>({
     totalExams: 0,
@@ -88,6 +104,16 @@ export default function ProfileScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
+  // Refresh stats when screen is focused (e.g., after completing an exam)
+  useFocusEffect(
+    React.useCallback(() => {
+      if (user && featuresSupported) {
+        loadStats();
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user, featuresSupported]),
+  );
+
   const initializeUserProgress = async () => {
     if (!featuresSupported) {
       logger.info(
@@ -101,7 +127,7 @@ export default function ProfileScreen() {
       logger.debug('ProfileScreen', 'Initializing user progress', {
         userId: user!.id,
       });
-      progressService.initializeUser(user!.id);
+      await progressService.initializeUser(user!.id);
       await loadStats();
     } catch (error) {
       logger.error(
@@ -140,6 +166,9 @@ export default function ProfileScreen() {
           'Stats loaded successfully',
           response.summary,
         );
+        logger.debug('ProfileScreen', 'Bookmark count from stats', {
+          bookmarkedNotes: response.summary.bookmarkedNotes,
+        });
         setStats({
           ...response.summary,
           streak: response.summary.currentStreak || 0,
@@ -207,13 +236,19 @@ export default function ProfileScreen() {
           // Continue with success message even if refresh fails
         }
 
-        Alert.alert('Success', response.message || 'Profile updated successfully!');
+        Alert.alert(
+          'Success',
+          response.message || 'Profile updated successfully!',
+        );
       } else {
         throw new Error('Update failed');
       }
     } catch (error) {
       logger.error('ProfileScreen', 'Failed to update profile', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update profile. Please try again.';
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Failed to update profile. Please try again.';
       Alert.alert('Error', errorMessage);
     } finally {
       setIsLoading(false);
@@ -500,13 +535,22 @@ ${user?.name || 'User'}`;
             <Text style={styles.statLabel}>Study Time</Text>
           </View>
 
-          <View style={styles.statCard}>
+          <TouchableOpacity
+            style={styles.statCard}
+            onPress={() => {
+              logger.userAction('Bookmark stat card clicked', {
+                count: stats.bookmarkedNotes,
+              });
+              router.push('/(tabs)/notes?showBookmarks=true');
+            }}
+            disabled={!featuresSupported}
+          >
             <BookOpen size={24} color="#FF9800" />
             <Text style={styles.statNumber}>
               {featuresSupported ? stats.bookmarkedNotes : 'N/A'}
             </Text>
             <Text style={styles.statLabel}>Bookmarks</Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.achievementCard}>
@@ -543,6 +587,10 @@ ${user?.name || 'User'}`;
           <LogOut size={20} color="#FF3B30" />
           <Text style={[styles.settingText, { color: '#FF3B30' }]}>Logout</Text>
         </TouchableOpacity>
+
+        <View style={styles.divider} />
+
+        <View style={styles.divider} />
 
         <TouchableOpacity
           style={styles.settingItem}
@@ -609,7 +657,8 @@ ${user?.name || 'User'}`;
             </View>
 
             <Text style={styles.helpText}>
-              All fields are optional. Update only the information you want to change.
+              All fields are optional. Update only the information you want to
+              change.
             </Text>
           </ScrollView>
         </View>
@@ -773,6 +822,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#1976D2',
     marginTop: 4,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#E0E0E0',
+    marginVertical: 20,
   },
   platformNote: {
     fontSize: 12,

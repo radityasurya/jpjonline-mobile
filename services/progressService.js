@@ -128,7 +128,7 @@ class ProgressService {
   /**
    * Initialize user progress data
    */
-  initializeUser(userId) {
+  async initializeUser(userId) {
     this.currentUserId = userId;
 
     if (!this.isSupported) {
@@ -142,12 +142,12 @@ class ProgressService {
       };
     }
 
-    let progress = storageService.getItem(STORAGE_KEYS.USER_PROGRESS);
-    let stats = storageService.getItem(STORAGE_KEYS.USER_STATS);
+    let progress = await storageService.getItem(STORAGE_KEYS.USER_PROGRESS);
+    let stats = await storageService.getItem(STORAGE_KEYS.USER_STATS);
 
     if (!progress || progress.userId !== userId) {
       progress = createProgressModel(userId);
-      storageService.setItem(STORAGE_KEYS.USER_PROGRESS, progress);
+      await storageService.setItem(STORAGE_KEYS.USER_PROGRESS, progress);
       logger.info('ProgressService', 'Initialized new user progress', {
         userId,
       });
@@ -155,7 +155,7 @@ class ProgressService {
 
     if (!stats || stats.userId !== userId) {
       stats = createStatsModel(userId);
-      storageService.setItem(STORAGE_KEYS.USER_STATS, stats);
+      await storageService.setItem(STORAGE_KEYS.USER_STATS, stats);
       logger.info('ProgressService', 'Initialized new user stats', { userId });
     }
 
@@ -263,7 +263,12 @@ class ProgressService {
     }
 
     try {
+      logger.debug('ProgressService', 'updateBookmarkCount called', { count });
       const currentProgress = await this.getProgress();
+      logger.debug('ProgressService', 'Current bookmark count in progress', {
+        currentCount: currentProgress.learning.notesBookmarked,
+        newCount: count,
+      });
       currentProgress.learning.notesBookmarked = count;
       currentProgress.lastUpdated = new Date().toISOString();
 
@@ -272,7 +277,9 @@ class ProgressService {
         currentProgress,
       );
       if (success) {
-        logger.debug('ProgressService', 'Bookmark count updated', { count });
+        logger.debug('ProgressService', 'Bookmark count updated successfully', { count });
+      } else {
+        logger.error('ProgressService', 'Failed to save bookmark count');
       }
     } catch (error) {
       logger.error('ProgressService', 'Failed to update bookmark count', error);
@@ -283,6 +290,7 @@ class ProgressService {
    * Update specific statistics
    */
   async updateStats(statType, value, metadata = {}) {
+    logger.info('ProgressService', 'updateStats called', { statType, value, metadata });
     if (!this.isSupported) {
       logger.warn(
         'ProgressService',
@@ -395,19 +403,32 @@ class ProgressService {
       currentProgress.lastUpdated = now.toISOString();
       currentStats.lastUpdated = now.toISOString();
 
+      logger.debug('ProgressService', 'Saving progress to storage', {
+        totalAttempts: currentProgress.exams.totalAttempts,
+        averageScore: currentProgress.exams.averageScore,
+        totalPassed: currentProgress.exams.totalPassed,
+      });
+
       const progressSaved = await storageService.setItem(
         STORAGE_KEYS.USER_PROGRESS,
         currentProgress,
       );
+      
+      logger.debug('ProgressService', 'Progress save result', { progressSaved });
+
       const statsSaved = await storageService.setItem(
         STORAGE_KEYS.USER_STATS,
         currentStats,
       );
 
+      logger.debug('ProgressService', 'Stats save result', { statsSaved });
+
       if (progressSaved && statsSaved) {
-        logger.debug('ProgressService', 'Stats updated successfully', {
+        logger.info('ProgressService', 'Stats updated successfully', {
           statType,
           value,
+          totalExams: currentProgress.exams.totalAttempts,
+          averageScore: currentProgress.exams.averageScore,
         });
         return {
           success: true,
@@ -415,6 +436,10 @@ class ProgressService {
           stats: currentStats,
         };
       } else {
+        logger.error('ProgressService', 'Failed to save updated stats', {
+          progressSaved,
+          statsSaved,
+        });
         throw new Error('Failed to save updated stats');
       }
     } catch (error) {
@@ -497,6 +522,10 @@ class ProgressService {
 
     try {
       const progress = await this.getProgress(this.currentUserId);
+      logger.debug('ProgressService', 'Got progress for dashboard', {
+        userId: this.currentUserId,
+        bookmarkedNotes: progress.learning.notesBookmarked,
+      });
 
       // Get actual bookmark count from bookmark service
       let actualBookmarkCount = progress.learning.notesBookmarked;
@@ -504,14 +533,28 @@ class ProgressService {
         // Lazy load bookmark service to avoid circular dependency
         const bookmarkService = require('./bookmarkService.js').default;
         if (bookmarkService) {
-          actualBookmarkCount = bookmarkService.getBookmarks().length;
+          const bookmarks = await bookmarkService.getBookmarks();
+          actualBookmarkCount = bookmarks.length;
+          logger.debug('ProgressService', 'Synced bookmark count from bookmark service', {
+            actualBookmarkCount,
+            storedCount: progress.learning.notesBookmarked,
+            bookmarksArray: bookmarks,
+          });
           // Update progress if counts don't match
           if (actualBookmarkCount !== progress.learning.notesBookmarked) {
+            logger.debug('ProgressService', 'Bookmark count mismatch, updating', {
+              actualBookmarkCount,
+              storedCount: progress.learning.notesBookmarked,
+            });
             await this.updateBookmarkCount(actualBookmarkCount);
+            // Re-fetch progress to get updated count
+            progress = await this.getProgress(this.currentUserId);
+            actualBookmarkCount = progress.learning.notesBookmarked;
           }
         }
       } catch (error) {
         logger.warn('ProgressService', 'Could not sync bookmark count', error);
+        // Continue with stored count if sync fails
       }
 
       // Get recent activities

@@ -10,7 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { ChevronDown } from 'lucide-react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import { logger } from '@/utils/logger';
@@ -20,6 +20,7 @@ import {
   getPlatformInfo,
   isBookmarked,
   toggleBookmark,
+  getBookmarks,
 } from '@/services/bookmarkService';
 import SearchBar from '@/components/shared/SearchBar';
 import BookmarkFilter from '@/components/shared/BookmarkFilter';
@@ -77,11 +78,14 @@ interface CategoryResponse {
 export default function NotesScreen() {
   const { user } = useAuth();
   const { t } = useI18n();
+  const params = useLocalSearchParams();
   const [category, setCategory] = useState<CategoryData | null>(null);
   const [selectedTopicId, setSelectedTopicId] = useState<string>('all');
   const [showTopicDropdown, setShowTopicDropdown] = useState(false);
   const [filteredNotes, setFilteredNotes] = useState<ApiNote[]>([]);
-  const [groupedNotes, setGroupedNotes] = useState<{[key: string]: ApiNote[]}>({});
+  const [groupedNotes, setGroupedNotes] = useState<{
+    [key: string]: ApiNote[];
+  }>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [showBookmarksOnly, setShowBookmarksOnly] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -101,15 +105,32 @@ export default function NotesScreen() {
       return;
     }
 
+    // Check if we should show bookmarks only (from profile page navigation)
+    if (params.showBookmarks === 'true') {
+      setShowBookmarksOnly(true);
+    }
+
     fetchNotesData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [params.showBookmarks]);
+
+  // Reset topic selection when showing bookmarks only
+  useEffect(() => {
+    if (showBookmarksOnly && selectedTopicId !== 'all') {
+      logger.debug(
+        'NotesScreen',
+        'Resetting topic selection for bookmarks view',
+      );
+      setSelectedTopicId('all');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showBookmarksOnly]);
 
   useEffect(() => {
     if (!category || !user || !featuresSupported) return;
     loadBookmarkStates();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category, user]);
+  }, [category, user, showBookmarksOnly]);
 
   useEffect(() => {
     applyFilters();
@@ -122,17 +143,50 @@ export default function NotesScreen() {
     category,
   ]);
 
-  const loadBookmarkStates = () => {
+  // Refresh bookmark states when showBookmarksOnly changes
+  useEffect(() => {
+    if (showBookmarksOnly && featuresSupported) {
+      logger.debug(
+        'NotesScreen',
+        'Refreshing bookmark states for bookmarks view',
+      );
+      loadBookmarkStates();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showBookmarksOnly]);
+
+  const loadBookmarkStates = async () => {
     if (!category || !featuresSupported) {
       logger.info('NotesScreen', 'Bookmark features disabled on web platform');
       return;
     }
 
+    logger.debug('NotesScreen', 'Loading bookmark states for all notes');
     const states: { [key: string]: boolean } = {};
+
+    // Get all bookmarks once
+    const allBookmarks = await getBookmarks();
+
+    logger.debug('NotesScreen', 'Retrieved bookmarks from storage', {
+      bookmarkCount: allBookmarks.length,
+      bookmarkIds: allBookmarks,
+    });
+
     category.topics.forEach((topic) => {
       topic.notes.forEach((note) => {
-        states[note.id] = isBookmarked(note.id);
+        const bookmarked = allBookmarks.includes(note.id);
+        states[note.id] = bookmarked;
+        if (bookmarked) {
+          logger.debug('NotesScreen', 'Note is bookmarked', {
+            noteId: note.id,
+            title: note.title,
+          });
+        }
       });
+    });
+    logger.debug('NotesScreen', 'Bookmark states loaded', {
+      totalNotes: Object.keys(states).length,
+      bookmarkedCount: Object.values(states).filter(Boolean).length,
     });
     setBookmarkStates(states);
   };
@@ -163,15 +217,15 @@ export default function NotesScreen() {
 
     try {
       let filtered: ApiNote[] = [];
-      const grouped: {[key: string]: ApiNote[]} = {};
+      const grouped: { [key: string]: ApiNote[] } = {};
 
       // If showing bookmarks only, get all notes from all topics first
       if (showBookmarksOnly) {
         // Get all notes from all topics
         category.topics.forEach((topic) => {
-          const notesWithTopic = topic.notes.map(note => ({
+          const notesWithTopic = topic.notes.map((note) => ({
             ...note,
-            topic: topic // Ensure each note has the topic data
+            topic: topic, // Ensure each note has the topic data
           }));
           filtered = [...filtered, ...notesWithTopic];
         });
@@ -182,11 +236,11 @@ export default function NotesScreen() {
         if (selectedTopicId === 'all') {
           // Show all notes from all topics - group by topic
           category.topics.forEach((topic) => {
-            const notesWithTopic = topic.notes.map(note => ({
+            const notesWithTopic = topic.notes.map((note) => ({
               ...note,
-              topic: topic // Ensure each note has the topic data
+              topic: topic, // Ensure each note has the topic data
             }));
-            
+
             // Apply search filter to this topic's notes
             let topicNotes = notesWithTopic;
             if (searchQuery.trim()) {
@@ -195,7 +249,7 @@ export default function NotesScreen() {
                 note.title.toLowerCase().includes(query),
               );
             }
-            
+
             if (topicNotes.length > 0) {
               grouped[topic.title] = topicNotes;
             }
@@ -207,11 +261,11 @@ export default function NotesScreen() {
             (t) => t.id === selectedTopicId,
           );
           if (selectedTopic) {
-            const notesWithTopic = selectedTopic.notes.map(note => ({
+            const notesWithTopic = selectedTopic.notes.map((note) => ({
               ...note,
-              topic: selectedTopic // Ensure each note has the topic data
+              topic: selectedTopic, // Ensure each note has the topic data
             }));
-            
+
             // Apply search filter
             if (searchQuery.trim()) {
               const query = searchQuery.toLowerCase();
@@ -276,8 +330,18 @@ export default function NotesScreen() {
     try {
       // Find note details for activity tracking
       const note = filteredNotes.find((n) => n.id === noteId);
+      logger.debug('NotesScreen', 'Before toggle', {
+        noteId,
+        currentStatus: bookmarkStates[noteId],
+      });
 
-      const newBookmarkStatus = toggleBookmark(noteId);
+      const newBookmarkStatus = await toggleBookmark(noteId);
+
+      logger.debug('NotesScreen', 'After toggle', {
+        noteId,
+        newStatus: newBookmarkStatus,
+      });
+
       setBookmarkStates((prev) => ({
         ...prev,
         [noteId]: newBookmarkStatus,

@@ -73,6 +73,17 @@ export default function NoteDetailScreen() {
       });
       setNote(noteData);
 
+      // Check bookmark status BEFORE tracking activity
+      let bookmarked = false;
+      if (featuresSupported) {
+        bookmarked = await isBookmarked(noteData.id);
+        logger.debug('NoteDetailScreen', 'Bookmark status checked', {
+          noteId: noteData.id,
+          bookmarked,
+        });
+        setNoteIsBookmarked(bookmarked);
+      }
+
       // Track note reading
       activityService.addActivity(ACTIVITY_TYPES.NOTE_VIEWED, {
         noteId: noteData.id,
@@ -88,12 +99,6 @@ export default function NoteDetailScreen() {
         readTime: Math.ceil(noteData.content.length / 200), // Estimate read time
         category: noteData.topic?.category?.slug || 'general',
       });
-
-      // Check bookmark status
-      if (featuresSupported) {
-        const bookmarked = isBookmarked(noteData.id);
-        setNoteIsBookmarked(bookmarked);
-      }
     } catch (error) {
       logger.error('NoteDetailScreen', 'Error fetching note', error);
     } finally {
@@ -112,7 +117,24 @@ export default function NoteDetailScreen() {
 
     logger.userAction('Bookmark toggle attempted', { noteId: note?.id });
     try {
-      const newBookmarkStatus = toggleBookmark(note.id);
+      logger.debug('NoteDetailScreen', 'Before toggle', {
+        noteId: note.id,
+        currentStatus: noteIsBookmarked,
+      });
+
+      const newBookmarkStatus = await toggleBookmark(note.id);
+
+      logger.debug('NoteDetailScreen', 'After toggle', {
+        noteId: note.id,
+        newStatus: newBookmarkStatus,
+      });
+
+      logger.debug('NoteDetailScreen', 'Setting noteIsBookmarked state', {
+        noteId: note.id,
+        newValue: newBookmarkStatus,
+        oldValue: noteIsBookmarked,
+      });
+
       setNoteIsBookmarked(newBookmarkStatus);
 
       // Track activity
@@ -266,7 +288,7 @@ export default function NoteDetailScreen() {
             disabled={!featuresSupported}
           >
             {featuresSupported && noteIsBookmarked ? (
-              <BookmarkCheck size={22} color="#facc15" />
+              <BookmarkCheck size={22} color="#333333" />
             ) : featuresSupported ? (
               <Bookmark size={22} color="#333333" />
             ) : (

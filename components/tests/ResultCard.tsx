@@ -1,11 +1,12 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import {
   Trophy,
   Clock,
   CheckCircle,
   XCircle,
   Calendar,
+  Trash2,
 } from 'lucide-react-native';
 
 interface ExamResult {
@@ -21,6 +22,7 @@ interface ExamResult {
 interface ResultCardProps {
   result: ExamResult;
   onPress: (result: ExamResult) => void;
+  onDelete?: (resultId: string) => Promise<void>;
 }
 
 const formatDate = (dateString: string) => {
@@ -32,7 +34,31 @@ const formatDate = (dateString: string) => {
   });
 };
 
-export default function ResultCard({ result, onPress }: ResultCardProps) {
+export default function ResultCard({
+  result,
+  onPress,
+  onDelete,
+}: ResultCardProps) {
+  const handleDelete = () => {
+    if (onDelete) {
+      Alert.alert(
+        'Delete Result',
+        'Are you sure you want to delete this exam result?',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: () => onDelete(result.id),
+          },
+        ],
+      );
+    }
+  };
+
   const getScoreColor = (score: number) => {
     if (score >= 80) return '#4CAF50';
     if (score >= 60) return '#FF9800';
@@ -99,14 +125,21 @@ export default function ResultCard({ result, onPress }: ResultCardProps) {
         </View>
       </View>
 
-      {/* View Details Button */}
-      <TouchableOpacity
-        style={styles.viewButton}
-        onPress={() => onPress(result)}
-      >
-        <Trophy size={16} color={'#000'} />
-        <Text style={styles.viewButtonText}>View Details</Text>
-      </TouchableOpacity>
+      {/* Action Buttons */}
+      <View style={styles.actionButtonsContainer}>
+        <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
+          <Trash2 size={16} color="#F44336" />
+          <Text style={styles.deleteButtonText}>Delete</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.viewButton}
+          onPress={() => onPress(result)}
+        >
+          <Trophy size={16} color={'#000'} />
+          <Text style={styles.viewButtonText}>View Details</Text>
+        </TouchableOpacity>
+      </View>
     </TouchableOpacity>
   );
 }
@@ -186,7 +219,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#374151',
   },
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    gap: 8,
+  },
   viewButton: {
+    flex: 2,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
@@ -199,5 +237,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#000',
+  },
+  deleteButton: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FEE2E2',
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  deleteButtonText: {
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#F44336',
   },
 });

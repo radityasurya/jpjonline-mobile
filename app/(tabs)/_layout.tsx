@@ -63,6 +63,24 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="exam"
+        options={{
+          title: 'Exam',
+          tabBarIcon: ({ size, color }) => (
+            <ClipboardList size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="exam/result"
+        options={{
+          title: 'Results',
+          tabBarIcon: ({ size, color }) => (
+            <UserCircle size={size} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

@@ -28,79 +28,85 @@ export function QuestionDisplay({
   }, [question.id, question.imageUrl, question.image]);
 
   // Markdown styles - matching result page styling
-  const markdownStyles = useMemo(() => ({
-    body: {
-      color: '#333333',
-    },
-    text: {
-      fontSize: 18,
-      color: '#333333',
-      lineHeight: 26,
-    },
-    paragraph: {
-      marginTop: 0,
-      marginBottom: 8,
-      fontSize: 18,
-      color: '#333333',
-      lineHeight: 26,
-    },
-    strong: {
-      fontWeight: '900' as const,
-      color: '#000000',
-    },
-    em: {
-      fontStyle: 'italic' as const,
-      color: '#333333',
-    },
-    list_item: {
-      flexDirection: 'row' as const,
-      marginBottom: 4,
-      fontSize: 18,
-      color: '#333333',
-      lineHeight: 26,
-    },
-    bullet_list: {
-      marginTop: 8,
-      marginBottom: 8,
-    },
-    ordered_list: {
-      marginTop: 8,
-      marginBottom: 8,
-    },
-    bullet_list_icon: {
-      fontSize: 18,
-      lineHeight: 26,
-      marginRight: 8,
-    },
-    ordered_list_icon: {
-      fontSize: 18,
-      lineHeight: 26,
-      marginRight: 8,
-    },
-  }), []);
+  const markdownStyles = useMemo(
+    () => ({
+      body: {
+        color: '#333333',
+      },
+      text: {
+        fontSize: 18,
+        color: '#333333',
+        lineHeight: 26,
+      },
+      paragraph: {
+        marginTop: 0,
+        marginBottom: 8,
+        fontSize: 18,
+        color: '#333333',
+        lineHeight: 26,
+      },
+      strong: {
+        fontWeight: '900' as const,
+        color: '#000000',
+      },
+      em: {
+        fontStyle: 'italic' as const,
+        color: '#333333',
+      },
+      list_item: {
+        flexDirection: 'row' as const,
+        marginBottom: 4,
+        fontSize: 18,
+        color: '#333333',
+        lineHeight: 26,
+      },
+      bullet_list: {
+        marginTop: 8,
+        marginBottom: 8,
+      },
+      ordered_list: {
+        marginTop: 8,
+        marginBottom: 8,
+      },
+      bullet_list_icon: {
+        fontSize: 18,
+        lineHeight: 26,
+        marginRight: 8,
+      },
+      ordered_list_icon: {
+        fontSize: 18,
+        lineHeight: 26,
+        marginRight: 8,
+      },
+    }),
+    [],
+  );
 
   // Custom rules for markdown rendering
-  const markdownRules = useMemo(() => ({
-    image: (node: any) => {
-      const imageUrl = convertImageUrl(node.attributes.src);
-      return (
-        <View key={node.key} style={styles.markdownImageContainer}>
-          <RetryImage
-            uri={imageUrl}
-            style={styles.markdownImage}
-            resizeMode="contain"
-            showZoomButton={true}
-            onZoomPress={() => {
-              setLightboxImageUrl(imageUrl);
-              setLightboxVisible(true);
-            }}
-            maxRetries={3}
-            retryDelay={2000}
-          />
-        </View>
-      );
-    },
-  }), []);
+  const markdownRules = useMemo(
+    () => ({
+      image: (node: any) => {
+        const imageUrl = convertImageUrl(node.attributes.src);
+        return (
+          <View key={node.key} style={styles.markdownImageContainer}>
+            <RetryImage
+              uri={imageUrl}
+              style={styles.markdownImage}
+              resizeMode="contain"
+              showZoomButton={true}
+              onZoomPress={() => {
+                setLightboxImageUrl(imageUrl);
+                setLightboxVisible(true);
+              }}
+              maxRetries={3}
+              retryDelay={2000}
+            />
+          </View>
+        );
+      },
+    }),
+    [],
+  );
 
   return (
     <>
@@ -129,10 +135,7 @@ export function QuestionDisplay({
         )}
 
         {question.text && question.text.trim() && (
-          <Markdown
-            style={markdownStyles}
-            rules={markdownRules}
-          >
+          <Markdown style={markdownStyles} rules={markdownRules}>
             {decodeHtmlEntities(question.text)}
           </Markdown>
         )}

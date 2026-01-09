@@ -19,13 +19,39 @@ class BookmarkService {
   constructor() {
     this.isSupported = storageService.isAvailable();
     this.platform = Platform.OS;
+    this.listeners = [];
+  }
+
+  /**
+   * Subscribe to bookmark changes
+   * @param {Function} callback - Callback function to call when bookmarks change
+   * @returns {Function} Unsubscribe function
+   */
+  subscribe(callback) {
+    this.listeners.push(callback);
+    return () => {
+      this.listeners = this.listeners.filter(listener => listener !== callback);
+    };
+  }
+
+  /**
+   * Notify all listeners of bookmark changes
+   */
+  notifyListeners() {
+    this.listeners.forEach(callback => {
+      try {
+        callback();
+      } catch (error) {
+        logger.error('BookmarkService', 'Error in listener callback', error);
+      }
+    });
   }
 
   /**
    * Get all bookmarked note IDs
-   * @returns {string[]} Array of bookmarked note IDs
+   * @returns {Promise<string[]>} Array of bookmarked note IDs
    */
-  getBookmarks() {
+  async getBookmarks() {
     if (!this.isSupported) {
       logger.warn(
         'BookmarkService',
@@ -34,16 +60,16 @@ class BookmarkService {
       return [];
     }
 
-    const bookmarks = storageService.getItem(BOOKMARKS_STORAGE_KEY);
+    const bookmarks = await storageService.getItem(BOOKMARKS_STORAGE_KEY);
     return Array.isArray(bookmarks) ? bookmarks : [];
   }
 
   /**
    * Check if a note is bookmarked
    * @param {string} noteId - Note ID to check
-   * @returns {boolean} Whether the note is bookmarked
+   * @returns {Promise<boolean>} Whether the note is bookmarked
    */
-  isBookmarked(noteId) {
+  async isBookmarked(noteId) {
     if (!noteId) {
       logger.warn('BookmarkService', 'No noteId provided to isBookmarked');
       return false;
@@ -53,14 +79,14 @@ class BookmarkService {
       return false;
     }
 
-    const bookmarks = this.getBookmarks();
+    const bookmarks = await this.getBookmarks();
     return bookmarks.includes(noteId);
   }
 
   /**
    * Update bookmark statistics in progress service
    */
-  updateBookmarkStats() {
+  async updateBookmarkStats() {
     if (!this.isSupported) {
       return;
     }
@@ -69,8 +95,9 @@ class BookmarkService {
       // Lazy load progress service to avoid circular dependency
       const progressService = require('./progressService.js').default;
       if (progressService && progressService.updateBookmarkCount) {
-        const bookmarkCount = this.getBookmarks().length;
-        progressService.updateBookmarkCount(bookmarkCount);
+        const bookmarks = await this.getBookmarks();
+        const bookmarkCount = bookmarks.length;
+        await progressService.updateBookmarkCount(bookmarkCount);
         logger.debug('BookmarkService', 'Updated bookmark stats', {
           count: bookmarkCount,
         });
@@ -83,9 +110,9 @@ class BookmarkService {
   /**
    * Add a note to bookmarks
    * @param {string} noteId - Note ID to bookmark
-   * @returns {boolean} Success status
+   * @returns {Promise<boolean>} Success status
    */
-  addBookmark(noteId) {
+  async addBookmark(noteId) {
     if (!noteId) {
       logger.warn('BookmarkService', 'No noteId provided to addBookmark');
       return false;
@@ -100,18 +127,29 @@ class BookmarkService {
     }
 
     try {
-      const bookmarks = this.getBookmarks();
+      const bookmarks = await this.getBookmarks();
 
       if (!bookmarks.includes(noteId)) {
         bookmarks.push(noteId);
-        const success = storageService.setItem(
+        
+        logger.debug('BookmarkService', 'Saving bookmark to storage', {
+          noteId,
+          bookmarkCount: bookmarks.length,
+        });
+        
+        const success = await storageService.setItem(
           BOOKMARKS_STORAGE_KEY,
           bookmarks,
         );
 
         if (success) {
-          // Update bookmark statistics
-          this.updateBookmarkStats();
+          logger.debug('BookmarkService', 'Bookmark saved to storage successfully', { noteId });
+          
+          // Update bookmark statistics AFTER saving to storage
+          await this.updateBookmarkStats();
+
+          // Notify listeners of bookmark change
+          this.notifyListeners();
 
           // Track activity
           try {
@@ -135,6 +173,8 @@ class BookmarkService {
             noteId,
           });
           return true;
+        } else {
+          logger.error('BookmarkService', 'Failed to save bookmark to storage', { noteId });
         }
       } else {
         logger.debug('BookmarkService', 'Note already bookmarked', { noteId });
@@ -153,9 +193,9 @@ class BookmarkService {
   /**
    * Remove a note from bookmarks
    * @param {string} noteId - Note ID to remove from bookmarks
-   * @returns {boolean} Success status
+   * @returns {Promise<boolean>} Success status
    */
-  removeBookmark(noteId) {
+  async removeBookmark(noteId) {
     if (!noteId) {
       logger.warn('BookmarkService', 'No noteId provided to removeBookmark');
       return false;
@@ -170,18 +210,28 @@ class BookmarkService {
     }
 
     try {
-      const bookmarks = this.getBookmarks();
+      const bookmarks = await this.getBookmarks();
       const filteredBookmarks = bookmarks.filter((id) => id !== noteId);
 
       if (filteredBookmarks.length !== bookmarks.length) {
-        const success = storageService.setItem(
+        logger.debug('BookmarkService', 'Removing bookmark from storage', {
+          noteId,
+          bookmarkCount: filteredBookmarks.length,
+        });
+        
+        const success = await storageService.setItem(
           BOOKMARKS_STORAGE_KEY,
           filteredBookmarks,
         );
 
         if (success) {
-          // Update bookmark statistics
-          this.updateBookmarkStats();
+          logger.debug('BookmarkService', 'Bookmark removed from storage successfully', { noteId });
+          
+          // Update bookmark statistics AFTER saving to storage
+          await this.updateBookmarkStats();
+
+          // Notify listeners of bookmark change
+          this.notifyListeners();
 
           // Track activity
           try {
@@ -205,6 +255,8 @@ class BookmarkService {
             noteId,
           });
           return true;
+        } else {
+          logger.error('BookmarkService', 'Failed to remove bookmark from storage', { noteId });
         }
       } else {
         logger.debug('BookmarkService', 'Note was not bookmarked', { noteId });
@@ -223,9 +275,9 @@ class BookmarkService {
   /**
    * Toggle bookmark status for a note
    * @param {string} noteId - Note ID to toggle
-   * @returns {boolean} New bookmark status (true if now bookmarked, false if removed)
+   * @returns {Promise<boolean>} New bookmark status (true if now bookmarked, false if removed)
    */
-  toggleBookmark(noteId) {
+  async toggleBookmark(noteId) {
     if (!noteId) {
       logger.warn('BookmarkService', 'No noteId provided to toggleBookmark');
       return false;
@@ -239,13 +291,19 @@ class BookmarkService {
       return false;
     }
 
-    const isCurrentlyBookmarked = this.isBookmarked(noteId);
+    const isCurrentlyBookmarked = await this.isBookmarked(noteId);
+    logger.debug('BookmarkService', 'toggleBookmark called', {
+      noteId,
+      isCurrentlyBookmarked,
+    });
 
     if (isCurrentlyBookmarked) {
-      const success = this.removeBookmark(noteId);
+      const success = await this.removeBookmark(noteId);
+      logger.debug('BookmarkService', 'removeBookmark result', { success, noteId });
       return success ? false : isCurrentlyBookmarked; // Return false if successfully removed
     } else {
-      const success = this.addBookmark(noteId);
+      const success = await this.addBookmark(noteId);
+      logger.debug('BookmarkService', 'addBookmark result', { success, noteId });
       return success ? true : isCurrentlyBookmarked; // Return true if successfully added
     }
   }
@@ -253,9 +311,9 @@ class BookmarkService {
   /**
    * Get bookmarked notes from a list of notes
    * @param {Array} notes - Array of note objects
-   * @returns {Array} Array of bookmarked notes
+   * @returns {Promise<Array>} Array of bookmarked notes
    */
-  getBookmarkedNotes(notes) {
+  async getBookmarkedNotes(notes) {
     if (!Array.isArray(notes)) {
       logger.warn(
         'BookmarkService',
@@ -268,7 +326,7 @@ class BookmarkService {
       return [];
     }
 
-    const bookmarkIds = this.getBookmarks();
+    const bookmarkIds = await this.getBookmarks();
     return notes.filter((note) => bookmarkIds.includes(note.id));
   }
 
@@ -288,7 +346,8 @@ class BookmarkService {
     try {
       const success = storageService.removeItem(BOOKMARKS_STORAGE_KEY);
       if (success) {
-        this.updateBookmarkStats();
+        await this.updateBookmarkStats();
+        this.notifyListeners();
         logger.info('BookmarkService', 'All bookmarks cleared successfully');
       }
       return success;
@@ -344,9 +403,9 @@ class BookmarkService {
   /**
    * Import bookmarks from backup
    * @param {Object} importData - Import data object
-   * @returns {boolean} Success status
+   * @returns {Promise<boolean>} Success status
    */
-  importBookmarks(importData) {
+  async importBookmarks(importData) {
     if (!this.isSupported) {
       logger.warn(
         'BookmarkService',
@@ -367,7 +426,8 @@ class BookmarkService {
       );
 
       if (success) {
-        this.updateBookmarkStats();
+        await this.updateBookmarkStats();
+        this.notifyListeners();
         logger.info('BookmarkService', 'Bookmarks imported successfully', {
           count: importData.bookmarks.length,
         });
@@ -421,6 +481,7 @@ export const importBookmarks =
   bookmarkService.importBookmarks.bind(bookmarkService);
 export const getPlatformInfo =
   bookmarkService.getPlatformInfo.bind(bookmarkService);
+export const subscribe = bookmarkService.subscribe.bind(bookmarkService);
 
 // Export the service instance
 export default bookmarkService;

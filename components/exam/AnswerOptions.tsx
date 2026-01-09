@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+  useCallback,
+} from 'react';
 import {
   View,
   Text,
@@ -10,7 +16,10 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { decodeHtmlEntities } from '@/utils/htmlDecoder';
-import { splitTextWithImages, convertImageUrl } from '@/utils/markdownImageHandler';
+import {
+  splitTextWithImages,
+  convertImageUrl,
+} from '@/utils/markdownImageHandler';
 import { ImageLightbox } from '@/components/shared/ImageLightbox';
 
 interface AnswerOptionsProps {
@@ -40,7 +49,7 @@ export function AnswerOptions({
   }>({});
   const [lightboxVisible, setLightboxVisible] = useState(false);
   const [lightboxImageUrl, setLightboxImageUrl] = useState('');
-  
+
   // Track the current question ID to prevent stale callbacks
   const currentQuestionIdRef = useRef(question.id);
   const imageLoadHandledRef = useRef<{ [key: number]: boolean }>({});
@@ -54,10 +63,10 @@ export function AnswerOptions({
     // Handle legacy format with options.choices
     if (question.options?.choices && Array.isArray(question.options.choices)) {
       normalizedOptions = question.options.choices.map((choice: any) =>
-        typeof choice === 'string' ? choice : (choice.text || '')
+        typeof choice === 'string' ? choice : choice.text || '',
       );
       normalizedOptionImages = question.options.choices.map((choice: any) =>
-        typeof choice === 'object' ? (choice.image || null) : null
+        typeof choice === 'object' ? choice.image || null : null,
       );
     }
     // Handle new API format with options as array and separate optionImages
@@ -72,7 +81,7 @@ export function AnswerOptions({
   // Custom component to render option text with markdown images
   const renderOptionTextWithImages = (text: string) => {
     const segments = splitTextWithImages(text);
-    
+
     return segments.map((segment, index) => {
       if (segment.type === 'text') {
         return (
@@ -90,7 +99,10 @@ export function AnswerOptions({
                 style={styles.markdownImage}
                 resizeMode="contain"
                 onError={(error) => {
-                  console.log('Markdown option image load error:', error.nativeEvent.error);
+                  console.log(
+                    'Markdown option image load error:',
+                    error.nativeEvent.error,
+                  );
                 }}
               />
               <TouchableOpacity
@@ -118,15 +130,15 @@ export function AnswerOptions({
   useEffect(() => {
     currentQuestionIdRef.current = question.id;
     imageLoadHandledRef.current = {};
-    
+
     const initialLoadingStates: { [key: number]: boolean } = {};
-    
+
     optionImages.forEach((imageUrl: string | null, index: number) => {
       if (imageUrl && imageUrl.trim() !== '') {
         initialLoadingStates[index] = true;
       }
     });
-    
+
     setImageLoadingStates(initialLoadingStates);
     setImageErrorStates({});
     // Only depend on question.id - optionImages is derived from question and is stable via useMemo
@@ -134,23 +146,35 @@ export function AnswerOptions({
   }, [question.id]);
 
   // Stable callback for image load - prevents infinite loops
-  const handleImageLoad = useCallback((index: number) => {
-    // Only handle if this is for the current question and hasn't been handled yet
-    if (currentQuestionIdRef.current === question.id && !imageLoadHandledRef.current[index]) {
-      imageLoadHandledRef.current[index] = true;
-      setImageLoadingStates((prev) => ({ ...prev, [index]: false }));
-    }
-  }, [question.id]);
+  const handleImageLoad = useCallback(
+    (index: number) => {
+      // Only handle if this is for the current question and hasn't been handled yet
+      if (
+        currentQuestionIdRef.current === question.id &&
+        !imageLoadHandledRef.current[index]
+      ) {
+        imageLoadHandledRef.current[index] = true;
+        setImageLoadingStates((prev) => ({ ...prev, [index]: false }));
+      }
+    },
+    [question.id],
+  );
 
   // Stable callback for image error
-  const handleImageError = useCallback((index: number) => {
-    console.log('Option image load error at index:', index);
-    if (currentQuestionIdRef.current === question.id && !imageLoadHandledRef.current[index]) {
-      imageLoadHandledRef.current[index] = true;
-      setImageLoadingStates((prev) => ({ ...prev, [index]: false }));
-      setImageErrorStates((prev) => ({ ...prev, [index]: true }));
-    }
-  }, [question.id]);
+  const handleImageError = useCallback(
+    (index: number) => {
+      console.log('Option image load error at index:', index);
+      if (
+        currentQuestionIdRef.current === question.id &&
+        !imageLoadHandledRef.current[index]
+      ) {
+        imageLoadHandledRef.current[index] = true;
+        setImageLoadingStates((prev) => ({ ...prev, [index]: false }));
+        setImageErrorStates((prev) => ({ ...prev, [index]: true }));
+      }
+    },
+    [question.id],
+  );
 
   const getAnswerOptionStyle = (optionIndex: number) => {
     const isSelected = selectedAnswer === optionIndex;
@@ -182,8 +206,6 @@ export function AnswerOptions({
     };
   };
 
-
-
   // Check if optionImages array exists and has images
   const hasOptionImages = optionImages.some(
     (img: string | null) => img && img.trim() !== '',
@@ -209,113 +231,119 @@ export function AnswerOptions({
       />
       <View style={styles.optionsContainer}>
         {options.map((option: any, index: number) => {
-        const isImageLoading = imageLoadingStates[index] === true;
-        const hasImageError = imageErrorStates[index] === true;
+          const isImageLoading = imageLoadingStates[index] === true;
+          const hasImageError = imageErrorStates[index] === true;
 
-        // Get option image from normalized optionImages array
-        const rawOptionImageUrl = optionImages[index] || null;
+          // Get option image from normalized optionImages array
+          const rawOptionImageUrl = optionImages[index] || null;
 
-        // Convert relative URLs to absolute URLs using jpjonline.com domain
-        const optionImageUrl = rawOptionImageUrl && rawOptionImageUrl.trim() !== ''
-          ? convertImageUrl(rawOptionImageUrl)
-          : null;
+          // Convert relative URLs to absolute URLs using jpjonline.com domain
+          const optionImageUrl =
+            rawOptionImageUrl && rawOptionImageUrl.trim() !== ''
+              ? convertImageUrl(rawOptionImageUrl)
+              : null;
 
-        const hasImage = optionImageUrl && optionImageUrl.trim() !== '';
+          const hasImage = optionImageUrl && optionImageUrl.trim() !== '';
 
-        return (
-          <TouchableOpacity
-            key={index}
-            style={[
-              styles.optionButton,
-              isImageOnlyOptions && styles.imageOnlyOptionButton,
-              getAnswerOptionStyle(index),
-              disabled && styles.disabledOption,
-            ]}
-            onPress={() => !disabled && onAnswerSelect(index)}
-            disabled={disabled}
-          >
-            <View
+          return (
+            <TouchableOpacity
+              key={index}
               style={[
-                styles.optionIndicator,
-                selectedAnswer === index && styles.selectedIndicator,
-                isImageOnlyOptions && styles.imageOnlyIndicator,
+                styles.optionButton,
+                isImageOnlyOptions && styles.imageOnlyOptionButton,
+                getAnswerOptionStyle(index),
+                disabled && styles.disabledOption,
               ]}
+              onPress={() => !disabled && onAnswerSelect(index)}
+              disabled={disabled}
             >
-              <Text
-                style={[
-                  styles.optionLetter,
-                  selectedAnswer === index && styles.selectedOptionLetter,
-                ]}
-              >
-                {String.fromCharCode(65 + index)}
-              </Text>
-            </View>
-
-            {hasImage && (
               <View
                 style={[
-                  styles.optionImageContainer,
-                  isImageOnlyOptions && styles.imageOnlyContainer,
+                  styles.optionIndicator,
+                  selectedAnswer === index && styles.selectedIndicator,
+                  isImageOnlyOptions && styles.imageOnlyIndicator,
                 ]}
               >
-                {isImageLoading && (
-                  <View style={styles.imageLoadingOverlay}>
-                    <ActivityIndicator size="small" color="#666666" />
-                    <Text style={styles.loadingText}>Loading...</Text>
-                  </View>
-                )}
-                <Image
-                  source={{ uri: optionImageUrl }}
+                <Text
                   style={[
-                    styles.optionImage,
-                    isImageOnlyOptions && styles.imageOnlyOption,
-                    isImageLoading && styles.hiddenImage,
+                    styles.optionLetter,
+                    selectedAnswer === index && styles.selectedOptionLetter,
                   ]}
-                  onLoad={() => handleImageLoad(index)}
-                  onError={(error) => {
-                    console.log('Image error:', error.nativeEvent.error);
-                    handleImageError(index);
-                  }}
-                  resizeMode="contain"
-                />
-                {!isImageLoading && !hasImageError && (
-                  <TouchableOpacity
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      setLightboxImageUrl(optionImageUrl);
-                      setLightboxVisible(true);
-                    }}
-                    style={styles.zoomIconButton}
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons name="search" size={16} color="#FFFFFF" />
-                  </TouchableOpacity>
-                )}
-                {hasImageError && !isImageLoading && (
-                  <View
-                    style={[
-                      styles.imageErrorContainer,
-                      isImageOnlyOptions && styles.imageOnlyOption,
-                    ]}
-                  >
-                    <Text style={styles.imageErrorText}>Failed to load</Text>
-                  </View>
-                )}
+                >
+                  {String.fromCharCode(65 + index)}
+                </Text>
               </View>
-            )}
 
-            {/* Render text content only if it exists and is not empty */}
-            {(() => {
-              const textContent = typeof option === 'string' ? option : (option?.text || option?.image || '');
-              return textContent.trim() !== '' ? (
-                <ScrollView style={{ flex: 1 }} nestedScrollEnabled>
-                  {renderOptionTextWithImages(decodeHtmlEntities(textContent))}
-                </ScrollView>
-              ) : null;
-            })()}
-          </TouchableOpacity>
-        );
-      })}
+              {hasImage && (
+                <View
+                  style={[
+                    styles.optionImageContainer,
+                    isImageOnlyOptions && styles.imageOnlyContainer,
+                  ]}
+                >
+                  {isImageLoading && (
+                    <View style={styles.imageLoadingOverlay}>
+                      <ActivityIndicator size="small" color="#666666" />
+                      <Text style={styles.loadingText}>Loading...</Text>
+                    </View>
+                  )}
+                  <Image
+                    source={{ uri: optionImageUrl }}
+                    style={[
+                      styles.optionImage,
+                      isImageOnlyOptions && styles.imageOnlyOption,
+                      isImageLoading && styles.hiddenImage,
+                    ]}
+                    onLoad={() => handleImageLoad(index)}
+                    onError={(error) => {
+                      console.log('Image error:', error.nativeEvent.error);
+                      handleImageError(index);
+                    }}
+                    resizeMode="contain"
+                  />
+                  {!isImageLoading && !hasImageError && (
+                    <TouchableOpacity
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        setLightboxImageUrl(optionImageUrl);
+                        setLightboxVisible(true);
+                      }}
+                      style={styles.zoomIconButton}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons name="search" size={16} color="#FFFFFF" />
+                    </TouchableOpacity>
+                  )}
+                  {hasImageError && !isImageLoading && (
+                    <View
+                      style={[
+                        styles.imageErrorContainer,
+                        isImageOnlyOptions && styles.imageOnlyOption,
+                      ]}
+                    >
+                      <Text style={styles.imageErrorText}>Failed to load</Text>
+                    </View>
+                  )}
+                </View>
+              )}
+
+              {/* Render text content only if it exists and is not empty */}
+              {(() => {
+                const textContent =
+                  typeof option === 'string'
+                    ? option
+                    : option?.text || option?.image || '';
+                return textContent.trim() !== '' ? (
+                  <ScrollView style={{ flex: 1 }} nestedScrollEnabled>
+                    {renderOptionTextWithImages(
+                      decodeHtmlEntities(textContent),
+                    )}
+                  </ScrollView>
+                ) : null;
+              })()}
+            </TouchableOpacity>
+          );
+        })}
       </View>
     </>
   );

@@ -13,6 +13,8 @@ export default function BookmarkFilter({
   onToggle,
   featuresSupported = true,
 }: BookmarkFilterProps) {
+  // Use key to force re-render when showBookmarksOnly changes
+  const filterKey = `bookmark-filter-${showBookmarksOnly}`;
   if (!featuresSupported) {
     return null;
   }

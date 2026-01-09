@@ -48,7 +48,7 @@ export function ExamProgress({
       // Calculate the x position to scroll to
       // Center the active question in the visible area
       const scrollToX = currentQuestionIndex * totalButtonWidth - 50;
-      
+
       scrollViewRef.current.scrollTo({
         x: Math.max(0, scrollToX),
         animated: true,

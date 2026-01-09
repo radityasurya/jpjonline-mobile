@@ -12,7 +12,7 @@ import { useI18n } from '@/contexts/I18nContext';
 import { logger } from '@/utils/logger';
 import { Trophy } from 'lucide-react-native';
 import { router } from 'expo-router';
-import { getUserExams, getUserExamHistory } from '@/services';
+import { getUserExams, getUserExamHistory, deleteExamResult } from '@/services';
 import ExamCard from '@/components/tests/ExamCard';
 import ResultCard from '@/components/tests/ResultCard';
 import SearchBar from '@/components/shared/SearchBar';
@@ -236,8 +236,31 @@ export default function TestsScreen() {
   );
 
   const renderResultItem = ({ item: result }: { item: ExamResult }) => (
-    <ResultCard result={result} onPress={handleResultPress} />
+    <ResultCard
+      result={result}
+      onPress={handleResultPress}
+      onDelete={handleDeleteResult}
+    />
   );
+
+  const handleDeleteResult = async (resultId: string) => {
+    try {
+      const success = await deleteExamResult(resultId);
+      if (success) {
+        // Refresh the results list
+        const response = (await getUserExamHistory('')) as {
+          results: ExamResult[];
+          total: number;
+        };
+        setTestResults(response.results);
+      } else {
+        Alert.alert('Error', 'Failed to delete result. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error deleting result:', error);
+      Alert.alert('Error', 'Failed to delete result. Please try again.');
+    }
+  };
 
   if (isLoading) {
     return (

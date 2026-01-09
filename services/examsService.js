@@ -219,8 +219,10 @@ export const submitExamResults = async (examSlug, results, token) => {
     const score = Math.round((correctAnswers / totalQuestions) * 100);
     const passed = score >= 80; // Default passing score
 
+    // Generate unique result ID using timestamp + random string to prevent duplicates
+    const uniqueId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const examResult = {
-      id: `result_${Date.now()}`,
+      id: `result_${uniqueId}`,
       examId: examData.id,
       examSlug: examSlug,
       examTitle: examData.title,
@@ -293,7 +295,7 @@ export const getUserExamHistory = async (token) => {
  * @param {Object} examResult - Exam result object
  * @returns {Promise<Object>} Saved result or null if failed
  */
-const saveExamResult = async (examResult) => {
+export const saveExamResult = async (examResult) => {
   if (!storageService.isAvailable()) {
     logger.warn(
       'ExamsService',
@@ -304,6 +306,36 @@ const saveExamResult = async (examResult) => {
 
   try {
     const existingResults = await getExamResults();
+    
+    // Check if result with same ID already exists
+    const existingIndex = existingResults.findIndex(r => r.id === examResult.id);
+    if (existingIndex !== -1) {
+      logger.debug('ExamsService', 'Result already exists, skipping save', {
+        resultId: examResult.id,
+        examSlug: examResult.examSlug,
+      });
+      return existingResults[existingIndex];
+    }
+    
+    // Check for duplicate submission of same exam within last 10 seconds
+    const now = Date.now();
+    const recentDuplicate = existingResults.find(r =>
+      r.examSlug === examResult.examSlug &&
+      r.examId === examResult.examId &&
+      r.totalQuestions === examResult.totalQuestions &&
+      Math.abs(now - new Date(r.completedAt).getTime()) < 10000
+    );
+    
+    if (recentDuplicate) {
+      logger.warn('ExamsService', 'Duplicate submission detected (same exam within 10s), skipping save', {
+        examSlug: examResult.examSlug,
+        existingResultId: recentDuplicate.id,
+        newResultId: examResult.id,
+        timeDiff: now - new Date(recentDuplicate.completedAt).getTime(),
+      });
+      return recentDuplicate;
+    }
+    
     const newResults = [examResult, ...existingResults].slice(0, MAX_RESULTS);
 
     const success = await storageService.setItem(
@@ -360,6 +392,39 @@ export const getExamResultsForExam = async (examSlug) => {
     logger.error('ExamsService', 'Failed to get exam results for exam', error);
     return [];
   }
+};
+
+/**
+ * Delete Exam Result
+ * @param {string} resultId - Result ID to delete
+ * @returns {Promise<boolean>} Success status
+ */
+export const deleteExamResult = async (resultId) => {
+  if (!storageService.isAvailable()) {
+    logger.warn('ExamsService', 'Storage not available, cannot delete result');
+    return false;
+  }
+
+  try {
+    const allResults = await getExamResults();
+    const filteredResults = allResults.filter((result) => result.id !== resultId);
+    
+    const success = await storageService.setItem(
+      EXAM_RESULTS_STORAGE_KEY,
+      filteredResults,
+    );
+
+    if (success) {
+      logger.info('ExamsService', 'Exam result deleted successfully', {
+        resultId,
+      });
+      return true;
+    }
+  } catch (error) {
+    logger.error('ExamsService', 'Failed to delete exam result', error);
+  }
+
+  return false;
 };
 
 /**

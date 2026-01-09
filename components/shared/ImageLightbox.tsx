@@ -16,7 +16,11 @@ interface ImageLightboxProps {
   onClose: () => void;
 }
 
-export function ImageLightbox({ visible, imageUrl, onClose }: ImageLightboxProps) {
+export function ImageLightbox({
+  visible,
+  imageUrl,
+  onClose,
+}: ImageLightboxProps) {
   const { width, height } = Dimensions.get('window');
 
   return (

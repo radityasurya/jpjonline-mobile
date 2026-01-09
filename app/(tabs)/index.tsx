@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -5,11 +6,10 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
+import { useFocusEffect, router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
-import { router } from 'expo-router';
 import { logger } from '@/utils/logger';
 import { Book, FileText, Trophy, Clock, Crown } from 'lucide-react-native';
-import { useState, useEffect } from 'react';
 import { progressService, activityService, ACTIVITY_TYPES } from '@/services';
 import { LAYOUT_CONSTANTS } from '@/constants/layout';
 
@@ -17,7 +17,8 @@ export default function HomeScreen() {
   const { user, isLoading } = useAuth();
 
   // Check if features are supported on current platform
-  const featuresSupported = progressService.getPlatformInfo().supported;
+  const platformInfo = progressService.getPlatformInfo();
+  const featuresSupported = (platformInfo as any)?.supported || false;
 
   const [stats, setStats] = useState<{
     totalExams: number;
@@ -40,27 +41,41 @@ export default function HomeScreen() {
   });
 
   useEffect(() => {
-    if (!user) {
-      logger.warn('HomeScreen', 'No user found, redirecting to login');
-      router.replace('/auth/login');
-      return;
-    }
+    const init = async () => {
+      if (!user) {
+        logger.warn('HomeScreen', 'No user found, redirecting to login');
+        router.replace('/auth/login');
+        return;
+      }
 
-    // Initialize progress service for the user
-    try {
-      progressService.initializeUser(user.id);
-    } catch (error) {
-      logger.error(
-        'HomeScreen',
-        'Failed to initialize progress service',
-        error,
-      );
-    }
+      // Initialize progress service for user
+      try {
+        await progressService.initializeUser(user.id);
+      } catch (error) {
+        logger.error(
+          'HomeScreen',
+          'Failed to initialize progress service',
+          error,
+        );
+      }
 
-    logger.info('HomeScreen', 'Loading user stats', { userId: user.id });
-    loadStats();
+      logger.info('HomeScreen', 'Loading user stats', { userId: user.id });
+      await loadStats();
+    };
+
+    init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  // Refresh stats when screen is focused (e.g., after completing an exam)
+  useFocusEffect(
+    React.useCallback(() => {
+      if (user && featuresSupported) {
+        loadStats();
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user, featuresSupported]),
+  );
 
   if (isLoading || !user) {
     return null;
@@ -196,7 +211,7 @@ export default function HomeScreen() {
         <View style={styles.userNameContainer}>
           <Text style={styles.userName}>{user.name}</Text>
           {user.tier === 'PREMIUM' && (
-            <View style={styles.subscriptionBadge}>
+            <View style={styles.premiumIconContainer}>
               <Crown size={18} color="#FFD700" style={styles.premiumIcon} />
             </View>
           )}
@@ -303,6 +318,9 @@ const styles = StyleSheet.create({
   userNameContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  premiumIconContainer: {
+    marginLeft: 8,
   },
   premiumIcon: {
     marginLeft: 8,

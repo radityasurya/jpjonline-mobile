@@ -35,6 +35,8 @@ export {
   getExamBySlug,
   submitExamResults,
   getUserExamHistory,
+  deleteExamResult,
+  saveExamResult,
 } from './examsService.js';
 
 // Pages services

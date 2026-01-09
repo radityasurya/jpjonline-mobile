@@ -51,7 +51,12 @@ export function ExamNavigation({
     examMode === 'OPEN' && hasCheckedAnswer && canRetryQuestion;
 
   return (
-    <View style={[styles.navigation, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+    <View
+      style={[
+        styles.navigation,
+        { paddingBottom: Math.max(insets.bottom, 16) },
+      ]}
+    >
       <View style={styles.leftSection}>
         <TouchableOpacity
           style={[

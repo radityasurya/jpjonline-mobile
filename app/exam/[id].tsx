@@ -16,11 +16,11 @@ import { decodeHtmlEntities } from '@/utils/htmlDecoder';
 import { LAYOUT_CONSTANTS } from '@/constants/layout';
 import {
   getExamBySlug,
-  submitExamResults,
   progressService,
   activityService,
   ACTIVITY_TYPES,
 } from '@/services';
+import { saveExamResult } from '@/services/examsService.js';
 
 // Import components
 import { ExamHeader } from '@/components/exam/ExamHeader';
@@ -68,6 +68,7 @@ export default function ExamScreen() {
   const [hasCheckedAnswer, setHasCheckedAnswer] = useState<boolean[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
   const [showQuestionSidebar, setShowQuestionSidebar] = useState(false);
   const [isTimerActive, setIsTimerActive] = useState(true);
   const [examMode, setExamMode] = useState<'OPEN' | 'CLOSED'>('OPEN');
@@ -346,7 +347,7 @@ export default function ExamScreen() {
   };
 
   const handleSubmitExam = async () => {
-    if (isSubmitting) return;
+    if (isSubmitting || hasSubmitted) return;
 
     logger.info('ExamScreen', 'Exam submission initiated', {
       examSlug: exam!.slug,
@@ -388,7 +389,13 @@ export default function ExamScreen() {
   };
 
   const submitExam = async () => {
+    if (hasSubmitted) {
+      logger.warn('ExamScreen', 'Exam already submitted, skipping');
+      return;
+    }
+
     setIsSubmitting(true);
+    setHasSubmitted(true);
 
     // Calculate actual time spent
     const endTime = new Date();
@@ -405,7 +412,7 @@ export default function ExamScreen() {
     try {
       // Calculate score client-side
       let correctAnswers = 0;
-      const questionResults: Array<{
+      const questionResults: {
         questionId: string;
         question: string;
         userAnswer: number;
@@ -415,7 +422,7 @@ export default function ExamScreen() {
         questionImage: string | null;
         options: string[];
         optionImages: string[];
-      }> = [];
+      }[] = [];
 
       questions.forEach((question, index) => {
         const userAnswer = answers[index] ?? -1;
@@ -452,8 +459,10 @@ export default function ExamScreen() {
       const score = Math.round((correctAnswers / totalQuestions) * 100);
       const passed = score >= 80; // Default passing score
 
+      // Generate unique result ID using timestamp + random string to prevent duplicates
+      const uniqueId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const examResult = {
-        id: `result_${Date.now()}`,
+        id: `result_${uniqueId}`,
         examId: exam!.id,
         examSlug: exam!.slug,
         examTitle: exam!.title,
@@ -476,14 +485,48 @@ export default function ExamScreen() {
         totalQuestions: totalQuestions,
       });
 
+      // Save result directly to exam history (bypass submitExamResults to avoid duplicate calculation)
+      try {
+        await saveExamResult(examResult);
+
+        logger.info('ExamScreen', 'Exam result saved to history successfully', {
+          examSlug: exam!.slug,
+          score: examResult.score,
+        });
+      } catch (saveError) {
+        logger.error(
+          'ExamScreen',
+          'Failed to save exam result to history',
+          saveError,
+        );
+        // Continue with navigation even if save fails
+      }
+
       // Track exam completion in progress service
-      progressService.updateStats('exam_completed', {
-        score: examResult.score,
-        passed: examResult.passed,
-        timeSpent: examResult.timeSpent,
-        examSlug: exam!.slug,
-        examTitle: exam!.title,
-      });
+      const statsUpdateResult = await progressService.updateStats(
+        'exam_completed',
+        {
+          score: examResult.score,
+          passed: examResult.passed,
+          timeSpent: examResult.timeSpent,
+          examSlug: exam!.slug,
+          examTitle: exam!.title,
+        },
+      );
+
+      if (statsUpdateResult.success) {
+        logger.info(
+          'ExamScreen',
+          'Stats updated successfully',
+          statsUpdateResult,
+        );
+      } else {
+        logger.error(
+          'ExamScreen',
+          'Failed to update stats',
+          statsUpdateResult.error,
+        );
+      }
 
       // Track exam completion activity
       const activityType = examResult.passed
@@ -499,6 +542,7 @@ export default function ExamScreen() {
         category: exam!.category?.name,
         userId: user?.id,
       });
+      logger.info('ExamScreen', 'Exam completion activity tracked');
 
       // Also track pass/fail specific activity
       activityService.addActivity(activityType, {
@@ -510,13 +554,38 @@ export default function ExamScreen() {
         category: exam!.category?.name,
         userId: user?.id,
       });
+      logger.info('ExamScreen', 'Pass/fail activity tracked');
 
       // Navigate to result page
-      router.replace(
-        `/exam/result/${exam!.slug}?resultData=${encodeURIComponent(
-          JSON.stringify(examResult),
-        )}`,
-      );
+      const resultJson = JSON.stringify(examResult);
+      logger.info('ExamScreen', 'Navigating to results page', {
+        examSlug: exam!.slug,
+        resultDataSize: resultJson.length,
+        resultDataPreview: resultJson.substring(0, 200) + '...',
+      });
+
+      try {
+        const encodedResultData = encodeURIComponent(resultJson);
+        logger.info('ExamScreen', 'Attempting navigation to results page', {
+          encodedLength: encodedResultData.length,
+          url: `/exam/result/${exam!.slug}?resultData=${encodedResultData}`,
+        });
+
+        // Use push to add to navigation stack
+        router.push(
+          `/exam/result/${exam!.slug}?resultData=${encodedResultData}`,
+        );
+
+        logger.info('ExamScreen', 'Navigation completed', {
+          success: true,
+        });
+      } catch (error) {
+        logger.error('ExamScreen', 'Failed to navigate to results page', error);
+        Alert.alert(
+          'Navigation Error',
+          'Failed to navigate to results page. Please try again.',
+        );
+      }
     } catch (error: any) {
       logger.error('ExamScreen', 'Failed to submit exam', error);
       const errorMessage = error?.message || 'Unknown error occurred';

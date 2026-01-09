@@ -31,74 +31,80 @@ export function QuestionReview({
   const [lightboxImageUrl, setLightboxImageUrl] = useState('');
 
   // Markdown styles for question text
-  const markdownStyles = useMemo(() => ({
-    body: {
-      color: '#333333',
-    },
-    text: {
-      fontSize: 16,
-      color: '#333333',
-      lineHeight: 22,
-    },
-    paragraph: {
-      marginTop: 0,
-      marginBottom: 8,
-      fontSize: 16,
-      color: '#333333',
-      lineHeight: 22,
-    },
-    strong: {
-      fontWeight: '900' as const,
-      color: '#000000',
-    },
-    em: {
-      fontStyle: 'italic' as const,
-      color: '#333333',
-    },
-    list_item: {
-      flexDirection: 'row' as const,
-      marginBottom: 4,
-      fontSize: 16,
-      color: '#333333',
-      lineHeight: 22,
-    },
-    bullet_list: {
-      marginTop: 8,
-      marginBottom: 8,
-    },
-    ordered_list: {
-      marginTop: 8,
-      marginBottom: 8,
-    },
-    bullet_list_icon: {
-      fontSize: 16,
-      lineHeight: 22,
-      marginRight: 8,
-    },
-    ordered_list_icon: {
-      fontSize: 16,
-      lineHeight: 22,
-      marginRight: 8,
-    },
-  }), []);
+  const markdownStyles = useMemo(
+    () => ({
+      body: {
+        color: '#333333',
+      },
+      text: {
+        fontSize: 16,
+        color: '#333333',
+        lineHeight: 22,
+      },
+      paragraph: {
+        marginTop: 0,
+        marginBottom: 8,
+        fontSize: 16,
+        color: '#333333',
+        lineHeight: 22,
+      },
+      strong: {
+        fontWeight: '900' as const,
+        color: '#000000',
+      },
+      em: {
+        fontStyle: 'italic' as const,
+        color: '#333333',
+      },
+      list_item: {
+        flexDirection: 'row' as const,
+        marginBottom: 4,
+        fontSize: 16,
+        color: '#333333',
+        lineHeight: 22,
+      },
+      bullet_list: {
+        marginTop: 8,
+        marginBottom: 8,
+      },
+      ordered_list: {
+        marginTop: 8,
+        marginBottom: 8,
+      },
+      bullet_list_icon: {
+        fontSize: 16,
+        lineHeight: 22,
+        marginRight: 8,
+      },
+      ordered_list_icon: {
+        fontSize: 16,
+        lineHeight: 22,
+        marginRight: 8,
+      },
+    }),
+    [],
+  );
 
   // Custom rules for markdown rendering
-  const markdownRules = useMemo(() => ({
-    image: (node: any) => {
-      const imageUrl = convertImageUrl(node.attributes.src);
-      return (
-        <View key={node.key} style={styles.markdownImageContainer}>
-          <RetryImage
-            uri={imageUrl}
-            style={styles.markdownImage}
-            resizeMode="contain"
-            maxRetries={3}
-            retryDelay={2000}
-          />
-        </View>
-      );
-    },
-  }), []);
+  const markdownRules = useMemo(
+    () => ({
+      image: (node: any) => {
+        const imageUrl = convertImageUrl(node.attributes.src);
+        return (
+          <View key={node.key} style={styles.markdownImageContainer}>
+            <RetryImage
+              uri={imageUrl}
+              style={styles.markdownImage}
+              resizeMode="contain"
+              maxRetries={3}
+              retryDelay={2000}
+            />
+          </View>
+        );
+      },
+    }),
+    [],
+  );
 
   const renderAnswerOption = (option: any, index: number) => {
     const isUserAnswer = questionResult.userAnswer === index;
@@ -108,7 +114,9 @@ export function QuestionReview({
     const optionImages = questionResult.optionImages || [];
     const rawOptionImageUrl =
       optionImages[index] || (typeof option === 'object' ? option.image : null);
-    const optionImageUrl = rawOptionImageUrl ? convertImageUrl(rawOptionImageUrl) : null;
+    const optionImageUrl = rawOptionImageUrl
+      ? convertImageUrl(rawOptionImageUrl)
+      : null;
     const hasImage = optionImageUrl && optionImageUrl.trim() !== '';
 
     const hasText =
@@ -198,10 +206,7 @@ export function QuestionReview({
       )}
 
       {questionResult.question && questionResult.question.trim() && (
-        <Markdown
-          style={markdownStyles}
-          rules={markdownRules}
-        >
+        <Markdown style={markdownStyles} rules={markdownRules}>
           {questionResult.question}
         </Markdown>
       )}

@@ -64,7 +64,7 @@ export function RetryImage({
     setError(false);
     setRetryCount(0);
     setImageKey((prev) => prev + 1);
-    
+
     if (retryTimeoutRef.current) {
       clearTimeout(retryTimeoutRef.current);
     }
@@ -72,7 +72,7 @@ export function RetryImage({
 
   const handleImageLoad = () => {
     if (!isMountedRef.current) return;
-    
+
     setLoading(false);
     setError(false);
     onLoad?.();
@@ -81,8 +81,11 @@ export function RetryImage({
   const handleImageError = (e: any) => {
     if (!isMountedRef.current) return;
 
-    console.log(`Image load error (attempt ${retryCount + 1}/${maxRetries}):`, e?.nativeEvent?.error);
-    
+    console.log(
+      `Image load error (attempt ${retryCount + 1}/${maxRetries}):`,
+      e?.nativeEvent?.error,
+    );
+
     if (retryCount < maxRetries) {
       // Retry after delay
       setLoading(true);
@@ -148,9 +151,7 @@ export function RetryImage({
         <View style={styles.errorContainer}>
           <Ionicons name="image-outline" size={48} color="#CCCCCC" />
           <Text style={styles.errorText}>Failed to load image</Text>
-          <Text style={styles.errorSubtext}>
-            Tried {maxRetries} times
-          </Text>
+          <Text style={styles.errorSubtext}>Tried {maxRetries} times</Text>
           <TouchableOpacity
             onPress={handleManualRetry}
             style={styles.retryButton}

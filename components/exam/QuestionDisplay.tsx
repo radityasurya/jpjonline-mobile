@@ -6,6 +6,21 @@ import { convertImageUrl } from '@/utils/markdownImageHandler';
 import { ImageLightbox } from '@/components/shared/ImageLightbox';
 import { RetryImage } from '@/components/shared/RetryImage';
 
+// Helper function to extract HTML img tags and convert them to markdown image syntax
+const convertHtmlImagesToMarkdown = (text: string): string => {
+  if (!text) return text;
+  
+  // Match HTML <img> tags with various attributes
+  const imgRegex = /<img\s+(?:[^>]*?\s+)?src=["']([^"']+)["'][^>]*>/gi;
+  
+  return text.replace(imgRegex, (match, src) => {
+    const imageUrl = convertImageUrl(src);
+    return `
+![image](${imageUrl})
+`;
+  });
+};
+
 interface QuestionDisplayProps {
   question: any;
   questionIndex: number;
@@ -136,7 +151,7 @@ export function QuestionDisplay({
 
         {question.text && question.text.trim() && (
           <Markdown style={markdownStyles} rules={markdownRules}>
-            {decodeHtmlEntities(question.text)}
+            {convertHtmlImagesToMarkdown(decodeHtmlEntities(question.text))}
           </Markdown>
         )}
       </View>

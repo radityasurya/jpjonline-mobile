@@ -21,6 +21,7 @@ import {
   ACTIVITY_TYPES,
 } from '@/services';
 import { saveExamResult } from '@/services/examsService.js';
+import { imageCacheService } from '@/services/imageCacheService';
 
 // Import components
 import { ExamHeader } from '@/components/exam/ExamHeader';
@@ -29,6 +30,7 @@ import { QuestionDisplay } from '@/components/exam/QuestionDisplay';
 import { AnswerOptions } from '@/components/exam/AnswerOptions';
 import { ExamNavigation } from '@/components/exam/ExamNavigation';
 import { QuestionSidebar } from '@/components/exam/QuestionSidebar';
+import { ImagePreloader } from '@/components/exam/ImagePreloader';
 
 // Types for the new API structure
 interface ApiQuestion {
@@ -75,6 +77,8 @@ export default function ExamScreen() {
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const [questionRetryStates, setQuestionRetryStates] = useState<boolean[]>([]);
   const [startTime, setStartTime] = useState<Date>(new Date());
+  const [showPreloader, setShowPreloader] = useState(true);
+  const [preloadComplete, setPreloadComplete] = useState(false);
 
   const handleExitExam = () => {
     logger.userAction('Exam exit requested');
@@ -140,6 +144,30 @@ export default function ExamScreen() {
       setAnswerValidation(new Array(examData.questions.length).fill(false));
       setHasCheckedAnswer(new Array(examData.questions.length).fill(false));
       setQuestionRetryStates(new Array(examData.questions.length).fill(false));
+
+      // Start Stage 2: Background preloading of remaining images
+      // This runs in background without blocking the UI
+      setTimeout(() => {
+        logger.info('ExamScreen', 'Starting Stage 2 background preloading');
+        imageCacheService.preloadImages(
+          imageCacheService.extractImageUrls(examData),
+          undefined, // No progress callback for background loading
+          (success, failedUris) => {
+            if (failedUris.length > 0) {
+              logger.warn('ExamScreen', 'Stage 2 preloading completed with failures', {
+                failedCount: failedUris.length,
+              });
+            } else {
+              logger.info('ExamScreen', 'Stage 2 preloading completed successfully');
+            }
+          },
+          {
+            maxConcurrent: 2, // Lower concurrency for background loading
+            timeout: 20000, // Longer timeout for background loading
+            stopAtPercentage: 100, // Load all remaining images
+          }
+        );
+      }, 1000); // Start after 1 second delay
 
       // Track exam start activity
       activityService.addActivity(ACTIVITY_TYPES.EXAM_STARTED, {
@@ -616,6 +644,31 @@ export default function ExamScreen() {
   }
 
   const currentQuestion = questions[currentQuestionIndex];
+
+  const handlePreloadComplete = (success: boolean) => {
+    logger.info('ExamScreen', 'Stage 1 preloading completed', { success });
+    setPreloadComplete(true);
+    setShowPreloader(false);
+  };
+
+  const handlePreloadCancel = () => {
+    logger.info('ExamScreen', 'Stage 1 preloading cancelled by user');
+    setPreloadComplete(true);
+    setShowPreloader(false);
+  };
+
+  // Show preloader overlay during Stage 1
+  if (showPreloader && exam) {
+    return (
+      <ImagePreloader
+        exam={exam}
+        targetPercentage={50}
+        onComplete={handlePreloadComplete}
+        onCancel={handlePreloadCancel}
+        showDetails={true}
+      />
+    );
+  }
 
   return (
     <View style={styles.container}>

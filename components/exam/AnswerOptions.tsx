@@ -1,17 +1,9 @@
-import React, {
-  useState,
-  useEffect,
-  useMemo,
-  useRef,
-  useCallback,
-} from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  Image,
-  ActivityIndicator,
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,6 +13,22 @@ import {
   convertImageUrl,
 } from '@/utils/markdownImageHandler';
 import { ImageLightbox } from '@/components/shared/ImageLightbox';
+import { RetryImage } from '@/components/shared/RetryImage';
+
+// Helper function to extract HTML img tags and convert them to markdown image syntax
+const convertHtmlImagesToMarkdown = (text: string): string => {
+  if (!text) return text;
+  
+  // Match HTML <img> tags with various attributes
+  const imgRegex = /<img\s+(?:[^>]*?\s+)?src=["']([^"']+)["'][^>]*>/gi;
+  
+  return text.replace(imgRegex, (match, src) => {
+    const imageUrl = convertImageUrl(src);
+    return `
+![image](${imageUrl})
+`;
+  });
+};
 
 interface AnswerOptionsProps {
   question: any;
@@ -41,18 +49,8 @@ export function AnswerOptions({
   examMode,
   disabled = false,
 }: AnswerOptionsProps) {
-  const [imageLoadingStates, setImageLoadingStates] = useState<{
-    [key: number]: boolean;
-  }>({});
-  const [imageErrorStates, setImageErrorStates] = useState<{
-    [key: number]: boolean;
-  }>({});
   const [lightboxVisible, setLightboxVisible] = useState(false);
   const [lightboxImageUrl, setLightboxImageUrl] = useState('');
-
-  // Track the current question ID to prevent stale callbacks
-  const currentQuestionIdRef = useRef(question.id);
-  const imageLoadHandledRef = useRef<{ [key: number]: boolean }>({});
 
   // Normalize options and optionImages to handle both legacy and new API formats
   // Use useMemo to prevent recreating arrays on every render
@@ -80,7 +78,9 @@ export function AnswerOptions({
 
   // Custom component to render option text with markdown images
   const renderOptionTextWithImages = (text: string) => {
-    const segments = splitTextWithImages(text);
+    // First convert HTML img tags to markdown image syntax
+    const convertedText = convertHtmlImagesToMarkdown(text);
+    const segments = splitTextWithImages(convertedText);
 
     return segments.map((segment, index) => {
       if (segment.type === 'text') {
@@ -93,29 +93,18 @@ export function AnswerOptions({
         const imageUrl = convertImageUrl(segment.src);
         return (
           <View key={index} style={styles.markdownImageContainer}>
-            <View style={styles.imageWrapper}>
-              <Image
-                source={{ uri: imageUrl }}
-                style={styles.markdownImage}
-                resizeMode="contain"
-                onError={(error) => {
-                  console.log(
-                    'Markdown option image load error:',
-                    error.nativeEvent.error,
-                  );
-                }}
-              />
-              <TouchableOpacity
-                onPress={() => {
-                  setLightboxImageUrl(imageUrl);
-                  setLightboxVisible(true);
-                }}
-                style={styles.zoomIconButton}
-                activeOpacity={0.8}
-              >
-                <Ionicons name="search" size={18} color="#FFFFFF" />
-              </TouchableOpacity>
-            </View>
+            <RetryImage
+              uri={imageUrl}
+              style={styles.markdownImage}
+              resizeMode="contain"
+              showZoomButton={true}
+              onZoomPress={() => {
+                setLightboxImageUrl(imageUrl);
+                setLightboxVisible(true);
+              }}
+              maxRetries={3}
+              retryDelay={2000}
+            />
             {segment.alt && (
               <Text style={styles.markdownImageAlt}>{segment.alt}</Text>
             )}
@@ -125,56 +114,6 @@ export function AnswerOptions({
       return null;
     });
   };
-
-  // Reset loading states when question changes
-  useEffect(() => {
-    currentQuestionIdRef.current = question.id;
-    imageLoadHandledRef.current = {};
-
-    const initialLoadingStates: { [key: number]: boolean } = {};
-
-    optionImages.forEach((imageUrl: string | null, index: number) => {
-      if (imageUrl && imageUrl.trim() !== '') {
-        initialLoadingStates[index] = true;
-      }
-    });
-
-    setImageLoadingStates(initialLoadingStates);
-    setImageErrorStates({});
-    // Only depend on question.id - optionImages is derived from question and is stable via useMemo
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [question.id]);
-
-  // Stable callback for image load - prevents infinite loops
-  const handleImageLoad = useCallback(
-    (index: number) => {
-      // Only handle if this is for the current question and hasn't been handled yet
-      if (
-        currentQuestionIdRef.current === question.id &&
-        !imageLoadHandledRef.current[index]
-      ) {
-        imageLoadHandledRef.current[index] = true;
-        setImageLoadingStates((prev) => ({ ...prev, [index]: false }));
-      }
-    },
-    [question.id],
-  );
-
-  // Stable callback for image error
-  const handleImageError = useCallback(
-    (index: number) => {
-      console.log('Option image load error at index:', index);
-      if (
-        currentQuestionIdRef.current === question.id &&
-        !imageLoadHandledRef.current[index]
-      ) {
-        imageLoadHandledRef.current[index] = true;
-        setImageLoadingStates((prev) => ({ ...prev, [index]: false }));
-        setImageErrorStates((prev) => ({ ...prev, [index]: true }));
-      }
-    },
-    [question.id],
-  );
 
   const getAnswerOptionStyle = (optionIndex: number) => {
     const isSelected = selectedAnswer === optionIndex;
@@ -231,9 +170,6 @@ export function AnswerOptions({
       />
       <View style={styles.optionsContainer}>
         {options.map((option: any, index: number) => {
-          const isImageLoading = imageLoadingStates[index] === true;
-          const hasImageError = imageErrorStates[index] === true;
-
           // Get option image from normalized optionImages array
           const rawOptionImageUrl = optionImages[index] || null;
 
@@ -281,49 +217,24 @@ export function AnswerOptions({
                     isImageOnlyOptions && styles.imageOnlyContainer,
                   ]}
                 >
-                  {isImageLoading && (
-                    <View style={styles.imageLoadingOverlay}>
-                      <ActivityIndicator size="small" color="#666666" />
-                      <Text style={styles.loadingText}>Loading...</Text>
-                    </View>
-                  )}
-                  <Image
-                    source={{ uri: optionImageUrl }}
+                  <RetryImage
+                    uri={optionImageUrl}
                     style={[
                       styles.optionImage,
                       isImageOnlyOptions && styles.imageOnlyOption,
-                      isImageLoading && styles.hiddenImage,
                     ]}
-                    onLoad={() => handleImageLoad(index)}
-                    onError={(error) => {
-                      console.log('Image error:', error.nativeEvent.error);
-                      handleImageError(index);
-                    }}
+                    containerStyle={[
+                      isImageOnlyOptions && styles.imageOnlyOption,
+                    ]}
                     resizeMode="contain"
+                    showZoomButton={true}
+                    onZoomPress={() => {
+                      setLightboxImageUrl(optionImageUrl);
+                      setLightboxVisible(true);
+                    }}
+                    maxRetries={3}
+                    retryDelay={2000}
                   />
-                  {!isImageLoading && !hasImageError && (
-                    <TouchableOpacity
-                      onPress={(e) => {
-                        e.stopPropagation();
-                        setLightboxImageUrl(optionImageUrl);
-                        setLightboxVisible(true);
-                      }}
-                      style={styles.zoomIconButton}
-                      activeOpacity={0.8}
-                    >
-                      <Ionicons name="search" size={16} color="#FFFFFF" />
-                    </TouchableOpacity>
-                  )}
-                  {hasImageError && !isImageLoading && (
-                    <View
-                      style={[
-                        styles.imageErrorContainer,
-                        isImageOnlyOptions && styles.imageOnlyOption,
-                      ]}
-                    >
-                      <Text style={styles.imageErrorText}>Failed to load</Text>
-                    </View>
-                  )}
                 </View>
               )}
 
@@ -336,7 +247,7 @@ export function AnswerOptions({
                 return textContent.trim() !== '' ? (
                   <ScrollView style={{ flex: 1 }} nestedScrollEnabled>
                     {renderOptionTextWithImages(
-                      decodeHtmlEntities(textContent),
+                      convertHtmlImagesToMarkdown(decodeHtmlEntities(textContent)),
                     )}
                   </ScrollView>
                 ) : null;
@@ -410,10 +321,6 @@ const styles = StyleSheet.create({
     height: 180,
     borderRadius: 8,
   },
-  imageWrapper: {
-    position: 'relative',
-    width: '100%',
-  },
   zoomIconButton: {
     position: 'absolute',
     top: 8,
@@ -422,46 +329,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 6,
     zIndex: 10,
-  },
-  hiddenImage: {
-    opacity: 0,
-  },
-  imageLoadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F8F9FA',
-    borderRadius: 8,
-    zIndex: 1,
-  },
-  loadingText: {
-    marginTop: 8,
-    fontSize: 10,
-    color: '#999999',
-  },
-  imageErrorContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    width: 140,
-    height: 105,
-    backgroundColor: '#F8F9FA',
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-  },
-  imageErrorText: {
-    fontSize: 10,
-    color: '#999999',
-    textAlign: 'center',
   },
   selectedOverlay: {
     position: 'absolute',
